@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>App Dinâmico</title>
+
+<style>
+body{
+font-family:Arial, Helvetica, sans-serif;
+background:#0f172a;
+color:white;
+display:flex;
+align-items:center;
+justify-content:center;
+height:100vh;
+margin:0;
+}
+
+.card{
+background:#1e293b;
+padding:30px;
+border-radius:10px;
+width:320px;
+box-shadow:0 0 20px rgba(0,0,0,0.4);
+}
+
+h2{
+margin-top:0;
+text-align:center;
+}
+
+input{
+width:100%;
+padding:10px;
+margin-top:10px;
+border-radius:6px;
+border:none;
+outline:none;
+}
+
+button{
+width:100%;
+padding:10px;
+margin-top:15px;
+border:none;
+border-radius:6px;
+background:#3b82f6;
+color:white;
+font-weight:bold;
+cursor:pointer;
+}
+
+button:hover{
+background:#2563eb;
+}
+
+small{
+display:block;
+text-align:center;
+margin-top:10px;
+cursor:pointer;
+opacity:.7;
+}
+</style>
+
+</head>
+<body>
+
+<div class="card">
+<h2>Login</h2>
+
+<input id="email" placeholder="Email">
+<input id="senha" type="password" placeholder="Senha">
+
+<button onclick="login()">Entrar</button>
+
+<small onclick="criarConta()">Criar conta</small>
+
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+<script>
+
+// CONFIG FIREBASE
+const firebaseConfig = {
+apiKey: "SUA_API_KEY",
+authDomain: "SEU_AUTH_DOMAIN",
+projectId: "SEU_PROJECT_ID",
+storageBucket: "SEU_BUCKET",
+messagingSenderId: "SEU_ID",
+appId: "SEU_APP_ID"
+};
+
+firebase.initializeApp(firebaseConfig);
+
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+
+// LOGIN
+function login(){
+
+let email = document.getElementById("email").value
+let senha = document.getElementById("senha").value
+
+auth.signInWithEmailAndPassword(email,senha)
+.then(()=>{
+
+window.location.href="app.html"
+
+})
+.catch(e=>alert(e.message))
+
+}
+
+
+
+// CRIAR CONTA
+function criarConta(){
+
+let email = document.getElementById("email").value
+let senha = document.getElementById("senha").value
+
+auth.createUserWithEmailAndPassword(email,senha)
+.then(async (userCredential)=>{
+
+let uid = userCredential.user.uid
+
+await db.collection("usuarios").doc(uid).set({
+
+email:email,
+role:"user",
+criado:Date.now()
+
+})
+
+alert("Conta criada")
+})
+.catch(e=>alert(e.message))
+
+}
+
+
+
+// MANTER LOGIN
+auth.onAuthStateChanged(user=>{
+
+if(user){
+
+window.location.href="app.html"
+
+}
+
+})
+
+</script>
+
+</body>
+</html>
