@@ -178,9 +178,15 @@ carregarTabela()
 
 })
 
-function modoMaster(){
+function logout(){
+auth.signOut()
+}
 
-let senha = prompt("Senha master")
+async function modoMaster(){
+
+let senha = prompt("Senha MASTER")
+
+if(!senha) return
 
 if(senha !== "LOG#001"){
 alert("Senha incorreta")
@@ -189,24 +195,24 @@ return
 
 let user = auth.currentUser
 
-db.collection("usuarios")
+if(!user){
+alert("Usuário não autenticado")
+return
+}
+
+await db.collection("usuarios")
 .doc(user.uid)
 .set({
 email:user.email,
 role:"admin",
-master:true
+master:true,
+criado:Date.now()
 },{merge:true})
-.then(()=>{
 
-alert("Modo administrador ativado")
-location.reload()
+alert("Você agora é ADMIN MASTER")
 
-})
+window.location.reload()
 
-}
-
-function logout(){
-auth.signOut()
 }
 
 function abrirTab(ev,nome){
@@ -299,11 +305,9 @@ html+=`<td>${d[c.id]||""}</td>`
 })
 
 if(userRole==="admin"){
-html+=`
-<td>
+html+=`<td>
 <button onclick="excluir('${doc.id}')">Excluir</button>
-</td>
-`
+</td>`
 }
 
 html+="</tr>"
