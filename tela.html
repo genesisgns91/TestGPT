@@ -396,15 +396,10 @@ carregarComandos()
 
 async function executar(id,destino){
 
-let doc = await db.collection("registros").doc(id).get()
+localStorage.setItem("transicao_registro",id)
+localStorage.setItem("transicao_destino",destino)
 
-let dados = doc.data()
-
-dados.tela = destino
-
-await db.collection("registros").doc(id).set(dados)
-
-carregarRegistros()
+window.location.href="transicao.html"
 
 }
 
