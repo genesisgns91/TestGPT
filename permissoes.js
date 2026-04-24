@@ -2,8 +2,11 @@ const Permissoes = {
 
 user:null,
 role:"user",
+loaded:false,
 
 async init(auth,db){
+
+if(this.loaded) return
 
 return new Promise(resolve=>{
 
@@ -14,15 +17,20 @@ window.location.href="index.html"
 return
 }
 
-this.user = user
+Permissoes.user = user
 
-let doc = await db.collection("usuarios")
+let doc = await db
+.collection("usuarios")
 .doc(user.uid)
 .get()
 
 if(doc.exists){
-this.role = doc.data().role || "user"
+Permissoes.role = doc.data().role || "user"
+}else{
+Permissoes.role = "user"
 }
+
+Permissoes.loaded = true
 
 resolve()
 
@@ -40,7 +48,7 @@ somenteAdmin(){
 
 if(!this.isAdmin()){
 alert("Apenas administrador")
-throw "sem permissao"
+throw new Error("Sem permissão")
 }
 
 },
@@ -49,8 +57,11 @@ aplicar(){
 
 if(!this.isAdmin()){
 
-document.querySelectorAll(".admin")
-.forEach(el=>el.style.display="none")
+document
+.querySelectorAll(".admin")
+.forEach(el=>{
+el.style.display="none"
+})
 
 }
 
