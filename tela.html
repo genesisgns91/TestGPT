@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tela</title>
+
+<style>
+
+body{
+margin:0;
+font-family:Arial;
+background:#020617;
+color:white;
+}
+
+.top{
+background:#020617;
+padding:10px;
+display:flex;
+justify-content:space-between;
+}
+
+.container{
+padding:20px;
+}
+
+input,select{
+padding:8px;
+margin:5px 0;
+width:100%;
+border-radius:6px;
+border:none;
+}
+
+button{
+padding:8px 15px;
+background:#3b82f6;
+border:none;
+color:white;
+border-radius:6px;
+cursor:pointer;
+margin-top:5px;
+}
+
+table{
+width:100%;
+border-collapse:collapse;
+margin-top:20px;
+}
+
+th,td{
+border:1px solid #1e293b;
+padding:8px;
+}
+
+.card{
+background:#1e293b;
+padding:15px;
+margin-bottom:10px;
+border-radius:8px;
+}
+
+</style>
+
+</head>
+<body>
+
+<div class="top">
+<div id="titulo">Tela</div>
+<button onclick="voltar()">Voltar</button>
+</div>
+
+<div class="container">
+
+<h3>Campos do Formulário</h3>
+
+<input id="campoNome" placeholder="Nome do campo">
+
+<select id="campoTipo">
+<option value="text">Texto</option>
+<option value="number">Número</option>
+<option value="date">Data</option>
+</select>
+
+<button onclick="addCampo()">Adicionar Campo</button>
+
+<div id="campos"></div>
+
+<hr>
+
+<h3>Comandos</h3>
+
+<input id="nomeComando" placeholder="Nome do comando">
+<select id="destino"></select>
+
+<button onclick="addComando()">Adicionar Comando</button>
+
+<div id="comandos"></div>
+
+<hr>
+
+<h3>Registros</h3>
+
+<div id="form"></div>
+
+<div id="tabela"></div>
+
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+<script>
+
+const firebaseConfig = {
+apiKey: "SUA_API_KEY",
+authDomain: "SEU_AUTH_DOMAIN",
+projectId: "SEU_PROJECT_ID",
+storageBucket: "SEU_BUCKET",
+messagingSenderId: "SEU_ID",
+appId: "SEU_APP_ID"
+};
+
+firebase.initializeApp(firebaseConfig);
+
+const db = firebase.firestore();
+const auth = firebase.auth();
+
+let telaId = localStorage.getItem("telaConfig")
+let campos = []
+let comandos = []
+let telas = []
+
+auth.onAuthStateChanged(user=>{
+if(!user) window.location.href="index.html"
+init()
+})
+
+async function init(){
+
+await carregarTelas()
+await carregarCampos()
+await carregarComandos()
+carregarRegistros()
+
+}
+
+function voltar(){
+window.location.href="workflow.html"
+}
+
+async function carregarTelas(){
+
+let snap = await db.collection("telas").get()
+
+let select = document.getElementById("destino")
+
+snap.forEach(doc=>{
+
+let d = doc.data()
+
+select.innerHTML += `<option value="${doc.id}">${d.nome}</option>`
+
+})
+
+}
+
+async function carregarCampos(){
+
+let doc = await db.collection("telas").doc(telaId).get()
+
+campos = doc.data().campos || []
+
+renderCampos()
+renderForm()
+
+}
+
+function renderCampos(){
+
+let html=""
+
+campos.forEach(c=>{
+
+html+=`
+<div class="card">
+${c.nome}
+<button onclick="removerCampo('${c.id}')">Excluir</button>
+</div>
+`
+
+})
+
+document.getElementById("campos").innerHTML=html
+
+}
+
+async function addCampo(){
+
+let nome = document.getElementById("campoNome").value
+let tipo = document.getElementById("campoTipo").value
+
+campos.push({
+id:Date.now().toString(),
+nome,
+tipo
+})
+
+await db.collection("telas").doc(telaId).update({
+campos
+})
+
+carregarCampos()
+
+}
+
+async function removerCampo(id){
+
+campos = campos.filter(c=>c.id!==id)
+
+await db.collection("telas").doc(telaId).update({
+campos
+})
+
+carregarCampos()
+
+}
+
+function renderForm(){
+
+let html=""
+
+campos.forEach(c=>{
+
+html+=`
+<label>${c.nome}</label>
+<input id="f_${c.id}" type="${c.tipo}">
+`
+
+})
+
+html+=`<button onclick="salvar()">Salvar</button>`
+
+document.getElementById("form").innerHTML=html
+
+}
+
+async function salvar(){
+
+let dados={}
+
+campos.forEach(c=>{
+dados[c.id]=document.getElementById("f_"+c.id).value
+})
+
+dados.tela=telaId
+dados.data=Date.now()
+
+await db.collection("registros").add(dados)
+
+carregarRegistros()
+
+}
+
+async function carregarRegistros(){
+
+let snap = await db.collection("registros")
+.where("tela","==",telaId)
+.get()
+
+let html="<table><tr>"
+
+campos.forEach(c=>{
+html+=`<th>${c.nome}</th>`
+})
+
+html+="<th>Ações</th></tr>"
+
+snap.forEach(doc=>{
+
+let d = doc.data()
+
+html+="<tr>"
+
+campos.forEach(c=>{
+html+=`<td>${d[c.id]||""}</td>`
+})
+
+html+="<td>"
+
+comandos.forEach(c=>{
+
+html+=`
+<button onclick="executar('${doc.id}','${c.destino}')">
+${c.nome}
+</button>
+`
+
+})
+
+html+="</td></tr>"
+
+})
+
+html+="</table>"
+
+document.getElementById("tabela").innerHTML=html
+
+}
+
+async function carregarComandos(){
+
+let doc = await db.collection("telas").doc(telaId).get()
+
+comandos = doc.data().comandos || []
+
+renderComandos()
+
+}
+
+function renderComandos(){
+
+let html=""
+
+comandos.forEach(c=>{
+
+html+=`
+<div class="card">
+${c.nome} → ${c.destino}
+<button onclick="removerComando('${c.id}')">Excluir</button>
+</div>
+`
+
+})
+
+document.getElementById("comandos").innerHTML=html
+
+}
+
+async function addComando(){
+
+let nome = document.getElementById("nomeComando").value
+let destino = document.getElementById("destino").value
+
+comandos.push({
+id:Date.now().toString(),
+nome,
+destino
+})
+
+await db.collection("telas").doc(telaId).update({
+comandos
+})
+
+carregarComandos()
+
+}
+
+async function removerComando(id){
+
+comandos = comandos.filter(c=>c.id!==id)
+
+await db.collection("telas").doc(telaId).update({
+comandos
+})
+
+carregarComandos()
+
+}
+
+async function executar(id,destino){
+
+let doc = await db.collection("registros").doc(id).get()
+
+let dados = doc.data()
+
+dados.tela = destino
+
+await db.collection("registros").doc(id).set(dados)
+
+carregarRegistros()
+
+}
+
+</script>
+
+</body>
+</html>
