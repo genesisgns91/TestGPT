@@ -133,7 +133,7 @@ Obrigatório
 
 </div>
 
-
+<script src="permissoes.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
@@ -160,6 +160,9 @@ let campos = []
 
 auth.onAuthStateChanged(async user=>{
 
+  await Permissoes.init(auth,db)
+Permissoes.aplicar()
+  
 if(!user){
 window.location.href="index.html"
 return
