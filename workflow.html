@@ -6,7 +6,6 @@
 <title>Workflow</title>
 
 <style>
-
 body{
 margin:0;
 font-family:Arial;
@@ -42,24 +41,12 @@ border-radius:6px;
 cursor:pointer;
 }
 
-table{
-width:100%;
-border-collapse:collapse;
-margin-top:20px;
-}
-
-th,td{
-border:1px solid #1e293b;
-padding:8px;
-}
-
 .card{
 background:#1e293b;
 padding:15px;
 margin-bottom:15px;
 border-radius:8px;
 }
-
 </style>
 
 </head>
@@ -85,6 +72,8 @@ border-radius:8px;
 
 </div>
 
+<script src="permissoes.js"></script>
+
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
@@ -92,12 +81,12 @@ border-radius:8px;
 <script>
 
 const firebaseConfig = {
-apiKey: "SUA_API_KEY",
-authDomain: "SEU_AUTH_DOMAIN",
-projectId: "SEU_PROJECT_ID",
-storageBucket: "SEU_BUCKET",
-messagingSenderId: "SEU_ID",
-appId: "SEU_APP_ID"
+apiKey: "AIzaSyBv-d4GVwf8QOQ_Vr4PrmzJGXB5Y43JzVY",
+authDomain: "testegpt-7f69d.firebaseapp.com",
+projectId: "testegpt-7f69d",
+storageBucket: "testegpt-7f69d.firebasestorage.app",
+messagingSenderId: "427161163285",
+appId: "1:427161163285:web:2b7f0dc4acfba68667601c"
 };
 
 firebase.initializeApp(firebaseConfig);
@@ -105,9 +94,18 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const auth = firebase.auth();
 
-auth.onAuthStateChanged(user=>{
-if(!user) window.location.href="index.html"
+auth.onAuthStateChanged(async user=>{
+
+if(!user){
+window.location.href="index.html"
+return
+}
+
+await Permissoes.init(auth,db)
+Permissoes.aplicar()
+
 carregarTelas()
+
 })
 
 function voltar(){
@@ -116,14 +114,20 @@ window.location.href="app.html"
 
 async function criarTela(){
 
+Permissoes.somenteAdmin()
+
 let nome = document.getElementById("nomeTela").value
 
+if(!nome) return
+
 await db.collection("telas").add({
-
 nome,
+campos:[],
+comandos:[],
 criado:Date.now()
-
 })
+
+document.getElementById("nomeTela").value=""
 
 carregarTelas()
 
@@ -140,14 +144,13 @@ snap.forEach(doc=>{
 let d = doc.data()
 
 html+=`
-
 <div class="card">
 
 <b>${d.nome}</b>
 
 <br><br>
 
-<button onclick="configurar('${doc.id}','${d.nome}')">
+<button onclick="configurar('${doc.id}')">
 Configurar
 </button>
 
@@ -156,7 +159,6 @@ Excluir
 </button>
 
 </div>
-
 `
 
 })
@@ -167,13 +169,15 @@ document.getElementById("telas").innerHTML=html
 
 async function excluir(id){
 
+Permissoes.somenteAdmin()
+
 await db.collection("telas").doc(id).delete()
 
 carregarTelas()
 
 }
 
-function configurar(id,nome){
+function configurar(id){
 
 localStorage.setItem("telaConfig",id)
 
