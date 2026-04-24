@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gráficos</title>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+body{
+margin:0;
+font-family:Arial;
+background:#020617;
+color:white;
+}
+
+.top{
+background:#020617;
+padding:10px;
+display:flex;
+justify-content:space-between;
+}
+
+.container{
+padding:20px;
+}
+
+select,input{
+width:100%;
+padding:8px;
+margin:5px 0;
+border-radius:6px;
+border:none;
+}
+
+button{
+padding:8px 15px;
+background:#3b82f6;
+border:none;
+color:white;
+border-radius:6px;
+cursor:pointer;
+margin-top:5px;
+}
+
+.card{
+background:#1e293b;
+padding:15px;
+margin-top:20px;
+border-radius:8px;
+}
+</style>
+
+</head>
+<body>
+
+<div class="top">
+<div>Gráficos</div>
+<button onclick="voltar()">Voltar</button>
+</div>
+
+<div class="container">
+
+<h3>Novo Gráfico</h3>
+
+<label>Tipo</label>
+<select id="tipo">
+<option value="bar">Barra</option>
+<option value="line">Linha</option>
+<option value="pie">Pizza</option>
+</select>
+
+<label>Campo</label>
+<select id="campo"></select>
+
+<button onclick="criar()">Criar</button>
+
+<div id="graficos"></div>
+
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+<script>
+
+const firebaseConfig = {
+apiKey: "SUA_API_KEY",
+authDomain: "SEU_AUTH_DOMAIN",
+projectId: "SEU_PROJECT_ID",
+storageBucket: "SEU_BUCKET",
+messagingSenderId: "SEU_ID",
+appId: "SEU_APP_ID"
+};
+
+firebase.initializeApp(firebaseConfig);
+
+const db = firebase.firestore();
+
+let telaId = localStorage.getItem("telaConfig")
+let campos = []
+
+init()
+
+async function init(){
+
+let doc = await db.collection("telas").doc(telaId).get()
+
+campos = doc.data().campos || []
+
+let select = document.getElementById("campo")
+
+campos.forEach(c=>{
+select.innerHTML += `<option value="${c.id}">${c.nome}</option>`
+})
+
+carregar()
+
+}
+
+function voltar(){
+window.location.href="tela.html"
+}
+
+async function criar(){
+
+let tipo = document.getElementById("tipo").value
+let campo = document.getElementById("campo").value
+
+await db.collection("graficos").add({
+tela:telaId,
+tipo,
+campo
+})
+
+carregar()
+
+}
+
+async function carregar(){
+
+let snap = await db.collection("graficos")
+.where("tela","==",telaId)
+.get()
+
+let html=""
+
+snap.forEach(doc=>{
+
+html+=`
+<div class="card">
+<canvas id="g_${doc
