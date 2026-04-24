@@ -80,6 +80,8 @@ border-radius:8px;
 
 </div>
 
+<script src="permissoes.js"></script>
+
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
@@ -87,30 +89,48 @@ border-radius:8px;
 <script>
 
 const firebaseConfig = {
-apiKey: "SUA_API_KEY",
-authDomain: "SEU_AUTH_DOMAIN",
-projectId: "SEU_PROJECT_ID",
-storageBucket: "SEU_BUCKET",
-messagingSenderId: "SEU_ID",
-appId: "SEU_APP_ID"
+apiKey: "AIzaSyBv-d4GVwf8QOQ_Vr4PrmzJGXB5Y43JzVY",
+authDomain: "testegpt-7f69d.firebaseapp.com",
+projectId: "testegpt-7f69d",
+storageBucket: "testegpt-7f69d.firebasestorage.app",
+messagingSenderId: "427161163285",
+appId: "1:427161163285:web:2b7f0dc4acfba68667601c"
 };
 
 firebase.initializeApp(firebaseConfig);
 
 const db = firebase.firestore();
+const auth = firebase.auth();
 
 let telaId = localStorage.getItem("telaConfig")
 let campos = []
 
+auth.onAuthStateChanged(async user=>{
+
+if(!user){
+window.location.href="index.html"
+return
+}
+
+await Permissoes.init(auth,db)
+Permissoes.aplicar()
+
 init()
+
+})
 
 async function init(){
 
 let doc = await db.collection("telas").doc(telaId).get()
 
+if(!doc.exists){
+campos=[]
+}else{
 campos = doc.data().campos || []
+}
 
 let select = document.getElementById("campo")
+select.innerHTML=""
 
 campos.forEach(c=>{
 select.innerHTML += `<option value="${c.id}">${c.nome}</option>`
@@ -126,29 +146,6 @@ window.location.href="tela.html"
 
 async function criar(){
 
-let tipo = document.getElementById("tipo").value
-let campo = document.getElementById("campo").value
+Permissoes.somenteAdmin()
 
-await db.collection("graficos").add({
-tela:telaId,
-tipo,
-campo
-})
-
-carregar()
-
-}
-
-async function carregar(){
-
-let snap = await db.collection("graficos")
-.where("tela","==",telaId)
-.get()
-
-let html=""
-
-snap.forEach(doc=>{
-
-html+=`
-<div class="card">
-<canvas id="g_${doc
+let tipo = document.getElementById("tipo
