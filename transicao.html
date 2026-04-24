@@ -6,7 +6,6 @@
 <title>Transição</title>
 
 <style>
-
 body{
 margin:0;
 font-family:Arial;
@@ -48,7 +47,6 @@ padding:10px;
 margin-bottom:10px;
 border-radius:6px;
 }
-
 </style>
 
 </head>
@@ -69,7 +67,8 @@ border-radius:6px;
 
 </div>
 
-  <script src="permissoes.js"></script>
+<script src="permissoes.js"></script>
+
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
@@ -77,29 +76,46 @@ border-radius:6px;
 <script>
 
 const firebaseConfig = {
-apiKey: "SUA_API_KEY",
-authDomain: "SEU_AUTH_DOMAIN",
-projectId: "SEU_PROJECT_ID",
-storageBucket: "SEU_BUCKET",
-messagingSenderId: "SEU_ID",
-appId: "SEU_APP_ID"
+apiKey: "AIzaSyBv-d4GVwf8QOQ_Vr4PrmzJGXB5Y43JzVY",
+authDomain: "testegpt-7f69d.firebaseapp.com",
+projectId: "testegpt-7f69d",
+storageBucket: "testegpt-7f69d.firebasestorage.app",
+messagingSenderId: "427161163285",
+appId: "1:427161163285:web:2b7f0dc4acfba68667601c"
 };
 
 firebase.initializeApp(firebaseConfig);
 
 const db = firebase.firestore();
+const auth = firebase.auth();
 
 let registroId = localStorage.getItem("transicao_registro")
 let destino = localStorage.getItem("transicao_destino")
 let campos = []
 
+auth.onAuthStateChanged(async user=>{
+
+if(!user){
+window.location.href="index.html"
+return
+}
+
+await Permissoes.init(auth,db)
+Permissoes.aplicar()
+
 init()
+
+})
 
 async function init(){
 
 let doc = await db.collection("telas").doc(destino).get()
 
+if(!doc.exists){
+campos=[]
+}else{
 campos = doc.data().campos || []
+}
 
 render()
 
@@ -126,6 +142,8 @@ async function confirmar(){
 
 let doc = await db.collection("registros").doc(registroId).get()
 
+if(!doc.exists) return
+
 let dados = doc.data()
 
 campos.forEach(c=>{
@@ -141,9 +159,7 @@ window.location.href="tela.html"
 }
 
 function voltar(){
-
 window.location.href="tela.html"
-
 }
 
 </script>
