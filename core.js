@@ -843,5 +843,25 @@ function escHtml(s){
 }
 
 // init
-renderHome();
-window.showPanel = showPanel; window.toggleMaster = toggleMaster; window.checkMaster = checkMaster; window.closeMasterModal = closeMasterModal; window.openNewScreenModal = openNewScreenModal; window.createScreen = createScreen; window.openFieldModal = openFieldModal; window.addField = addField; window.removeField = removeField; window.openFormModal = openFormModal; window.submitForm = submitForm; window.openTableView = openTableView; window.openActionForm = openActionForm; window.submitActionForm = submitActionForm; window.openAddUserModal = openAddUserModal; window.addUser = addUser; window.closeModal = closeModal;
+document.addEventListener("DOMContentLoaded", () => {
+  renderHome();
+  updateStats();
+});
+
+window.showPanel = showPanel;
+window.toggleMaster = toggleMaster;
+window.checkMaster = checkMaster;
+window.closeMasterModal = closeMasterModal;
+window.openNewScreenModal = openNewScreenModal;
+window.createScreen = createScreen;
+window.openFieldModal = openFieldModal;
+window.addField = addField;
+window.removeField = removeField;
+window.openFormModal = openFormModal;
+window.submitForm = submitForm;
+window.openTableView = openTableView;
+window.openActionForm = openActionForm;
+window.submitActionForm = submitActionForm;
+window.openAddUserModal = openAddUserModal;
+window.addUser = addUser;
+window.closeModal = closeModal;
