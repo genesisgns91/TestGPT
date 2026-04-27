@@ -8,8 +8,13 @@
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-  import { getAuth, onAuthStateChanged, signOut, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-  import { getFirestore, doc, setDoc, getDoc, onSnapshot, collection, getDocs, updateDoc, deleteDoc, query, where, orderBy, limit, runTransaction } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+  import { 
+    getAuth, onAuthStateChanged, signOut, signInWithEmailAndPassword 
+  } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+  import { 
+    getFirestore, doc, setDoc, getDoc, onSnapshot, collection, getDocs, 
+    updateDoc, deleteDoc, query, where, orderBy, runTransaction, addDoc 
+  } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyADZphyLztYYeMV130uyq_3CYthr6QzBo0",
@@ -21,9 +26,13 @@
   };
 
   const app = initializeApp(firebaseConfig);
-  window._fbAuth = getAuth(app);
-  window._fbDb  = getFirestore(app);
-  window._fbFns = { doc, setDoc, getDoc, onSnapshot, collection, getDocs, updateDoc, deleteDoc, query, where, orderBy, limit, runTransaction };
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  // Expondo para o escopo global de forma organizada
+  window.fb = { auth, db };
+  window.fbAuth = { onAuthStateChanged, signOut, signInWithEmailAndPassword };
+  window.fbDb = { doc, setDoc, getDoc, onSnapshot, collection, getDocs, updateDoc, deleteDoc, query, where, orderBy, runTransaction, addDoc };
 
   // Inicializa EmailJS
   emailjs.init("EBoUWW7xHzfnthAsO");
@@ -32,95 +41,79 @@
 </script>
 
 <style>
-/* ── ESTILOS GERAIS ─────────────────────────────────────── */
-*{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --bg:#f8f7f4;--bg2:#fff;--bg3:#f0efe9;
-  --text:#1a1a18;--text2:#555550;--text3:#888880;
-  --border:rgba(0,0,0,0.1);--accent:#2d5be3;--accent-light:#e8eefb;
-  --success:#1d9e75;--danger:#a32d2d;--purple:#534ab7;--r2:14px;
-  --font:'DM Sans',system-ui,sans-serif;
+/* ── ESTILOS ───────────────────────────────────────────── */
+:root {
+  --bg: #f4f4f2; --white: #ffffff; --accent: #2d5be3; --text: #1a1a18;
+  --border: rgba(0,0,0,0.1); --success: #1d9e75; --danger: #d32f2f;
 }
-body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:14px;}
-#authScreen{display:flex;align-items:center;justify-content:center;min-height:100vh;}
-.auth-card{background:var(--bg2);border-radius:var(--r2);padding:32px;width:380px;box-shadow:0 4px 24px rgba(0,0,0,0.07);border:0.5px solid var(--border)}
-.logo span{color:var(--accent)}
-#mainApp{display:none}
-.topbar{display:flex;align-items:center;padding:10px 16px;background:var(--bg2);border-bottom:0.5px solid var(--border);position:sticky;top:0;z-index:10;}
-.content{padding:20px;max-width:1200px;margin:0 auto}
-.panel{display:none}.panel.active{display:block}
-.btn{padding:8px 16px;border-radius:8px;border:0.5px solid var(--border);cursor:pointer;font-family:inherit;transition:0.2s}
-.btn-primary{background:var(--accent);color:#fff;border:none}
-.card{background:var(--bg2);border-radius:var(--r2);padding:16px;margin-bottom:12px;border:0.5px solid var(--border)}
-table{width:100%;border-collapse:collapse;margin-top:10px}
-th{text-align:left;padding:12px;font-size:11px;color:var(--text3);text-transform:uppercase;border-bottom:1px solid var(--border)}
-td{padding:12px;border-bottom:0.5px solid var(--border)}
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);display:none;align-items:center;justify-content:center;z-index:100;}
-.modal-overlay.open{display:flex}
-.modal{background:#fff;padding:24px;border-radius:12px;width:450px;max-width:90%}
-.toast{position:fixed;bottom:20px;right:20px;padding:12px 24px;border-radius:8px;color:#fff;display:none;z-index:1000}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); }
+.topbar { background: var(--white); padding: 12px 20px; display: flex; align-items: center; border-bottom: 1px solid var(--border); sticky: top; }
+.btn { padding: 8px 16px; border-radius: 6px; border: 1px solid var(--border); cursor: pointer; transition: 0.2s; }
+.btn-primary { background: var(--accent); color: white; border: none; }
+.content { padding: 20px; max-width: 1200px; margin: 0 auto; }
+.card { background: var(--white); padding: 15px; border-radius: 8px; box-shadow: 0 2px 8px var(--border); margin-bottom: 20px; }
+table { width: 100%; border-collapse: collapse; margin-top: 15px; background: white; }
+th, td { padding: 12px; text-align: left; border-bottom: 1px solid var(--border); }
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: none; align-items: center; justify-content: center; z-index: 100; }
+.modal-overlay.open { display: flex; }
+.modal { background: white; padding: 25px; border-radius: 12px; width: 500px; max-width: 95%; }
+.hidden { display: none; }
+.toast { position: fixed; bottom: 20px; right: 20px; padding: 15px 25px; border-radius: 8px; color: white; display: none; z-index: 1000; }
 </style>
 </head>
 <body>
 
-<div id="authScreen">
-  <div class="auth-card">
-    <h2 class="logo">Flow<span>GNS</span></h2>
-    <p style="margin-bottom:20px;color:var(--text3)">Login do Sistema</p>
-    <input type="email" id="loginEmail" placeholder="E-mail" style="width:100%;padding:10px;margin-bottom:10px">
-    <input type="password" id="loginPwd" placeholder="Senha" style="width:100%;padding:10px;margin-bottom:15px">
+<div id="authScreen" style="display: flex; height: 100vh; align-items: center; justify-content: center;">
+  <div class="card" style="width: 350px;">
+    <h2>FlowGNS Login</h2>
+    <input type="email" id="loginEmail" placeholder="E-mail" style="width:100%; padding:10px; margin: 10px 0;">
+    <input type="password" id="loginPwd" placeholder="Senha" style="width:100%; padding:10px; margin-bottom: 15px;">
     <button class="btn btn-primary" style="width:100%" onclick="doLogin()">Entrar</button>
   </div>
 </div>
 
-<div id="mainApp">
+<div id="mainApp" style="display:none">
   <div class="topbar">
-    <h3 class="logo">Flow<span>GNS</span></h3>
-    <div style="flex:1;text-align:center">
-        <button class="btn" onclick="showPanel('home')">Início</button>
-        <button class="btn" onclick="showPanel('builder')" id="btnBuilder" style="display:none">Construtor</button>
-        <button class="btn" onclick="showPanel('groups')">Grupos E-mail</button>
-    </div>
+    <h3 style="margin-right: 20px;">FlowGNS</h3>
+    <button class="btn" onclick="showPanel('home')">Dashboard</button>
+    <button class="btn" onclick="showPanel('groups')">Grupos E-mail</button>
+    <div style="flex:1"></div>
     <button class="btn" onclick="doLogout()">Sair</button>
   </div>
 
   <div class="content">
     <div id="panel-home" class="panel active">
-        <div id="homeCards" style="display:grid;grid-template-columns:repeat(auto-fit, minmax(250px, 1fr));gap:15px"></div>
+        <div id="homeCards" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;"></div>
     </div>
 
-    <div id="panel-builder" class="panel">
-        <h3>Configuração de Telas</h3>
-        <button class="btn btn-primary" onclick="openNewScreenModal()">+ Nova Tela</button>
-        <div id="screenList" style="margin-top:20px"></div>
-    </div>
-
-    <div id="panel-groups" class="panel">
-        <h3>Grupos de Notificação (E-mail)</h3>
-        <p>Cadastre os e-mails para os grupos 101, 102, 103, etc.</p>
+    <div id="panel-groups" class="panel hidden">
         <div class="card">
-            <input type="text" id="grpId" placeholder="ID do Grupo (ex: 101)" style="width:100px;padding:8px">
-            <input type="text" id="grpEmails" placeholder="Emails (separados por vírgula)" style="width:300px;padding:8px">
-            <button class="btn btn-primary" onclick="saveEmailGroup()">Salvar Grupo</button>
+            <h4>Cadastro de Grupos (Editável por todos)</h4>
+            <input type="text" id="grpId" placeholder="Nome Grupo (Ex: 101)" style="padding:8px; width:120px">
+            <input type="text" id="grpEmails" placeholder="emails separados por vírgula" style="padding:8px; width:300px">
+            <button class="btn btn-primary" onclick="saveEmailGroup()">Cadastrar</button>
         </div>
-        <div id="groupsTable"></div>
+        <div id="groupsList"></div>
     </div>
 
-    <div id="panel-table" class="panel">
-        <button class="btn" onclick="showPanel('home')">← Voltar</button>
-        <h2 id="tableTitle" style="margin:15px 0"></h2>
-        <div id="tableContainer" class="card"></div>
+    <div id="panel-table" class="panel hidden">
+        <div style="display:flex; justify-content: space-between; align-items: center;">
+            <h2 id="tableTitle">Tabela</h2>
+            <button class="btn btn-primary" onclick="openModal('recordModal')">+ Novo Registro</button>
+        </div>
+        <div id="tableContainer"></div>
     </div>
   </div>
 </div>
 
 <div class="modal-overlay" id="recordModal">
     <div class="modal">
-        <h3 id="modalTitle">Novo Registro</h3>
-        <div id="formFields"></div>
-        <div class="modal-actions" style="margin-top:20px;text-align:right">
+        <h3>Novo Lançamento</h3>
+        <div id="formFields" style="margin-top:15px"></div>
+        <div style="text-align:right; margin-top:20px">
             <button class="btn" onclick="closeModal('recordModal')">Cancelar</button>
-            <button class="btn btn-primary" onclick="processSave()">Salvar e Enviar</button>
+            <button class="btn btn-primary" onclick="handleSave()">Salvar</button>
         </div>
     </div>
 </div>
@@ -130,18 +123,20 @@ td{padding:12px;border-bottom:0.5px solid var(--border)}
 <script>
 let state = { user: null, screens: [], currentScreen: null, groups: {} };
 
-// --- CORE LOGIC ---
-async function doLogin(){
+// --- AUTH ---
+async function doLogin() {
     const e = document.getElementById('loginEmail').value;
     const p = document.getElementById('loginPwd').value;
     try {
-        await _fbAuth.signInWithEmailAndPassword(_fbAuth.getAuth(), e, p);
+        await fbAuth.signInWithEmailAndPassword(fb.auth, e, p);
     } catch(err) { alert("Erro ao entrar: " + err.message); }
 }
 
+async function doLogout() { await fbAuth.signOut(fb.auth); }
+
 window.addEventListener('firebaseReady', () => {
-    _fbAuth.onAuthStateChanged(_fbAuth.getAuth(), user => {
-        if(user){
+    fbAuth.onAuthStateChanged(fb.auth, user => {
+        if(user) {
             state.user = user;
             document.getElementById('authScreen').style.display = 'none';
             document.getElementById('mainApp').style.display = 'block';
@@ -153,228 +148,223 @@ window.addEventListener('firebaseReady', () => {
     });
 });
 
-async function loadData(){
-    const snap = await _fbFns.getDocs(_fbFns.collection(_fbDb, "screens"));
+// --- DATA LOADING ---
+async function loadData() {
+    const snap = await fbDb.getDocs(fbDb.collection(fb.db, "screens"));
     state.screens = snap.docs.map(d => ({id: d.id, ...d.data()}));
     renderHome();
     loadGroups();
 }
 
-function renderHome(){
+function renderHome() {
     const container = document.getElementById('homeCards');
     container.innerHTML = state.screens.map(s => `
         <div class="card" onclick="openScreen('${s.id}')" style="cursor:pointer">
-            <h4>${s.name}</h4>
-            <small>${s.type}</small>
+            <h3>${s.name}</h3>
+            <p>${s.type}</p>
         </div>
     `).join('');
 }
 
-// --- SEQUENTIAL SERIAL LOGIC (TRACEABILITY) ---
-async function getNextSerial() {
-    const counterRef = _fbFns.doc(_fbDb, "system", "counters");
+// --- SEQUENTIAL SERIAL GENERATOR ---
+async function generateSerial() {
     const date = new Date();
-    const prefix = `${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, '0')}`;
+    const prefix = `${date.getFullYear()}${String(date.getMonth()+1).padStart(2, '0')}`;
+    const counterRef = fbDb.doc(fb.db, "system", "counters");
     
-    let newSerial = "";
-    await _fbFns.runTransaction(_fbDb, async (transaction) => {
-        const counterDoc = await transaction.get(counterRef);
+    let serial = "";
+    await fbDb.runTransaction(fb.db, async (transaction) => {
+        const snap = await transaction.get(counterRef);
         let count = 1;
-        if (counterDoc.exists() && counterDoc.data()[prefix]) {
-            count = counterDoc.data()[prefix] + 1;
+        if(snap.exists() && snap.data()[prefix]) {
+            count = snap.data()[prefix] + 1;
         }
         transaction.set(counterRef, { [prefix]: count }, { merge: true });
-        newSerial = `${prefix}-${String(count).padStart(4, '0')}`;
+        serial = `${prefix}-${String(count).padStart(4, '0')}`;
     });
-    return newSerial;
+    return serial;
 }
 
-// --- SAVE & TRACEABILITY ---
-async function processSave() {
+// --- SAVE & ACTIONS ---
+async function handleSave() {
     const screen = state.currentScreen;
-    const serial = await getNextSerial();
-    const inputs = document.querySelectorAll('.form-input');
-    const timestamp = new Date().toISOString();
-    
-    // Captura dados e injeta o número de série em todas as linhas
-    const baseData = {
-        serial_number: serial,
-        created_at: timestamp,
+    const serial = await generateSerial();
+    const data = {
+        "Série#": serial,
+        screenId: screen.id,
         user: state.user.email,
-        screen_id: screen.id
+        timestamp: new Date().toISOString()
     };
 
-    inputs.forEach(i => { baseData[i.name] = i.value; });
-
-    // Salva na coleção principal
-    await _fbFns.setDoc(_fbFns.doc(_fbFns.collection(_fbDb, "records")), baseData);
-
-    // LOG DE HISTÓRICO (Ponto 5)
-    await _fbFns.setDoc(_fbFns.doc(_fbFns.collection(_fbDb, "historico_movimentacoes")), {
-        ...baseData,
-        tipo_log: "ENTRADA_ORIGINAL"
+    document.querySelectorAll('.f-input').forEach(i => {
+        data[i.name] = i.value;
     });
 
-    // EMAIL LOGIC (Ponto 1 & 2)
-    handleEmails(screen, baseData);
+    // 1. Salva na Tabela de Ação
+    await fbDb.addDoc(fbDb.collection(fb.db, `records_${screen.id}`), data);
+
+    // 2. Salva no Histórico (Ponto 5 - nunca deletado)
+    await fbDb.addDoc(fbDb.collection(fb.db, "historico_geral"), { ...data, logType: 'ENTRADA' });
+
+    // 3. Envio de EmailJS (Ponto 1 e 2)
+    sendEmailNotification(screen, data);
 
     showToast("Salvo com sucesso! Série: " + serial);
     closeModal('recordModal');
     openScreen(screen.id);
 }
 
-// --- EMAILJS & GROUPS (Ponto 1 & 2) ---
-async function handleEmails(screen, data) {
-    if (!screen.sendEmail) return;
+async function runBatchAction(serial, targetStatus) {
+    if(!confirm("Deseja movimentar todas as linhas desta série?")) return;
 
-    let targetEmails = screen.emailRecipients || "";
-    const groupField = data.grupo_email || data.grupo; // Verifica se existe campo de grupo
+    const screen = state.currentScreen;
+    const q = fbDb.query(fbDb.collection(fb.db, `records_${screen.id}`), fbDb.where("Série#", "==", serial));
+    const snap = await fbDb.getDocs(q);
 
-    if (groupField && state.groups[groupField]) {
-        targetEmails += (targetEmails ? "," : "") + state.groups[groupField];
+    for (let d of snap.docs) {
+        const docData = d.data();
+        // Move para histórico de movimentação
+        await fbDb.addDoc(fbDb.collection(fb.db, "historico_geral"), { ...docData, logType: 'MOVIMENTACAO', status: targetStatus });
+        // Deleta da tabela ativa
+        await fbDb.deleteDoc(fbDb.doc(fb.db, `records_${screen.id}`, d.id));
     }
 
-    if (targetEmails) {
-        const templateParams = {
-            to_email: targetEmails,
-            subject: `Novo Registro: ${screen.name} - Série ${data.serial_number}`,
-            message: JSON.stringify(data, null, 2),
-            serial: data.serial_number,
-            user: data.user
-        };
+    showToast("Série movimentada com sucesso!");
+    openScreen(screen.id);
+}
 
-        emailjs.send("service_neeyil2", "template_38hvw8h", templateParams)
-            .then(() => console.log("Email enviado!"))
-            .catch(err => console.error("Erro email:", err));
+// --- EMAILJS LOGIC ---
+async function sendEmailNotification(screen, data) {
+    const groupId = data.grupo; // Campo 'grupo' no form
+    let emails = "";
+
+    if(groupId && state.groups[groupId]) {
+        emails = state.groups[groupId];
+    }
+
+    if(emails) {
+        emailjs.send("service_neeyil2", "template_38hvw8h", {
+            to_email: emails,
+            serial: data["Série#"],
+            message: `Novo registro realizado por ${data.user}.`
+        }).then(() => console.log("Email enviado")).catch(e => console.error(e));
     }
 }
 
-// --- MULTI-ROW ACTION (Ponto 3) ---
-async function runActionOnSerial(serial, newStatus) {
-    if(!confirm(`Deseja mover TODAS as linhas da série ${serial} para ${newStatus}?`)) return;
-
-    const q = _fbFns.query(_fbFns.collection(_fbDb, "records"), _fbFns.where("serial_number", "==", serial));
-    const snap = await _fbFns.getDocs(q);
-
-    const batchPromises = snap.docs.map(d => {
-        // Atualiza cada linha que possui o mesmo Serial
-        return _fbFns.updateDoc(_fbFns.doc(_fbDb, "records", d.id), { status: newStatus });
-    });
-
-    await Promise.all(batchPromises);
-    
-    // Loga a movimentação em lote no histórico
-    await _fbFns.setDoc(_fbFns.doc(_fbFns.collection(_fbDb, "historico_movimentacoes")), {
-        serial_target: serial,
-        acao: "MOVIMENTACAO_LOTE",
-        novo_status: newStatus,
-        data: new Date().toISOString()
-    });
-
-    showToast(`Série ${serial} atualizada.`);
-    openScreen(state.currentScreen.id);
-}
-
-// --- SALDO E TABELA (Ponto 5) ---
+// --- TABLE & BALANCE RENDER ---
 async function openScreen(id) {
     const screen = state.screens.find(s => s.id === id);
     state.currentScreen = screen;
     showPanel('table');
     document.getElementById('tableTitle').innerText = screen.name;
 
-    const q = _fbFns.query(_fbFns.collection(_fbDb, "records"), _fbFns.where("screen_id", "==", id));
-    const snap = await _fbFns.getDocs(q);
+    const snap = await fbDb.getDocs(fbDb.collection(fb.db, `records_${id}`));
     const records = snap.docs.map(d => ({id: d.id, ...d.data()}));
 
-    // Agregação de Saldo (Soma quantidades de itens iguais)
+    // Cálculo de Saldo Acumulado (Ponto 5)
     const saldos = {};
     records.forEach(r => {
-        const key = r.item || r.codigo || "Geral";
-        const qtd = parseFloat(r.quantidade || 0);
-        saldos[key] = (saldos[key] || 0) + qtd;
+        const item = r.item || r.codigo || "Indefinido";
+        saldos[item] = (saldos[item] || 0) + parseFloat(r.quantidade || 0);
     });
 
     let html = `
-        <button class="btn btn-primary" onclick="openModal('recordModal')">Novo Registro</button>
         <table>
             <thead>
                 <tr>
                     <th>Série#</th>
-                    <th>Item/Mestre</th>
+                    <th>Item</th>
                     <th>Qtd Linha</th>
                     <th>Saldo Total Item</th>
                     <th>Ações</th>
                 </tr>
             </thead>
             <tbody>
-                ${records.map(r => `
+                ${records.map(r => {
+                    const itemKey = r.item || r.codigo || "Indefinido";
+                    return `
                     <tr>
-                        <td><strong>${r.serial_number || '---'}</strong></td>
-                        <td>${r.item || r.codigo || '---'}</td>
-                        <td>${r.quantidade || 0}</td>
-                        <td><b style="color:var(--accent)">${saldos[r.item || r.codigo || "Geral"]}</b></td>
+                        <td><b>${r["Série#"]}</b></td>
+                        <td>${itemKey}</td>
+                        <td>${r.quantidade}</td>
+                        <td style="color:blue; font-weight:bold">${saldos[itemKey]}</td>
                         <td>
-                            <button class="btn btn-sm" onclick="runActionOnSerial('${r.serial_number}', 'FINALIZADO')">Mover Série</button>
+                            <button class="btn" onclick="runBatchAction('${r["Série#"]}', 'MOVIMENTADO')">Mover Tudo</button>
                         </td>
-                    </tr>
-                `).join('')}
+                    </tr>`;
+                }).join('')}
             </tbody>
         </table>
     `;
     document.getElementById('tableContainer').innerHTML = html;
 }
 
-// --- GESTÃO DE GRUPOS ---
+// --- CONDICIONAIS (Ponto 4) ---
+function checkConditions() {
+    const qtd = parseFloat(document.querySelector('[name="quantidade"]').value) || 0;
+    const condField = document.getElementById('campo-condicional');
+    // Exemplo: Se quantidade > 100, mostra campo de observação
+    if(qtd > 100) {
+        condField.classList.remove('hidden');
+    } else {
+        condField.classList.add('hidden');
+    }
+}
+
+function renderFields() {
+    const container = document.getElementById('formFields');
+    container.innerHTML = `
+        <label>Item / Código</label>
+        <input type="text" name="item" class="f-input" style="width:100%; padding:8px; margin-bottom:10px">
+        
+        <label>Quantidade</label>
+        <input type="number" name="quantidade" class="f-input" oninput="checkConditions()" style="width:100%; padding:8px; margin-bottom:10px">
+        
+        <div id="campo-condicional" class="hidden">
+            <label style="color:red">Observação Urgente (Qtd Alta!)</label>
+            <input type="text" name="obs" class="f-input" style="width:100%; padding:8px; margin-bottom:10px">
+        </div>
+
+        <label>Grupo de E-mail</label>
+        <input type="text" name="grupo" class="f-input" placeholder="Ex: 101" style="width:100%; padding:8px; margin-bottom:10px">
+    `;
+}
+
+// --- GROUPS ---
 async function saveEmailGroup() {
     const id = document.getElementById('grpId').value;
-    const emails = document.getElementById('grpEmails').value;
-    if(!id || !emails) return alert("Preencha ID e Emails");
-
-    await _fbFns.setDoc(_fbFns.doc(_fbDb, "emailGroups", id), { emails });
+    const list = document.getElementById('grpEmails').value;
+    await fbDb.setDoc(fbDb.doc(fb.db, "emailGroups", id), { list });
     loadGroups();
 }
 
 async function loadGroups() {
-    const snap = await _fbFns.getDocs(_fbFns.collection(_fbDb, "emailGroups"));
+    const snap = await fbDb.getDocs(fbDb.collection(fb.db, "emailGroups"));
     const groups = {};
     let html = "<ul>";
     snap.forEach(d => {
-        groups[d.id] = d.data().emails;
-        html += `<li><b>Grupo ${d.id}:</b> ${d.data().emails}</li>`;
+        groups[d.id] = d.data().list;
+        html += `<li><b>${d.id}:</b> ${d.data().list}</li>`;
     });
     state.groups = groups;
-    document.getElementById('groupsTable').innerHTML = html + "</ul>";
+    document.getElementById('groupsList').innerHTML = html + "</ul>";
 }
 
-// --- UI UTILS ---
+// --- UI HELPERS ---
 function showPanel(id) {
-    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-    document.getElementById('panel-' + id).classList.add('active');
+    document.querySelectorAll('.panel').forEach(p => p.classList.add('hidden'));
+    document.getElementById('panel-' + id).classList.remove('hidden');
 }
 function openModal(id) { 
-    document.getElementById(id).classList.add('open');
-    if(id === 'recordModal') renderFields();
+    document.getElementById(id).classList.add('open'); 
+    if(id==='recordModal') renderFields();
 }
 function closeModal(id) { document.getElementById(id).classList.remove('open'); }
-function showToast(m) { 
+function showToast(msg) {
     const t = document.getElementById('toast');
-    t.innerText = m; t.style.display = 'block'; t.style.background = 'var(--success)';
-    setTimeout(() => t.style.display = 'none', 3000);
+    t.innerText = msg; t.style.background = 'var(--success)'; t.style.display = 'block';
+    setTimeout(() => t.style.display='none', 3000);
 }
-
-function renderFields() {
-    const fields = [
-        {name: 'item', label: 'Item (Campo Mestre)', type: 'text'},
-        {name: 'quantidade', label: 'Quantidade', type: 'number'},
-        {name: 'grupo_email', label: 'Grupo de E-mail (ex: 101)', type: 'text'}
-    ];
-    document.getElementById('formFields').innerHTML = fields.map(f => `
-        <label>${f.label}</label>
-        <input type="${f.type}" name="${f.name}" class="form-input" style="width:100%;padding:8px;margin-bottom:10px">
-    `).join('');
-}
-
-function doLogout() { _fbAuth.signOut(_fbAuth.getAuth()); }
 </script>
 </body>
 </html>
