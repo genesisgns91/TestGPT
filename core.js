@@ -60,3 +60,13 @@ onAuthStateChanged(auth, user => {
     window.location.href = "app.html";
   }
 });
+
+function switchAuthTab(tab) {
+  document.querySelectorAll(".auth-form").forEach(el => el.classList.remove("active"));
+  document.getElementById("auth" + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.add("active");
+
+  document.querySelectorAll(".auth-tab").forEach(el => el.classList.remove("active"));
+  event.target.classList.add("active");
+}
+
+window.switchAuthTab = switchAuthTab;
