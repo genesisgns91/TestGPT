@@ -1,0 +1,49 @@
+<!-- ============================================================
+     TELA DE AUTENTICAÇÃO
+     ============================================================ -->
+<div id="authScreen">
+  <div class="auth-card">
+    <div class="auth-logo">Flow<span>GNS</span></div>
+    <div class="auth-subtitle">Sistema de gestão personalizável</div>
+
+    <div class="auth-tabs">
+      <button class="auth-tab active" onclick="switchAuthTab('login')">Entrar</button>
+      <button class="auth-tab" onclick="switchAuthTab('cadastro')">Criar conta</button>
+    </div>
+
+    <!-- LOGIN -->
+    <div class="auth-form active" id="authLogin">
+      <label>E-mail</label>
+      <input type="email" id="loginEmail" placeholder="seu@email.com" onkeydown="if(event.key==='Enter')doLogin()"/>
+      <label>Senha</label>
+      <input type="password" id="loginPwd" placeholder="Sua senha" onkeydown="if(event.key==='Enter')doLogin()"/>
+      <div class="auth-error" id="loginErr"></div>
+      <button class="btn btn-primary" style="width:100%;margin-top:16px" onclick="doLogin()">Entrar</button>
+      <span class="auth-link" onclick="switchAuthTab('recover')">Esqueceu a senha?</span>
+    </div>
+
+    <!-- CADASTRO -->
+    <div class="auth-form" id="authCadastro">
+      <label>Nome completo</label>
+      <input type="text" id="cadNome" placeholder="Seu nome"/>
+      <label>E-mail</label>
+      <input type="email" id="cadEmail" placeholder="seu@email.com"/>
+      <label>Senha</label>
+      <input type="password" id="cadPwd" placeholder="Mínimo 6 caracteres"/>
+      <div class="auth-error" id="cadErr"></div>
+      <button class="btn btn-primary" style="width:100%;margin-top:16px" onclick="doCadastro()">Criar conta</button>
+      <div class="hint" style="text-align:center;margin-top:10px">
+        Novos usuários ficam como <strong>Operador</strong> até o Master alterar o nível.
+      </div>
+    </div>
+
+    <!-- RECUPERAR SENHA -->
+    <div class="auth-form" id="authRecover">
+      <label>E-mail da conta</label>
+      <input type="email" id="recoverEmail" placeholder="seu@email.com" onkeydown="if(event.key==='Enter')doRecover()"/>
+      <div class="auth-error" id="recoverErr" style="color:var(--success)"></div>
+      <button class="btn btn-primary" style="width:100%;margin-top:16px" onclick="doRecover()">Enviar link de recuperação</button>
+      <span class="auth-link" onclick="switchAuthTab('login')">← Voltar ao login</span>
+    </div>
+  </div>
+</div>
