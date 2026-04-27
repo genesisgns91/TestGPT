@@ -3,217 +3,378 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>TESTE-GPT</title>
-<link rel="stylesheet" href="estilo.css">
+<title>FlowGNS - Sistema de Gestão</title>
+
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import { getAuth, onAuthStateChanged, signOut, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+  import { getFirestore, doc, setDoc, getDoc, onSnapshot, collection, getDocs, updateDoc, deleteDoc, query, where, orderBy, limit, runTransaction } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyADZphyLztYYeMV130uyq_3CYthr6QzBo0",
+    authDomain: "coringa-c0bce.firebaseapp.com",
+    projectId: "coringa-c0bce",
+    storageBucket: "coringa-c0bce.firebasestorage.app",
+    messagingSenderId: "346363639454",
+    appId: "1:346363639454:web:38b288fe0d7abf66daad8f"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  window._fbAuth = getAuth(app);
+  window._fbDb  = getFirestore(app);
+  window._fbFns = { doc, setDoc, getDoc, onSnapshot, collection, getDocs, updateDoc, deleteDoc, query, where, orderBy, limit, runTransaction };
+
+  // Inicializa EmailJS
+  emailjs.init("EBoUWW7xHzfnthAsO");
+
+  window.dispatchEvent(new Event('firebaseReady'));
+</script>
+
+<style>
+/* ── ESTILOS GERAIS ─────────────────────────────────────── */
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f8f7f4;--bg2:#fff;--bg3:#f0efe9;
+  --text:#1a1a18;--text2:#555550;--text3:#888880;
+  --border:rgba(0,0,0,0.1);--accent:#2d5be3;--accent-light:#e8eefb;
+  --success:#1d9e75;--danger:#a32d2d;--purple:#534ab7;--r2:14px;
+  --font:'DM Sans',system-ui,sans-serif;
+}
+body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:14px;}
+#authScreen{display:flex;align-items:center;justify-content:center;min-height:100vh;}
+.auth-card{background:var(--bg2);border-radius:var(--r2);padding:32px;width:380px;box-shadow:0 4px 24px rgba(0,0,0,0.07);border:0.5px solid var(--border)}
+.logo span{color:var(--accent)}
+#mainApp{display:none}
+.topbar{display:flex;align-items:center;padding:10px 16px;background:var(--bg2);border-bottom:0.5px solid var(--border);position:sticky;top:0;z-index:10;}
+.content{padding:20px;max-width:1200px;margin:0 auto}
+.panel{display:none}.panel.active{display:block}
+.btn{padding:8px 16px;border-radius:8px;border:0.5px solid var(--border);cursor:pointer;font-family:inherit;transition:0.2s}
+.btn-primary{background:var(--accent);color:#fff;border:none}
+.card{background:var(--bg2);border-radius:var(--r2);padding:16px;margin-bottom:12px;border:0.5px solid var(--border)}
+table{width:100%;border-collapse:collapse;margin-top:10px}
+th{text-align:left;padding:12px;font-size:11px;color:var(--text3);text-transform:uppercase;border-bottom:1px solid var(--border)}
+td{padding:12px;border-bottom:0.5px solid var(--border)}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);display:none;align-items:center;justify-content:center;z-index:100;}
+.modal-overlay.open{display:flex}
+.modal{background:#fff;padding:24px;border-radius:12px;width:450px;max-width:90%}
+.toast{position:fixed;bottom:20px;right:20px;padding:12px 24px;border-radius:8px;color:#fff;display:none;z-index:1000}
+</style>
 </head>
 <body>
-<div class="app" id="app">
+
+<div id="authScreen">
+  <div class="auth-card">
+    <h2 class="logo">Flow<span>GNS</span></h2>
+    <p style="margin-bottom:20px;color:var(--text3)">Login do Sistema</p>
+    <input type="email" id="loginEmail" placeholder="E-mail" style="width:100%;padding:10px;margin-bottom:10px">
+    <input type="password" id="loginPwd" placeholder="Senha" style="width:100%;padding:10px;margin-bottom:15px">
+    <button class="btn btn-primary" style="width:100%" onclick="doLogin()">Entrar</button>
+  </div>
+</div>
+
+<div id="mainApp">
   <div class="topbar">
-    <div class="logo">TEST<span>GPT</span></div>
-    <div class="nav-tabs" id="navTabs">
-      <button class="nav-tab active" data-panel="home" onclick="showPanel('home',this)">Início</button>
-      <button class="nav-tab hidden" data-panel="builder" id="tabBuilder" onclick="showPanel('builder',this)">Construtor</button>
-      <button class="nav-tab hidden" data-panel="users" id="tabUsers" onclick="showPanel('users',this)">Usuários</button>
+    <h3 class="logo">Flow<span>GNS</span></h3>
+    <div style="flex:1;text-align:center">
+        <button class="btn" onclick="showPanel('home')">Início</button>
+        <button class="btn" onclick="showPanel('builder')" id="btnBuilder" style="display:none">Construtor</button>
+        <button class="btn" onclick="showPanel('groups')">Grupos E-mail</button>
     </div>
-    <span class="role-badge" id="roleBadge">Operador</span>
-    <button class="master-btn" id="masterBtn" onclick="toggleMaster()">MASTER</button>
+    <button class="btn" onclick="doLogout()">Sair</button>
   </div>
 
   <div class="content">
-    <!-- HOME: mostra formulários e tabelas de formulário como links -->
-    <div class="panel active" id="panel-home">
-      <div class="grid3" style="margin-bottom:20px">
-        <div class="stat-card"><div class="stat-num" id="statScreens">0</div><div class="stat-label">Telas criadas</div></div>
-        <div class="stat-card"><div class="stat-num" id="statForms">0</div><div class="stat-label">Formulários</div></div>
-        <div class="stat-card"><div class="stat-num" id="statRecords">0</div><div class="stat-label">Registros</div></div>
-      </div>
-      <div id="homeContent"></div>
+    <div id="panel-home" class="panel active">
+        <div id="homeCards" style="display:grid;grid-template-columns:repeat(auto-fit, minmax(250px, 1fr));gap:15px"></div>
     </div>
 
-    <!-- TABELA VIEW (substituída dinamicamente) -->
-    <div class="panel" id="panel-tableview">
-      <div id="tableViewContent"></div>
+    <div id="panel-builder" class="panel">
+        <h3>Configuração de Telas</h3>
+        <button class="btn btn-primary" onclick="openNewScreenModal()">+ Nova Tela</button>
+        <div id="screenList" style="margin-top:20px"></div>
     </div>
 
-    <!-- BUILDER (master only) -->
-    <div class="panel" id="panel-builder">
-      <div class="grid2">
-        <div>
-          <div class="section-header">
-            <div class="section-title">Telas criadas</div>
-            <button class="btn btn-primary btn-sm" onclick="openNewScreenModal()">+ Nova tela</button>
-          </div>
-          <div class="screen-list" id="builderScreenList"></div>
+    <div id="panel-groups" class="panel">
+        <h3>Grupos de Notificação (E-mail)</h3>
+        <p>Cadastre os e-mails para os grupos 101, 102, 103, etc.</p>
+        <div class="card">
+            <input type="text" id="grpId" placeholder="ID do Grupo (ex: 101)" style="width:100px;padding:8px">
+            <input type="text" id="grpEmails" placeholder="Emails (separados por vírgula)" style="width:300px;padding:8px">
+            <button class="btn btn-primary" onclick="saveEmailGroup()">Salvar Grupo</button>
         </div>
-        <div id="builderDetail">
-          <div class="empty-state" style="padding-top:40px">Selecione uma tela para editar seus campos e configurações.</div>
+        <div id="groupsTable"></div>
+    </div>
+
+    <div id="panel-table" class="panel">
+        <button class="btn" onclick="showPanel('home')">← Voltar</button>
+        <h2 id="tableTitle" style="margin:15px 0"></h2>
+        <div id="tableContainer" class="card"></div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="recordModal">
+    <div class="modal">
+        <h3 id="modalTitle">Novo Registro</h3>
+        <div id="formFields"></div>
+        <div class="modal-actions" style="margin-top:20px;text-align:right">
+            <button class="btn" onclick="closeModal('recordModal')">Cancelar</button>
+            <button class="btn btn-primary" onclick="processSave()">Salvar e Enviar</button>
         </div>
-      </div>
     </div>
-
-    <!-- USERS (master only) -->
-    <div class="panel" id="panel-users">
-      <div class="section-header">
-        <div class="section-title">Gestão de usuários</div>
-        <button class="btn btn-primary btn-sm" onclick="openAddUserModal()">+ Adicionar</button>
-      </div>
-      <div class="card" style="padding:0">
-        <div id="userList"></div>
-      </div>
-    </div>
-  </div>
 </div>
 
-<!-- Modal master password -->
-<div class="modal-overlay" id="masterModal">
-  <div class="modal">
-    <h3>Acesso Master</h3>
-    <p>Digite a senha de ADM Master para ativar o modo de edição de estrutura.</p>
-    <label>Senha</label>
-    <input type="password" id="masterPwd" placeholder="Digite a senha..." onkeydown="if(event.key==='Enter')checkMaster()"/>
-    <div style="font-size:12px;color:var(--danger);margin-top:6px;display:none" id="pwdErr">Senha incorreta.</div>
-    <div class="modal-actions">
-      <button class="btn" onclick="closeMasterModal()">Cancelar</button>
-      <button class="btn btn-primary" onclick="checkMaster()">Entrar</button>
-    </div>
-  </div>
-</div>
+<div id="toast" class="toast"></div>
 
-<!-- Modal nova tela -->
-<div class="modal-overlay" id="newScreenModal">
-  <div class="modal">
-    <h3>Nova tela</h3>
-    <p>Escolha o tipo e dê um nome para a tela.</p>
-    <label>Tipo de tela</label>
-    <select id="newScreenType" onchange="updateScreenTypeHint()">
-      <option value="cadastro">Cadastro — lista base de dados</option>
-      <option value="formulario">Formulário — entrada de dados</option>
-    </select>
-    <div class="hint" id="screenTypeHint" style="margin-bottom:4px">Tela de cadastro: serve de referência para outros formulários (ex: lista de motoristas).</div>
-    <label>Nome da tela</label>
-    <input type="text" id="newScreenName" placeholder="Ex: Cadastro de Motoristas"/>
-    <div class="modal-actions">
-      <button class="btn" onclick="closeModal('newScreenModal')">Cancelar</button>
-      <button class="btn btn-primary" onclick="createScreen()">Criar</button>
-    </div>
-  </div>
-</div>
+<script>
+let state = { user: null, screens: [], currentScreen: null, groups: {} };
 
-<!-- Modal novo campo -->
-<div class="modal-overlay" id="newFieldModal">
-  <div class="modal">
-    <h3>Novo campo</h3>
-    <p>Configure o campo para esta tela.</p>
-    <label>Nome do campo</label>
-    <input type="text" id="newFieldName" placeholder="Ex: Nome do Motorista"/>
-    <label>Tipo de dado</label>
-    <select id="newFieldType" onchange="onFieldTypeChange()">
-      <option value="texto">Texto</option>
-      <option value="numero">Número</option>
-      <option value="data">Data</option>
-      <option value="hora">Hora</option>
-      <option value="selecionavel">Selecionável (vínculo com cadastro)</option>
-    </select>
-    <div id="fieldLinkConfig" style="display:none">
-      <label>Vincular com tela de cadastro</label>
-      <select id="fieldLinkTarget"></select>
-      <div class="link-config" style="margin-top:8px">
-        <strong>Preenchimento automático:</strong> ao selecionar um registro, outros campos podem ser preenchidos automaticamente com base neste vínculo.
-      </div>
-    </div>
-    <div style="margin-top:12px;display:flex;align-items:center;gap:8px">
-      <input type="checkbox" id="fieldRequired" style="width:auto"/>
-      <label style="margin:0;cursor:pointer" for="fieldRequired">Campo obrigatório</label>
-    </div>
-    <div style="margin-top:8px;display:flex;align-items:center;gap:8px" id="masterFieldRow">
-      <input type="checkbox" id="fieldIsMaster" style="width:auto"/>
-      <label style="margin:0;cursor:pointer" for="fieldIsMaster">Campo mestre <span style="color:var(--purple);font-size:11px">(identificador único, sem repetição)</span></label>
-    </div>
-    <div class="modal-actions">
-      <button class="btn" onclick="closeModal('newFieldModal')">Cancelar</button>
-      <button class="btn btn-primary" onclick="addField()">Adicionar campo</button>
-    </div>
-  </div>
-</div>
+// --- CORE LOGIC ---
+async function doLogin(){
+    const e = document.getElementById('loginEmail').value;
+    const p = document.getElementById('loginPwd').value;
+    try {
+        await _fbAuth.signInWithEmailAndPassword(_fbAuth.getAuth(), e, p);
+    } catch(err) { alert("Erro ao entrar: " + err.message); }
+}
 
-<!-- Modal novo botão de ação -->
-<div class="modal-overlay" id="newActionModal">
-  <div class="modal" style="width:480px">
-    <h3>Novo botão de ação</h3>
-    <p>Configure um botão de comando para esta tabela. Ele permitirá selecionar uma linha e transferi-la para outra tabela com dados adicionais.</p>
-    <label>Nome do botão</label>
-    <input type="text" id="actionBtnName" placeholder="Ex: Registrar Saída"/>
-    <label>Campo mestre (coluna de identificação da linha)</label>
-    <select id="actionMasterField">
-      <option value="">Selecione o campo mestre...</option>
-    </select>
-    <div class="hint" style="margin-bottom:8px">O campo mestre identifica a linha da tabela que será selecionada. Não haverá repetição desse campo no formulário de ação.</div>
-    <label>Tabela de destino (onde a linha transferida será salva)</label>
-    <select id="actionTargetTable">
-      <option value="__new__">Criar nova tabela automaticamente</option>
-    </select>
-    <div class="divider"></div>
-    <div class="section-title">Campos adicionais do formulário de ação</div>
-    <p style="font-size:12px;color:var(--text3);margin-bottom:8px">Esses campos serão pedidos ao executar a ação. Os dados da linha selecionada serão copiados automaticamente.</p>
-    <div id="actionFieldsList" style="display:flex;flex-direction:column;gap:6px;margin-bottom:8px"></div>
-    <button class="btn btn-sm" onclick="addActionField()" style="width:100%">+ Adicionar campo ao formulário de ação</button>
-    <div class="modal-actions">
-      <button class="btn" onclick="closeModal('newActionModal')">Cancelar</button>
-      <button class="btn btn-primary" onclick="saveAction()">Criar botão de ação</button>
-    </div>
-  </div>
-</div>
+window.addEventListener('firebaseReady', () => {
+    _fbAuth.onAuthStateChanged(_fbAuth.getAuth(), user => {
+        if(user){
+            state.user = user;
+            document.getElementById('authScreen').style.display = 'none';
+            document.getElementById('mainApp').style.display = 'block';
+            loadData();
+        } else {
+            document.getElementById('authScreen').style.display = 'flex';
+            document.getElementById('mainApp').style.display = 'none';
+        }
+    });
+});
 
-<!-- Modal formulário operação normal -->
-<div class="modal-overlay" id="formModal">
-  <div class="modal">
-    <h3 id="formModalTitle">Preencher formulário</h3>
-    <p id="formModalSubtitle" style="font-size:12px;color:var(--text3)"></p>
-    <div id="formFields"></div>
-    <div class="modal-actions">
-      <button class="btn" onclick="closeModal('formModal')">Cancelar</button>
-      <button class="btn btn-primary" onclick="submitForm()">Salvar registro</button>
-    </div>
-  </div>
-</div>
+async function loadData(){
+    const snap = await _fbFns.getDocs(_fbFns.collection(_fbDb, "screens"));
+    state.screens = snap.docs.map(d => ({id: d.id, ...d.data()}));
+    renderHome();
+    loadGroups();
+}
 
-<!-- Modal formulário de ação (transferência de linha) -->
-<div class="modal-overlay" id="actionFormModal">
-  <div class="modal">
-    <h3 id="actionFormTitle">Executar ação</h3>
-    <p id="actionFormSubtitle" style="font-size:12px;color:var(--text3)"></p>
-    <div id="actionFormFields"></div>
-    <div class="modal-actions">
-      <button class="btn" onclick="closeModal('actionFormModal')">Cancelar</button>
-      <button class="btn btn-primary" onclick="submitActionForm()">Confirmar e transferir</button>
-    </div>
-  </div>
-</div>
+function renderHome(){
+    const container = document.getElementById('homeCards');
+    container.innerHTML = state.screens.map(s => `
+        <div class="card" onclick="openScreen('${s.id}')" style="cursor:pointer">
+            <h4>${s.name}</h4>
+            <small>${s.type}</small>
+        </div>
+    `).join('');
+}
 
-<!-- Modal add user -->
-<div class="modal-overlay" id="addUserModal">
-  <div class="modal">
-    <h3>Adicionar usuário</h3>
-    <label>Nome</label>
-    <input type="text" id="newUserName" placeholder="Nome completo"/>
-    <label>E-mail</label>
-    <input type="text" id="newUserEmail" placeholder="email@exemplo.com"/>
-    <label>Nível de acesso</label>
-    <select id="newUserRole">
-      <option value="operador">Operador</option>
-      <option value="visualizador">Visualizador</option>
-      <option value="adm_basico">ADM Básico</option>
-      <option value="adm_master">ADM Master</option>
-    </select>
-    <div class="modal-actions">
-      <button class="btn" onclick="closeModal('addUserModal')">Cancelar</button>
-      <button class="btn btn-primary" onclick="addUser()">Adicionar</button>
-    </div>
-  </div>
-</div>
+// --- SEQUENTIAL SERIAL LOGIC (TRACEABILITY) ---
+async function getNextSerial() {
+    const counterRef = _fbFns.doc(_fbDb, "system", "counters");
+    const date = new Date();
+    const prefix = `${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, '0')}`;
+    
+    let newSerial = "";
+    await _fbFns.runTransaction(_fbDb, async (transaction) => {
+        const counterDoc = await transaction.get(counterRef);
+        let count = 1;
+        if (counterDoc.exists() && counterDoc.data()[prefix]) {
+            count = counterDoc.data()[prefix] + 1;
+        }
+        transaction.set(counterRef, { [prefix]: count }, { merge: true });
+        newSerial = `${prefix}-${String(count).padStart(4, '0')}`;
+    });
+    return newSerial;
+}
 
-<!-- Toast -->
-<div class="toast" id="toast"></div>
-<script src="core.js"></script>
+// --- SAVE & TRACEABILITY ---
+async function processSave() {
+    const screen = state.currentScreen;
+    const serial = await getNextSerial();
+    const inputs = document.querySelectorAll('.form-input');
+    const timestamp = new Date().toISOString();
+    
+    // Captura dados e injeta o número de série em todas as linhas
+    const baseData = {
+        serial_number: serial,
+        created_at: timestamp,
+        user: state.user.email,
+        screen_id: screen.id
+    };
+
+    inputs.forEach(i => { baseData[i.name] = i.value; });
+
+    // Salva na coleção principal
+    await _fbFns.setDoc(_fbFns.doc(_fbFns.collection(_fbDb, "records")), baseData);
+
+    // LOG DE HISTÓRICO (Ponto 5)
+    await _fbFns.setDoc(_fbFns.doc(_fbFns.collection(_fbDb, "historico_movimentacoes")), {
+        ...baseData,
+        tipo_log: "ENTRADA_ORIGINAL"
+    });
+
+    // EMAIL LOGIC (Ponto 1 & 2)
+    handleEmails(screen, baseData);
+
+    showToast("Salvo com sucesso! Série: " + serial);
+    closeModal('recordModal');
+    openScreen(screen.id);
+}
+
+// --- EMAILJS & GROUPS (Ponto 1 & 2) ---
+async function handleEmails(screen, data) {
+    if (!screen.sendEmail) return;
+
+    let targetEmails = screen.emailRecipients || "";
+    const groupField = data.grupo_email || data.grupo; // Verifica se existe campo de grupo
+
+    if (groupField && state.groups[groupField]) {
+        targetEmails += (targetEmails ? "," : "") + state.groups[groupField];
+    }
+
+    if (targetEmails) {
+        const templateParams = {
+            to_email: targetEmails,
+            subject: `Novo Registro: ${screen.name} - Série ${data.serial_number}`,
+            message: JSON.stringify(data, null, 2),
+            serial: data.serial_number,
+            user: data.user
+        };
+
+        emailjs.send("service_neeyil2", "template_38hvw8h", templateParams)
+            .then(() => console.log("Email enviado!"))
+            .catch(err => console.error("Erro email:", err));
+    }
+}
+
+// --- MULTI-ROW ACTION (Ponto 3) ---
+async function runActionOnSerial(serial, newStatus) {
+    if(!confirm(`Deseja mover TODAS as linhas da série ${serial} para ${newStatus}?`)) return;
+
+    const q = _fbFns.query(_fbFns.collection(_fbDb, "records"), _fbFns.where("serial_number", "==", serial));
+    const snap = await _fbFns.getDocs(q);
+
+    const batchPromises = snap.docs.map(d => {
+        // Atualiza cada linha que possui o mesmo Serial
+        return _fbFns.updateDoc(_fbFns.doc(_fbDb, "records", d.id), { status: newStatus });
+    });
+
+    await Promise.all(batchPromises);
+    
+    // Loga a movimentação em lote no histórico
+    await _fbFns.setDoc(_fbFns.doc(_fbFns.collection(_fbDb, "historico_movimentacoes")), {
+        serial_target: serial,
+        acao: "MOVIMENTACAO_LOTE",
+        novo_status: newStatus,
+        data: new Date().toISOString()
+    });
+
+    showToast(`Série ${serial} atualizada.`);
+    openScreen(state.currentScreen.id);
+}
+
+// --- SALDO E TABELA (Ponto 5) ---
+async function openScreen(id) {
+    const screen = state.screens.find(s => s.id === id);
+    state.currentScreen = screen;
+    showPanel('table');
+    document.getElementById('tableTitle').innerText = screen.name;
+
+    const q = _fbFns.query(_fbFns.collection(_fbDb, "records"), _fbFns.where("screen_id", "==", id));
+    const snap = await _fbFns.getDocs(q);
+    const records = snap.docs.map(d => ({id: d.id, ...d.data()}));
+
+    // Agregação de Saldo (Soma quantidades de itens iguais)
+    const saldos = {};
+    records.forEach(r => {
+        const key = r.item || r.codigo || "Geral";
+        const qtd = parseFloat(r.quantidade || 0);
+        saldos[key] = (saldos[key] || 0) + qtd;
+    });
+
+    let html = `
+        <button class="btn btn-primary" onclick="openModal('recordModal')">Novo Registro</button>
+        <table>
+            <thead>
+                <tr>
+                    <th>Série#</th>
+                    <th>Item/Mestre</th>
+                    <th>Qtd Linha</th>
+                    <th>Saldo Total Item</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${records.map(r => `
+                    <tr>
+                        <td><strong>${r.serial_number || '---'}</strong></td>
+                        <td>${r.item || r.codigo || '---'}</td>
+                        <td>${r.quantidade || 0}</td>
+                        <td><b style="color:var(--accent)">${saldos[r.item || r.codigo || "Geral"]}</b></td>
+                        <td>
+                            <button class="btn btn-sm" onclick="runActionOnSerial('${r.serial_number}', 'FINALIZADO')">Mover Série</button>
+                        </td>
+                    </tr>
+                `).join('')}
+            </tbody>
+        </table>
+    `;
+    document.getElementById('tableContainer').innerHTML = html;
+}
+
+// --- GESTÃO DE GRUPOS ---
+async function saveEmailGroup() {
+    const id = document.getElementById('grpId').value;
+    const emails = document.getElementById('grpEmails').value;
+    if(!id || !emails) return alert("Preencha ID e Emails");
+
+    await _fbFns.setDoc(_fbFns.doc(_fbDb, "emailGroups", id), { emails });
+    loadGroups();
+}
+
+async function loadGroups() {
+    const snap = await _fbFns.getDocs(_fbFns.collection(_fbDb, "emailGroups"));
+    const groups = {};
+    let html = "<ul>";
+    snap.forEach(d => {
+        groups[d.id] = d.data().emails;
+        html += `<li><b>Grupo ${d.id}:</b> ${d.data().emails}</li>`;
+    });
+    state.groups = groups;
+    document.getElementById('groupsTable').innerHTML = html + "</ul>";
+}
+
+// --- UI UTILS ---
+function showPanel(id) {
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    document.getElementById('panel-' + id).classList.add('active');
+}
+function openModal(id) { 
+    document.getElementById(id).classList.add('open');
+    if(id === 'recordModal') renderFields();
+}
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+function showToast(m) { 
+    const t = document.getElementById('toast');
+    t.innerText = m; t.style.display = 'block'; t.style.background = 'var(--success)';
+    setTimeout(() => t.style.display = 'none', 3000);
+}
+
+function renderFields() {
+    const fields = [
+        {name: 'item', label: 'Item (Campo Mestre)', type: 'text'},
+        {name: 'quantidade', label: 'Quantidade', type: 'number'},
+        {name: 'grupo_email', label: 'Grupo de E-mail (ex: 101)', type: 'text'}
+    ];
+    document.getElementById('formFields').innerHTML = fields.map(f => `
+        <label>${f.label}</label>
+        <input type="${f.type}" name="${f.name}" class="form-input" style="width:100%;padding:8px;margin-bottom:10px">
+    `).join('');
+}
+
+function doLogout() { _fbAuth.signOut(_fbAuth.getAuth()); }
+</script>
 </body>
 </html>
