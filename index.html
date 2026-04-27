@@ -3,17 +3,29 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>FlowGNS - Sistema de Gestão</title>
+<title>FlowGNS</title>
 
-<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-  import { 
-    getAuth, onAuthStateChanged, signOut, signInWithEmailAndPassword 
+  import {
+    getAuth,
+    createUserWithEmailAndPassword,
+    signInWithEmailAndPassword,
+    sendPasswordResetEmail,
+    onAuthStateChanged,
+    signOut,
+    updateProfile
   } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-  import { 
-    getFirestore, doc, setDoc, getDoc, onSnapshot, collection, getDocs, 
-    updateDoc, deleteDoc, query, where, orderBy, runTransaction, addDoc 
+  import {
+    getFirestore,
+    doc,
+    setDoc,
+    getDoc,
+    onSnapshot,
+    collection,
+    getDocs,
+    updateDoc,
+    deleteDoc
   } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
   const firebaseConfig = {
@@ -26,345 +38,2554 @@
   };
 
   const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-  const db = getFirestore(app);
+  window._fbAuth = getAuth(app);
+  window._fbDb  = getFirestore(app);
+  window._fbFns = {
+    createUserWithEmailAndPassword,
+    signInWithEmailAndPassword,
+    sendPasswordResetEmail,
+    onAuthStateChanged,
+    signOut,
+    updateProfile,
+    doc, setDoc, getDoc, onSnapshot, collection, getDocs, updateDoc, deleteDoc
+  };
 
-  // Expondo para o escopo global de forma organizada
-  window.fb = { auth, db };
-  window.fbAuth = { onAuthStateChanged, signOut, signInWithEmailAndPassword };
-  window.fbDb = { doc, setDoc, getDoc, onSnapshot, collection, getDocs, updateDoc, deleteDoc, query, where, orderBy, runTransaction, addDoc };
-
-  // Inicializa EmailJS
-  emailjs.init("EBoUWW7xHzfnthAsO");
-
+  // Notifica o app quando o Firebase está pronto
   window.dispatchEvent(new Event('firebaseReady'));
 </script>
 
-<style>
-/* ── ESTILOS ───────────────────────────────────────────── */
-:root {
-  --bg: #f4f4f2; --white: #ffffff; --accent: #2d5be3; --text: #1a1a18;
-  --border: rgba(0,0,0,0.1); --success: #1d9e75; --danger: #d32f2f;
-}
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); }
-.topbar { background: var(--white); padding: 12px 20px; display: flex; align-items: center; border-bottom: 1px solid var(--border); sticky: top; }
-.btn { padding: 8px 16px; border-radius: 6px; border: 1px solid var(--border); cursor: pointer; transition: 0.2s; }
-.btn-primary { background: var(--accent); color: white; border: none; }
-.content { padding: 20px; max-width: 1200px; margin: 0 auto; }
-.card { background: var(--white); padding: 15px; border-radius: 8px; box-shadow: 0 2px 8px var(--border); margin-bottom: 20px; }
-table { width: 100%; border-collapse: collapse; margin-top: 15px; background: white; }
-th, td { padding: 12px; text-align: left; border-bottom: 1px solid var(--border); }
-.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: none; align-items: center; justify-content: center; z-index: 100; }
-.modal-overlay.open { display: flex; }
-.modal { background: white; padding: 25px; border-radius: 12px; width: 500px; max-width: 95%; }
-.hidden { display: none; }
-.toast { position: fixed; bottom: 20px; right: 20px; padding: 15px 25px; border-radius: 8px; color: white; display: none; z-index: 1000; }
-</style>
 </head>
 <body>
 
-<div id="authScreen" style="display: flex; height: 100vh; align-items: center; justify-content: center;">
-  <div class="card" style="width: 350px;">
-    <h2>FlowGNS Login</h2>
-    <input type="email" id="loginEmail" placeholder="E-mail" style="width:100%; padding:10px; margin: 10px 0;">
-    <input type="password" id="loginPwd" placeholder="Senha" style="width:100%; padding:10px; margin-bottom: 15px;">
-    <button class="btn btn-primary" style="width:100%" onclick="doLogin()">Entrar</button>
+<!-- ============================================================
+     TELA DE AUTENTICAÇÃO
+     ============================================================ -->
+<div id="authScreen">
+  <div class="auth-card">
+    <div class="auth-logo">Flow<span>GNS</span></div>
+    <div class="auth-subtitle">Sistema de gestão personalizável</div>
+
+    <div class="auth-tabs">
+      <button class="auth-tab active" onclick="switchAuthTab('login')">Entrar</button>
+      <button class="auth-tab" onclick="switchAuthTab('cadastro')">Criar conta</button>
+    </div>
+
+    <!-- LOGIN -->
+    <div class="auth-form active" id="authLogin">
+      <label>E-mail</label>
+      <input type="email" id="loginEmail" placeholder="seu@email.com" onkeydown="if(event.key==='Enter')doLogin()"/>
+      <label>Senha</label>
+      <input type="password" id="loginPwd" placeholder="Sua senha" onkeydown="if(event.key==='Enter')doLogin()"/>
+      <div class="auth-error" id="loginErr"></div>
+      <button class="btn btn-primary" style="width:100%;margin-top:16px" onclick="doLogin()">Entrar</button>
+      <span class="auth-link" onclick="switchAuthTab('recover')">Esqueceu a senha?</span>
+    </div>
+
+    <!-- CADASTRO -->
+    <div class="auth-form" id="authCadastro">
+      <label>Nome completo</label>
+      <input type="text" id="cadNome" placeholder="Seu nome"/>
+      <label>E-mail</label>
+      <input type="email" id="cadEmail" placeholder="seu@email.com"/>
+      <label>Senha</label>
+      <input type="password" id="cadPwd" placeholder="Mínimo 6 caracteres"/>
+      <div class="auth-error" id="cadErr"></div>
+      <button class="btn btn-primary" style="width:100%;margin-top:16px" onclick="doCadastro()">Criar conta</button>
+      <div class="hint" style="text-align:center;margin-top:10px">
+        Novos usuários ficam como <strong>Operador</strong> até o Master alterar o nível.
+      </div>
+    </div>
+
+    <!-- RECUPERAR SENHA -->
+    <div class="auth-form" id="authRecover">
+      <label>E-mail da conta</label>
+      <input type="email" id="recoverEmail" placeholder="seu@email.com" onkeydown="if(event.key==='Enter')doRecover()"/>
+      <div class="auth-error" id="recoverErr" style="color:var(--success)"></div>
+      <button class="btn btn-primary" style="width:100%;margin-top:16px" onclick="doRecover()">Enviar link de recuperação</button>
+      <span class="auth-link" onclick="switchAuthTab('login')">← Voltar ao login</span>
+    </div>
   </div>
 </div>
 
-<div id="mainApp" style="display:none">
+<!-- ============================================================
+     APP PRINCIPAL
+     ============================================================ -->
+<div id="mainApp">
+<div class="app">
   <div class="topbar">
-    <h3 style="margin-right: 20px;">FlowGNS</h3>
-    <button class="btn" onclick="showPanel('home')">Dashboard</button>
-    <button class="btn" onclick="showPanel('groups')">Grupos E-mail</button>
-    <div style="flex:1"></div>
-    <button class="btn" onclick="doLogout()">Sair</button>
+    <div class="logo">Flow<span>GNS</span></div>
+    <div class="nav-tabs" id="navTabs">
+      <button class="nav-tab active" data-panel="home" onclick="showPanel('home',this)">Início</button>
+      <button class="nav-tab hidden" data-panel="builder" id="tabBuilder" onclick="showPanel('builder',this)">Construtor</button>
+      <button class="nav-tab hidden" data-panel="users" id="tabUsers" onclick="showPanel('users',this)">Usuários</button>
+    </div>
+    <div class="topbar-right">
+      <span class="role-badge" id="roleBadge">Operador</span>
+      <button class="master-btn" id="masterBtn" onclick="toggleMaster()">MASTER</button>
+      <button class="btn logout-btn" onclick="openEmailRecipientsModal()" title="Destinatários de e-mail">📧</button>
+      <button class="logout-btn" onclick="doLogout()" title="Sair">↪ Sair</button>
+    </div>
   </div>
 
   <div class="content">
-    <div id="panel-home" class="panel active">
-        <div id="homeCards" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;"></div>
+
+    <!-- HOME -->
+    <div class="panel active" id="panel-home">
+      <div class="grid3" style="margin-bottom:20px">
+        <div class="stat-card"><div class="stat-num" id="statScreens">0</div><div class="stat-label">Telas criadas</div></div>
+        <div class="stat-card"><div class="stat-num" id="statForms">0</div><div class="stat-label">Formulários</div></div>
+        <div class="stat-card"><div class="stat-num" id="statRecords">0</div><div class="stat-label">Registros</div></div>
+      </div>
+      <div id="homeContent"></div>
     </div>
 
-    <div id="panel-groups" class="panel hidden">
-        <div class="card">
-            <h4>Cadastro de Grupos (Editável por todos)</h4>
-            <input type="text" id="grpId" placeholder="Nome Grupo (Ex: 101)" style="padding:8px; width:120px">
-            <input type="text" id="grpEmails" placeholder="emails separados por vírgula" style="padding:8px; width:300px">
-            <button class="btn btn-primary" onclick="saveEmailGroup()">Cadastrar</button>
-        </div>
-        <div id="groupsList"></div>
+    <!-- TABLE VIEW -->
+    <div class="panel" id="panel-tableview">
+      <div id="tableViewContent"></div>
     </div>
 
-    <div id="panel-table" class="panel hidden">
-        <div style="display:flex; justify-content: space-between; align-items: center;">
-            <h2 id="tableTitle">Tabela</h2>
-            <button class="btn btn-primary" onclick="openModal('recordModal')">+ Novo Registro</button>
+    <!-- BUILDER (master only) -->
+    <div class="panel" id="panel-builder">
+      <div class="grid2">
+        <div>
+          <div class="section-header">
+            <div class="section-title">Telas criadas</div>
+            <button class="btn btn-primary btn-sm" onclick="openNewScreenModal()">+ Nova tela</button>
+          </div>
+          <div class="screen-list" id="builderScreenList"></div>
         </div>
-        <div id="tableContainer"></div>
+        <div id="builderDetail">
+          <div class="empty-state" style="padding-top:40px">Selecione uma tela para editar.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- USERS (master only) -->
+    <div class="panel" id="panel-users">
+      <div class="section-header">
+        <div class="section-title">Gestão de usuários</div>
+      </div>
+      <div class="card" style="padding:0">
+        <div id="userList"></div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /app -->
+</div><!-- /mainApp -->
+
+<!-- ====================================================
+     MODAIS
+     ==================================================== -->
+
+<!-- Master password -->
+<div class="modal-overlay" id="masterModal">
+  <div class="modal">
+    <h3>Acesso Master</h3>
+    <p>Digite a senha para ativar o modo construtor.</p>
+    <label>Senha</label>
+    <input type="password" id="masterPwd" placeholder="Senha master..." onkeydown="if(event.key==='Enter')checkMaster()"/>
+    <div style="font-size:12px;color:var(--danger);margin-top:6px;display:none" id="pwdErr">Senha incorreta.</div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal('masterModal')">Cancelar</button>
+      <button class="btn btn-primary" onclick="checkMaster()">Entrar</button>
     </div>
   </div>
 </div>
 
-<div class="modal-overlay" id="recordModal">
-    <div class="modal">
-        <h3>Novo Lançamento</h3>
-        <div id="formFields" style="margin-top:15px"></div>
-        <div style="text-align:right; margin-top:20px">
-            <button class="btn" onclick="closeModal('recordModal')">Cancelar</button>
-            <button class="btn btn-primary" onclick="handleSave()">Salvar</button>
-        </div>
+<!-- Nova tela -->
+<div class="modal-overlay" id="newScreenModal">
+  <div class="modal">
+    <h3 id="newScreenModalTitle">Nova tela</h3>
+    <p>Escolha o tipo e dê um nome para a tela.</p>
+    <label>Tipo de tela</label>
+    <select id="newScreenType" onchange="updateScreenTypeHint()">
+      <option value="cadastro">Cadastro — lista base de dados</option>
+      <option value="formulario">Formulário — entrada de dados</option>
+      <option value="formulario-multi">Formulário multi-linha — linhas variáveis por registro</option>
+    </select>
+    <div class="hint" id="screenTypeHint" style="margin-bottom:4px"></div>
+    <label>Nome da tela</label>
+    <input type="text" id="newScreenName" placeholder="Ex: Entrada de Nota Fiscal"/>
+
+    <div class="divider"></div>
+    <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Opções adicionais</div>
+
+    <div class="check-group">
+      <input type="checkbox" id="screenAllowImages" style="width:auto"/>
+      <label for="screenAllowImages">
+        <strong>Permitir anexar imagens</strong>
+        <span style="color:var(--text3);font-size:11px;display:block">O operador pode fotografar ou anexar imagens ao registrar.</span>
+      </label>
     </div>
+    <div class="check-group" style="margin-top:10px">
+      <input type="checkbox" id="screenSendEmail" style="width:auto" onchange="toggleEmailConfig()"/>
+      <label for="screenSendEmail">
+        <strong>Enviar e-mail ao registrar</strong>
+        <span style="color:var(--text3);font-size:11px;display:block">Notifica destinatários por e-mail a cada novo registro.</span>
+      </label>
+    </div>
+    <div id="emailConfigSection" style="display:none;margin-top:8px">
+      <div style="background:var(--accent-light);border-radius:8px;padding:10px;font-size:12px;color:var(--accent-text);margin-bottom:8px">
+        <strong>📧 E-mail via Web3Forms</strong> — serviço gratuito, sem configuração de servidor.<br>
+        Cada destinatário precisa confirmar o recebimento uma única vez (link enviado no primeiro e-mail).
+      </div>
+      <label>Destinatários (um e-mail por linha)</label>
+      <textarea id="screenEmailRecipients" rows="3" placeholder="email1@empresa.com&#10;email2@empresa.com" style="resize:vertical"></textarea>
+      <div class="hint">Os e-mails serão enviados automaticamente a cada novo registro. Grátis até 250 e-mails/mês por remetente.</div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal('newScreenModal')">Cancelar</button>
+      <button class="btn btn-primary" id="newScreenSaveBtn" onclick="createOrRenameScreen()">Criar</button>
+    </div>
+  </div>
 </div>
 
-<div id="toast" class="toast"></div>
+<!-- Novo / Editar campo -->
+<div class="modal-overlay" id="newFieldModal">
+  <div class="modal">
+    <h3 id="fieldModalTitle">Novo campo</h3>
+    <p>Configure o campo para esta tela.</p>
+    <label>Nome do campo</label>
+    <input type="text" id="newFieldName" placeholder="Ex: Quantidade"/>
+    <label>Tipo de dado</label>
+    <select id="newFieldType" onchange="onFieldTypeChange()">
+      <option value="texto">Texto</option>
+      <option value="numero">Número</option>
+      <option value="moeda">Moeda (R$)</option>
+      <option value="percentual">Percentual (%)</option>
+      <option value="data">Data</option>
+      <option value="hora">Hora</option>
+      <option value="booleano">Sim / Não</option>
+      <option value="selecionavel">Selecionável (vínculo com cadastro)</option>
+      <option value="calculado">Calculado (resultado de colunas)</option>
+    </select>
 
+    <!-- Vínculo com cadastro -->
+    <div id="fieldLinkConfig" style="display:none">
+      <label>Vincular com tela de cadastro</label>
+      <select id="fieldLinkTarget"></select>
+      <div class="link-config" style="margin-top:8px">
+        <strong>Preenchimento automático:</strong> ao selecionar um registro outros campos são preenchidos automaticamente.
+      </div>
+    </div>
+
+    <!-- Campo calculado -->
+    <div id="fieldCalcConfig" style="display:none;margin-top:10px">
+      <div style="background:var(--purple-light);border-radius:8px;padding:10px;font-size:12px;color:var(--purple);margin-bottom:8px">
+        Este campo não é preenchido pelo usuário — é calculado automaticamente ao salvar.
+      </div>
+      <label>Coluna A</label>
+      <select id="calcFieldA"></select>
+      <label>Operação</label>
+      <select id="calcOp">
+        <option value="+">Soma (A + B)</option>
+        <option value="-">Subtração (A − B)</option>
+        <option value="*">Multiplicação (A × B)</option>
+        <option value="/">Divisão (A ÷ B)</option>
+      </select>
+      <label>Coluna B</label>
+      <select id="calcFieldB"></select>
+    </div>
+
+    <div class="divider" style="margin-top:14px"></div>
+    <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Comportamento</div>
+
+    <div class="check-group">
+      <input type="checkbox" id="fieldRequired" style="width:auto"/>
+      <label for="fieldRequired">Campo obrigatório</label>
+    </div>
+    <div class="check-group" id="masterFieldRow">
+      <input type="checkbox" id="fieldIsMaster" style="width:auto" onchange="onMasterOrSumChange('master')"/>
+      <label for="fieldIsMaster">
+        <strong>Campo mestre</strong>
+        <span style="color:var(--purple);font-size:11px;display:block">Coluna principal da tabela — identifica cada linha.</span>
+      </label>
+    </div>
+    <div class="check-group" id="uniqueFieldRow">
+      <input type="checkbox" id="fieldIsUnique" style="width:auto"/>
+      <label for="fieldIsUnique">
+        <strong>Item único</strong>
+        <span style="color:var(--accent-text);font-size:11px;display:block">Bloqueia entradas duplicadas neste campo.</span>
+      </label>
+    </div>
+    <div class="check-group" id="sumFieldRow" style="display:none">
+      <input type="checkbox" id="fieldIsSum" style="width:auto" onchange="onMasterOrSumChange('sum')"/>
+      <label for="fieldIsSum">
+        <strong>Campo de soma</strong>
+        <span style="color:var(--success);font-size:11px;display:block">Acumula valores — tabela de resumo gerada automaticamente.</span>
+      </label>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal('newFieldModal')">Cancelar</button>
+      <button class="btn btn-primary" id="fieldSaveBtn" onclick="saveField()">Adicionar campo</button>
+    </div>
+  </div>
+</div>
+
+<!-- Novo botão de ação -->
+<div class="modal-overlay" id="newActionModal">
+  <div class="modal" style="width:480px">
+    <h3 id="actionModalTitle">Novo botão de ação</h3>
+    <p>Configure um botão de comando para esta tabela.</p>
+    <label>Nome do botão</label>
+    <input type="text" id="actionBtnName" placeholder="Ex: Registrar Saída"/>
+    <label>Campo mestre (identificação da linha)</label>
+    <select id="actionMasterField">
+      <option value="">Selecione o campo mestre...</option>
+    </select>
+    <div class="hint" style="margin-bottom:8px">O campo mestre identifica a linha que será transferida. Ele não aparecerá no formulário de ação (já está preenchido).</div>
+    <label>Tabela de destino</label>
+    <select id="actionTargetTable">
+      <option value="__new__">Criar nova tabela automaticamente</option>
+    </select>
+    <div class="divider"></div>
+    <div class="section-title">Comportamento da tabela de origem</div>
+    <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:10px">
+      <label style="display:flex;align-items:flex-start;gap:8px;cursor:pointer;margin:0">
+        <input type="radio" name="actionMode" id="actionModeFlow" value="flow" style="width:auto;margin-top:2px" checked/>
+        <span>
+          <strong>Fluxo (subtrai / remove linha)</strong><br>
+          <span style="font-size:11px;color:var(--text3)">Se a tabela tem campos de soma: subtrai o valor informado. Remove a linha quando o saldo zera. Bloqueia se o valor ficaria negativo.</span>
+        </span>
+      </label>
+      <label style="display:flex;align-items:flex-start;gap:8px;cursor:pointer;margin:0">
+        <input type="radio" name="actionMode" id="actionModeHistory" value="history" style="width:auto;margin-top:2px"/>
+        <span>
+          <strong>Histórico (linha nunca some)</strong><br>
+          <span style="font-size:11px;color:var(--text3)">A linha permanece na tabela de origem. Só o ADM Master pode excluir manualmente.</span>
+        </span>
+      </label>
+    </div>
+    <div class="divider"></div>
+    <div class="section-title">Campos adicionais do formulário de ação</div>
+    <p style="font-size:12px;color:var(--text3);margin-bottom:8px">Pedidos ao executar a ação. Os dados da linha selecionada são copiados automaticamente.</p>
+    <div id="actionFieldsList" style="display:flex;flex-direction:column;gap:6px;margin-bottom:8px"></div>
+    <button class="btn btn-sm" onclick="addActionField()" style="width:100%">+ Adicionar campo ao formulário</button>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal('newActionModal')">Cancelar</button>
+      <button class="btn btn-primary" id="actionSaveBtn" onclick="saveAction()">Criar botão de ação</button>
+    </div>
+  </div>
+</div>
+
+<!-- Formulário de registro normal -->
+<div class="modal-overlay" id="formModal">
+  <div class="modal">
+    <h3 id="formModalTitle">Preencher formulário</h3>
+    <p id="formModalSubtitle" style="font-size:12px;color:var(--text3)"></p>
+    <div id="formFields"></div>
+    <!-- Imagens (aparece se tela permite) -->
+    <div id="formImgSection" style="display:none;margin-top:10px">
+      <div class="divider"></div>
+      <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:8px">📷 Imagens anexadas</div>
+      <div id="formImgPreviews" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px"></div>
+      <label style="cursor:pointer">
+        <input type="file" id="formImgInput" accept="image/*" multiple style="display:none" onchange="handleImgUpload(this,'form')"/>
+        <span class="btn btn-sm">📷 Adicionar foto / imagem</span>
+      </label>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal('formModal')">Cancelar</button>
+      <button class="btn btn-primary" onclick="submitForm()">Salvar registro</button>
+    </div>
+  </div>
+</div>
+
+<!-- Formulário de ação (transferência) -->
+<div class="modal-overlay" id="actionFormModal">
+  <div class="modal">
+    <h3 id="actionFormTitle">Executar ação</h3>
+    <p id="actionFormSubtitle" style="font-size:12px;color:var(--text3)"></p>
+    <div id="actionFormFields"></div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal('actionFormModal')">Cancelar</button>
+      <button class="btn btn-primary" onclick="submitActionForm()">Confirmar e transferir</button>
+    </div>
+  </div>
+</div>
+
+<!-- Formulário MULTI-LINHA -->
+<div class="modal-overlay" id="multiFormModal">
+  <div class="modal" style="width:680px;max-width:98vw">
+    <h3 id="multiFormTitle">Registrar</h3>
+    <p id="multiFormSubtitle" style="font-size:12px;color:var(--text3);margin-bottom:12px"></p>
+    <!-- Campos do cabeçalho (campos normais, não-multi) -->
+    <div id="multiFormHeader"></div>
+    <div class="divider"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+      <div style="font-size:12px;font-weight:600;color:var(--text2)">Linhas do registro</div>
+      <button class="btn btn-sm btn-primary" onclick="addMultiRow()">+ Linha</button>
+    </div>
+    <div id="multiFormRows" style="display:flex;flex-direction:column;gap:6px"></div>
+    <!-- Imagens -->
+    <div id="multiImgSection" style="display:none;margin-top:12px">
+      <div class="divider"></div>
+      <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:8px">📷 Imagens anexadas</div>
+      <div id="multiImgPreviews" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px"></div>
+      <label style="cursor:pointer">
+        <input type="file" id="multiImgInput" accept="image/*" multiple style="display:none" onchange="handleImgUpload(this,'multi')"/>
+        <span class="btn btn-sm">📷 Adicionar foto / imagem</span>
+      </label>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal('multiFormModal')">Cancelar</button>
+      <button class="btn btn-primary" onclick="submitMultiForm()">Salvar registro</button>
+    </div>
+  </div>
+</div>
+
+<!-- Global email recipients (editável por operadores) -->
+<div class="modal-overlay" id="emailRecipientsModal">
+  <div class="modal" style="width:400px">
+    <h3>📧 Destinatários de E-mail</h3>
+    <p style="font-size:12px;color:var(--text2)">Lista global de e-mails que receberão notificações de todos os formulários com envio ativo. Qualquer usuário pode editar.</p>
+    <label>E-mails (um por linha)</label>
+    <textarea id="globalRecipientsInput" rows="5" placeholder="email1@empresa.com&#10;email2@empresa.com" style="resize:vertical"></textarea>
+    <div class="hint">Cada destinatário receberá um link de confirmação no primeiro e-mail.</div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal('emailRecipientsModal')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveEmailRecipients()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Visualizador de imagens -->
+<div class="modal-overlay" id="imgViewerModal" onclick="closeModal('imgViewerModal')">
+  <div style="max-width:90vw;max-height:90vh;display:flex;align-items:center;justify-content:center">
+    <img id="imgViewerSrc" style="max-width:88vw;max-height:88vh;border-radius:10px;box-shadow:0 4px 32px rgba(0,0,0,.5)"/>
+  </div>
+</div>
+
+<!-- Modal campo adicional de ação -->
+<div class="modal-overlay" id="addActionFieldModal">
+  <div class="modal" style="width:380px">
+    <h3>Campo adicional</h3>
+    <label>Nome</label>
+    <input type="text" id="aafName" placeholder="Ex: Motivo"/>
+    <label>Tipo</label>
+    <select id="aafType" onchange="onAafTypeChange()">
+      <option value="texto">Texto</option>
+      <option value="numero">Número</option>
+      <option value="moeda">Moeda (R$)</option>
+      <option value="percentual">Percentual (%)</option>
+      <option value="data">Data</option>
+      <option value="hora">Hora</option>
+      <option value="booleano">Sim / Não</option>
+      <option value="selecionavel">Selecionável (vínculo com cadastro)</option>
+    </select>
+    <div id="aafLinkConfig" style="display:none">
+      <label>Vincular com tela de cadastro</label>
+      <select id="aafLinkTarget"></select>
+    </div>
+    <div class="check-group">
+      <input type="checkbox" id="aafRequired" style="width:auto"/>
+      <label for="aafRequired">Obrigatório</label>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal('addActionFieldModal')">Cancelar</button>
+      <button class="btn btn-primary" onclick="confirmActionField()">Adicionar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Renomear tabela -->
+<div class="modal-overlay" id="renameTableModal">
+  <div class="modal" style="width:360px">
+    <h3>Renomear tabela</h3>
+    <label>Novo nome</label>
+    <input type="text" id="renameTableInput" placeholder="Nome da tabela"/>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal('renameTableModal')">Cancelar</button>
+      <button class="btn btn-primary" onclick="confirmRenameTable()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- ====================================================
+     JAVASCRIPT  (separar depois → core.js)
+     ==================================================== -->
 <script>
-let state = { user: null, screens: [], currentScreen: null, groups: {} };
+// ============================================================
+// STATE
+// ============================================================
+const state = {
+  isMaster: false,
+  currentRole: 'operador',
+  currentUser: null,       // objeto do Firebase Auth
+  currentUserData: null,   // dados do Firestore ({name, role, blocked})
+  screens: [],
+  records: {},
+  users: [],
+  selectedScreen: null,
+  activeForm: null,
+  activeAction: null,
+  tempActionFields: [],
+  nextId: 100,
+  currentTableView: null,
+  editingFieldIdx: null,   // índice do campo sendo editado (null = novo)
+  editingScreenId: null,   // tela sendo editada no modal de nova tela
+  renamingTableId: null,   // id da tabela sendo renomeada
+  masterPwd: 'LOG#001',    // senha padrão (será sobrescrita pelo Firestore)
+  unsubscribers: [],       // listeners do Firestore para cleanup
+};
 
-// --- AUTH ---
-async function doLogin() {
-    const e = document.getElementById('loginEmail').value;
-    const p = document.getElementById('loginPwd').value;
+function uid(){ return ++state.nextId; }
+
+// ============================================================
+// FIREBASE HELPERS
+// ============================================================
+const FB = {
+  auth(){ return window._fbAuth; },
+  db(){ return window._fbDb; },
+  fns(){ return window._fbFns; },
+
+  // ── Salva todo o estado de telas/registros no Firestore
+  async saveAll(){
+    const db = this.db(); const f = this.fns();
     try {
-        await fbAuth.signInWithEmailAndPassword(fb.auth, e, p);
-    } catch(err) { alert("Erro ao entrar: " + err.message); }
+      await f.setDoc(f.doc(db,'app','config'),{
+        screens: state.screens,
+        records: state.records,
+        nextId: state.nextId,
+        masterPwd: state.masterPwd,
+      });
+    } catch(e){ console.error('saveAll',e); }
+  },
+
+  // ── Carrega estado do Firestore e ativa listener em tempo real
+  listenAll(cb){
+    const db = this.db(); const f = this.fns();
+    const unsub = f.onSnapshot(f.doc(db,'app','config'), snap=>{
+      if(snap.exists()){
+        const d = snap.data();
+        state.screens  = d.screens  || [];
+        state.records  = d.records  || {};
+        state.nextId   = d.nextId   || 100;
+        state.masterPwd= d.masterPwd|| 'LOG#001';
+        if(cb) cb();
+      } else {
+        // primeiro uso: inicializa
+        FB.saveAll();
+        if(cb) cb();
+      }
+    }, err=>{ console.error('listenAll',err); });
+    state.unsubscribers.push(unsub);
+    return unsub;
+  },
+
+  // ── Salva/atualiza usuário no Firestore
+  async saveUser(uid, data){
+    const db = this.db(); const f = this.fns();
+    try { await f.setDoc(f.doc(db,'users',uid), data, {merge:true}); }
+    catch(e){ console.error('saveUser',e); }
+  },
+
+  // ── Carrega dados do usuário
+  async getUser(uid){
+    const db = this.db(); const f = this.fns();
+    try {
+      const snap = await f.getDoc(f.doc(db,'users',uid));
+      return snap.exists() ? snap.data() : null;
+    } catch(e){ console.error('getUser',e); return null; }
+  },
+
+  // ── Lista todos os usuários
+  async listUsers(){
+    const db = this.db(); const f = this.fns();
+    try {
+      const snap = await f.getDocs(f.collection(db,'users'));
+      return snap.docs.map(d=>({id:d.id,...d.data()}));
+    } catch(e){ console.error('listUsers',e); return []; }
+  },
+
+  // ── Listener de usuários em tempo real
+  listenUsers(cb){
+    const db = this.db(); const f = this.fns();
+    const unsub = f.onSnapshot(f.collection(db,'users'), snap=>{
+      state.users = snap.docs.map(d=>({id:d.id,...d.data()}));
+      if(cb) cb();
+    });
+    state.unsubscribers.push(unsub);
+    return unsub;
+  },
+};
+
+// Wrapper que salva e re-renderiza
+async function persist(fn){
+  if(fn) await fn();
+  await FB.saveAll();
 }
 
-async function doLogout() { await fbAuth.signOut(fb.auth); }
+// ============================================================
+// AUTH
+// ============================================================
+function switchAuthTab(tab){
+  document.querySelectorAll('.auth-tab').forEach((t,i)=>{
+    t.classList.toggle('active', ['login','cadastro','recover'][i]===tab);
+  });
+  document.querySelectorAll('.auth-form').forEach(f=>f.classList.remove('active'));
+  const map={login:'authLogin',cadastro:'authCadastro',recover:'authRecover'};
+  document.getElementById(map[tab]).classList.add('active');
+}
 
-window.addEventListener('firebaseReady', () => {
-    fbAuth.onAuthStateChanged(fb.auth, user => {
-        if(user) {
-            state.user = user;
-            document.getElementById('authScreen').style.display = 'none';
-            document.getElementById('mainApp').style.display = 'block';
-            loadData();
-        } else {
-            document.getElementById('authScreen').style.display = 'flex';
-            document.getElementById('mainApp').style.display = 'none';
-        }
-    });
+async function doLogin(){
+  const email = document.getElementById('loginEmail').value.trim();
+  const pwd   = document.getElementById('loginPwd').value;
+  const errEl = document.getElementById('loginErr');
+  errEl.style.display='none';
+  try {
+    await window._fbFns.signInWithEmailAndPassword(window._fbAuth, email, pwd);
+  } catch(e){
+    errEl.textContent = authErrMsg(e.code);
+    errEl.style.display='block';
+  }
+}
+
+async function doCadastro(){
+  const name  = document.getElementById('cadNome').value.trim();
+  const email = document.getElementById('cadEmail').value.trim();
+  const pwd   = document.getElementById('cadPwd').value;
+  const errEl = document.getElementById('cadErr');
+  errEl.style.display='none';
+  if(!name||!email||!pwd){ errEl.textContent='Preencha todos os campos.'; errEl.style.display='block'; return; }
+  try {
+    const cred = await window._fbFns.createUserWithEmailAndPassword(window._fbAuth, email, pwd);
+    await window._fbFns.updateProfile(cred.user,{displayName:name});
+    await FB.saveUser(cred.user.uid,{name,email,role:'operador',blocked:false});
+  } catch(e){
+    errEl.textContent = authErrMsg(e.code);
+    errEl.style.display='block';
+  }
+}
+
+async function doRecover(){
+  const email = document.getElementById('recoverEmail').value.trim();
+  const errEl = document.getElementById('recoverErr');
+  errEl.style.display='none';
+  try {
+    await window._fbFns.sendPasswordResetEmail(window._fbAuth, email);
+    errEl.textContent='✓ Link enviado! Verifique seu e-mail.';
+    errEl.style.color='var(--success)';
+    errEl.style.background='var(--success-light)';
+    errEl.style.display='block';
+  } catch(e){
+    errEl.textContent = authErrMsg(e.code);
+    errEl.style.color='var(--danger)';
+    errEl.style.background='var(--danger-light)';
+    errEl.style.display='block';
+  }
+}
+
+async function doLogout(){
+  state.unsubscribers.forEach(u=>u&&u());
+  state.unsubscribers=[];
+  state.isMaster=false;
+  await window._fbFns.signOut(window._fbAuth);
+}
+
+function authErrMsg(code){
+  const msgs={
+    'auth/invalid-email':'E-mail inválido.',
+    'auth/user-not-found':'Usuário não encontrado.',
+    'auth/wrong-password':'Senha incorreta.',
+    'auth/email-already-in-use':'E-mail já cadastrado.',
+    'auth/weak-password':'Senha muito fraca (mínimo 6 caracteres).',
+    'auth/too-many-requests':'Muitas tentativas. Aguarde e tente novamente.',
+    'auth/invalid-credential':'E-mail ou senha incorretos.',
+  };
+  return msgs[code]||'Erro: '+code;
+}
+
+// ============================================================
+// INICIALIZAÇÃO / AUTH STATE
+// ============================================================
+window.addEventListener('firebaseReady', ()=>{
+  window._fbFns.onAuthStateChanged(window._fbAuth, async user=>{
+    if(user){
+      state.currentUser = user;
+      // carrega dados do usuário
+      let userData = await FB.getUser(user.uid);
+      if(!userData){
+        // cria registro se não existir (login social ou primeiro acesso antigo)
+        userData = {name: user.displayName||user.email, email:user.email, role:'operador', blocked:false};
+        await FB.saveUser(user.uid, userData);
+      }
+      state.currentUserData = userData;
+      // verifica se bloqueado
+      if(userData.blocked){
+        await window._fbFns.signOut(window._fbAuth);
+        showAuthError('loginErr','Sua conta está bloqueada. Contate o administrador.');
+        return;
+      }
+      // mostra app
+      document.getElementById('authScreen').style.display='none';
+      document.getElementById('mainApp').style.display='block';
+      // escuta dados em tempo real
+      FB.listenAll(()=>{
+        renderHome(); updateStats();
+        if(state.currentTableView) renderTableView();
+        if(document.getElementById('panel-builder').classList.contains('active')) renderBuilderList();
+      });
+      FB.listenUsers(()=>{
+        if(document.getElementById('panel-users').classList.contains('active')) renderUsers();
+      });
+      loadGlobalRecipients();
+      // define papel
+      const roleMap={adm_master:'adm_master',adm_basico:'adm_basico',operador:'operador',visualizador:'visualizador'};
+      state.currentRole = roleMap[userData.role]||'operador';
+      updateUI();
+      renderHome(); updateStats();
+    } else {
+      state.currentUser=null; state.currentUserData=null; state.isMaster=false;
+      document.getElementById('authScreen').style.display='flex';
+      document.getElementById('mainApp').style.display='none';
+    }
+  });
 });
 
-// --- DATA LOADING ---
-async function loadData() {
-    const snap = await fbDb.getDocs(fbDb.collection(fb.db, "screens"));
-    state.screens = snap.docs.map(d => ({id: d.id, ...d.data()}));
-    renderHome();
-    loadGroups();
+function showAuthError(id, msg){
+  document.getElementById('authScreen').style.display='flex';
+  document.getElementById('mainApp').style.display='none';
+  const el = document.getElementById(id);
+  el.textContent=msg; el.style.display='block';
 }
 
-function renderHome() {
-    const container = document.getElementById('homeCards');
-    container.innerHTML = state.screens.map(s => `
-        <div class="card" onclick="openScreen('${s.id}')" style="cursor:pointer">
-            <h3>${s.name}</h3>
-            <p>${s.type}</p>
-        </div>
-    `).join('');
+// ============================================================
+// NAVEGAÇÃO
+// ============================================================
+function showPanel(id, btn){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('panel-'+id).classList.add('active');
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  else { document.querySelectorAll('.nav-tab').forEach(t=>{ if(t.dataset.panel===id) t.classList.add('active'); }); }
+  if(id==='builder') renderBuilderList();
+  if(id==='users') renderUsers();
+  if(id==='home') renderHome();
 }
 
-// --- SEQUENTIAL SERIAL GENERATOR ---
-async function generateSerial() {
-    const date = new Date();
-    const prefix = `${date.getFullYear()}${String(date.getMonth()+1).padStart(2, '0')}`;
-    const counterRef = fbDb.doc(fb.db, "system", "counters");
-    
-    let serial = "";
-    await fbDb.runTransaction(fb.db, async (transaction) => {
-        const snap = await transaction.get(counterRef);
-        let count = 1;
-        if(snap.exists() && snap.data()[prefix]) {
-            count = snap.data()[prefix] + 1;
+function openTableView(tableId){
+  state.currentTableView = tableId;
+  renderTableView();
+  showPanel('tableview');
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+}
+
+// ============================================================
+// TABLE VIEW
+// ============================================================
+function renderTableView(){
+  const tableId = state.currentTableView;
+  const screen = state.screens.find(s=>s.id===tableId);
+  if(!screen){ document.getElementById('tableViewContent').innerHTML=''; return; }
+  const recs = state.records[tableId]||[];
+  const actions = screen.actions||[];
+  const allCols = getAllColumns(screen);
+
+  // ── calcula totais para campos de soma
+  const sumFields = (screen.fields||[]).filter(f=>f.isSum);
+  const masterField = (screen.fields||[]).find(f=>f.isMaster);
+
+  let html = `<div class="table-view-container">
+    <div class="table-view-header">
+      <button class="back-btn" onclick="showPanel('home')">← Voltar</button>
+      <div class="table-view-title">${escHtml(screen.name)}</div>
+      <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+        <button class="btn btn-sm" title="Exportar CSV" onclick="exportTable(${tableId},'csv')">⬇ CSV</button>
+        <button class="btn btn-sm" title="Exportar Excel" onclick="exportTable(${tableId},'xls')">⬇ XLS</button>
+        ${state.isMaster?`
+          <button class="btn btn-sm btn-warning" title="Importar Excel" onclick="document.getElementById('importFileInput_${tableId}').click()">⬆ Importar</button>
+          <input type="file" id="importFileInput_${tableId}" accept=".xlsx,.xls,.csv" style="display:none" onchange="importTable(${tableId},this)"/>
+          <button class="btn btn-sm" onclick="openRenameTable(${tableId})">✎ Renomear</button>
+        `:''}
+      </div>
+    </div>`;
+
+  if(actions.length){
+    html += `<div class="table-action-buttons">`;
+    actions.forEach((act,ai)=>{
+      html += `<button class="cmd-btn" onclick="openActionForm(${tableId},${ai})">▶ ${escHtml(act.name)}</button>`;
+    });
+    html += `</div>`;
+  }
+
+  if(!recs.length){
+    html += `<div class="empty-state">Nenhum registro nesta tabela.</div>`;
+  } else {
+    html += `<div class="table-wrap"><table><thead><tr>`;
+    allCols.forEach(c=>{ html+=`<th>${escHtml(colLabel(c))}</th>`; });
+    if(state.isMaster) html+=`<th></th>`;
+    html+=`</tr></thead><tbody>`;
+    recs.forEach((r,ri)=>{
+      html+=`<tr>`;
+      allCols.forEach(c=>{
+        const v=r[c]||'—';
+        if(c==='_images'&&v!=='—'){
+          try{
+            const imgs=JSON.parse(v);
+            const thumbs=imgs.map(src=>`<img class="img-thumb" src="${src}" onclick="event.stopPropagation();document.getElementById('imgViewerSrc').src='${src}';document.getElementById('imgViewerModal').classList.add('open')" style="width:40px;height:40px;object-fit:cover;border-radius:4px;cursor:pointer;margin-right:2px"/>`).join('');
+            html+=`<td>${thumbs}</td>`;
+          }catch{ html+=`<td>${escHtml(v)}</td>`; }
+        } else {
+          html+=`<td>${escHtml(v)}</td>`;
         }
-        transaction.set(counterRef, { [prefix]: count }, { merge: true });
-        serial = `${prefix}-${String(count).padStart(4, '0')}`;
-    });
-    return serial;
-}
-
-// --- SAVE & ACTIONS ---
-async function handleSave() {
-    const screen = state.currentScreen;
-    const serial = await generateSerial();
-    const data = {
-        "Série#": serial,
-        screenId: screen.id,
-        user: state.user.email,
-        timestamp: new Date().toISOString()
-    };
-
-    document.querySelectorAll('.f-input').forEach(i => {
-        data[i.name] = i.value;
+      });
+      if(state.isMaster) html+=`<td><button class="btn btn-sm btn-danger" onclick="deleteRecord(${tableId},${ri})">×</button></td>`;
+      html+=`</tr>`;
     });
 
-    // 1. Salva na Tabela de Ação
-    await fbDb.addDoc(fbDb.collection(fb.db, `records_${screen.id}`), data);
-
-    // 2. Salva no Histórico (Ponto 5 - nunca deletado)
-    await fbDb.addDoc(fbDb.collection(fb.db, "historico_geral"), { ...data, logType: 'ENTRADA' });
-
-    // 3. Envio de EmailJS (Ponto 1 e 2)
-    sendEmailNotification(screen, data);
-
-    showToast("Salvo com sucesso! Série: " + serial);
-    closeModal('recordModal');
-    openScreen(screen.id);
-}
-
-async function runBatchAction(serial, targetStatus) {
-    if(!confirm("Deseja movimentar todas as linhas desta série?")) return;
-
-    const screen = state.currentScreen;
-    const q = fbDb.query(fbDb.collection(fb.db, `records_${screen.id}`), fbDb.where("Série#", "==", serial));
-    const snap = await fbDb.getDocs(q);
-
-    for (let d of snap.docs) {
-        const docData = d.data();
-        // Move para histórico de movimentação
-        await fbDb.addDoc(fbDb.collection(fb.db, "historico_geral"), { ...docData, logType: 'MOVIMENTACAO', status: targetStatus });
-        // Deleta da tabela ativa
-        await fbDb.deleteDoc(fbDb.doc(fb.db, `records_${screen.id}`, d.id));
+    // linha de totais se houver campos de soma
+    if(sumFields.length && masterField){
+      html+=`<tr class="sum-total-row">`;
+      allCols.forEach(col=>{
+        const sf = sumFields.find(f=>f.name===col);
+        if(sf){
+          const total = recs.reduce((acc,r)=>acc+parseFloat(String(r[col]||'0').replace(/[^0-9.,-]/g,'').replace(',','.'))||0,0);
+          const formatted = sf.type==='moeda'?'R$ '+total.toFixed(2).replace('.',','):
+                            sf.type==='percentual'?total.toFixed(2)+'%':
+                            total.toFixed(2);
+          html+=`<td><strong>Σ ${formatted}</strong></td>`;
+        } else {
+          html+=`<td>${col===masterField.name?'<strong>TOTAL</strong>':''}</td>`;
+        }
+      });
+      if(state.isMaster) html+=`<td></td>`;
+      html+=`</tr>`;
     }
 
-    showToast("Série movimentada com sucesso!");
-    openScreen(screen.id);
-}
+    html+=`</tbody></table></div>`;
+  }
 
-// --- EMAILJS LOGIC ---
-async function sendEmailNotification(screen, data) {
-    const groupId = data.grupo; // Campo 'grupo' no form
-    let emails = "";
-
-    if(groupId && state.groups[groupId]) {
-        emails = state.groups[groupId];
-    }
-
-    if(emails) {
-        emailjs.send("service_neeyil2", "template_38hvw8h", {
-            to_email: emails,
-            serial: data["Série#"],
-            message: `Novo registro realizado por ${data.user}.`
-        }).then(() => console.log("Email enviado")).catch(e => console.error(e));
-    }
-}
-
-// --- TABLE & BALANCE RENDER ---
-async function openScreen(id) {
-    const screen = state.screens.find(s => s.id === id);
-    state.currentScreen = screen;
-    showPanel('table');
-    document.getElementById('tableTitle').innerText = screen.name;
-
-    const snap = await fbDb.getDocs(fbDb.collection(fb.db, `records_${id}`));
-    const records = snap.docs.map(d => ({id: d.id, ...d.data()}));
-
-    // Cálculo de Saldo Acumulado (Ponto 5)
-    const saldos = {};
-    records.forEach(r => {
-        const item = r.item || r.codigo || "Indefinido";
-        saldos[item] = (saldos[item] || 0) + parseFloat(r.quantidade || 0);
+  // ── Tabela de resumo por campo mestre (se houver campos de soma)
+  if(sumFields.length && masterField && recs.length){
+    const grouped={};
+    recs.forEach(r=>{
+      const key=r[masterField.name]||'(sem valor)';
+      if(!grouped[key]) grouped[key]={};
+      sumFields.forEach(sf=>{
+        grouped[key][sf.name]=(grouped[key][sf.name]||0)+
+          (parseFloat(String(r[sf.name]||'0').replace(/[^0-9.,-]/g,'').replace(',','.'))||0);
+      });
     });
+    html+=`<div style="margin-top:16px">
+      <div class="section-title" style="padding:0 4px;margin-bottom:8px">Resumo por ${escHtml(masterField.name)}</div>
+      <div class="table-wrap"><table><thead><tr>
+        <th>${escHtml(masterField.name)}</th>
+        ${sumFields.map(f=>`<th>${escHtml(f.name)} (Σ)</th>`).join('')}
+      </tr></thead><tbody>`;
+    Object.entries(grouped).forEach(([key,sums])=>{
+      html+=`<tr><td><strong>${escHtml(key)}</strong></td>`;
+      sumFields.forEach(sf=>{
+        const v=sums[sf.name]||0;
+        const fmt=sf.type==='moeda'?'R$ '+v.toFixed(2).replace('.',','):
+                  sf.type==='percentual'?v.toFixed(2)+'%':v.toFixed(2);
+        html+=`<td>${fmt}</td>`;
+      });
+      html+=`</tr>`;
+    });
+    html+=`</tbody></table></div></div>`;
+  }
 
-    let html = `
-        <table>
-            <thead>
-                <tr>
-                    <th>Série#</th>
-                    <th>Item</th>
-                    <th>Qtd Linha</th>
-                    <th>Saldo Total Item</th>
-                    <th>Ações</th>
-                </tr>
-            </thead>
-            <tbody>
-                ${records.map(r => {
-                    const itemKey = r.item || r.codigo || "Indefinido";
-                    return `
-                    <tr>
-                        <td><b>${r["Série#"]}</b></td>
-                        <td>${itemKey}</td>
-                        <td>${r.quantidade}</td>
-                        <td style="color:blue; font-weight:bold">${saldos[itemKey]}</td>
-                        <td>
-                            <button class="btn" onclick="runBatchAction('${r["Série#"]}', 'MOVIMENTADO')">Mover Tudo</button>
-                        </td>
-                    </tr>`;
-                }).join('')}
-            </tbody>
-        </table>
-    `;
-    document.getElementById('tableContainer').innerHTML = html;
+  html+=`</div>`;
+  document.getElementById('tableViewContent').innerHTML = html;
 }
 
-// --- CONDICIONAIS (Ponto 4) ---
-function checkConditions() {
-    const qtd = parseFloat(document.querySelector('[name="quantidade"]').value) || 0;
-    const condField = document.getElementById('campo-condicional');
-    // Exemplo: Se quantidade > 100, mostra campo de observação
-    if(qtd > 100) {
-        condField.classList.remove('hidden');
+function getAllColumns(screen){
+  // ── Colunas definidas no formulário de origem
+  const formCols = (screen.fields||[]).map(f=>f.name);
+  const recs = state.records[screen.id]||[];
+  if(!recs.length){
+    // sem registros: mostra só as colunas do formulário + auditoria base
+    return [...formCols,'_data','_hora','_usuario'];
+  }
+
+  // Coleta todas as chaves reais dos registros
+  const allKeys = new Set();
+  recs.forEach(r=>Object.keys(r).forEach(k=>allKeys.add(k)));
+
+  const auditRx = /^_(data|hora|usuario)(_\d+)?$/;
+  // Chaves que não são do formulário nem de auditoria (campos dos formulários de ação encadeados)
+  // _images é tratado como coluna especial (não de auditoria)
+  const extraCols = [...allKeys].filter(k=>!formCols.includes(k)&&!auditRx.test(k));
+
+  // Agrupa chaves de auditoria por número de etapa
+  // _data / _hora / _usuario sem sufixo = etapa 1 (primeira gravação)
+  // _data_2 / _hora_2 / _usuario_2 = etapa 2, etc.
+  const auditByStep={};
+  [...allKeys].filter(k=>auditRx.test(k)).forEach(k=>{
+    const m=k.match(/^_(data|hora|usuario)(_(\d+))?$/);
+    const step = m[3] ? parseInt(m[3]) : 1;
+    auditByStep[step] = auditByStep[step]||[];
+    auditByStep[step].push(k);
+  });
+  const orderInGroup=['data','hora','usuario'];
+  Object.values(auditByStep).forEach(arr=>
+    arr.sort((a,b)=>orderInGroup.findIndex(x=>a.includes(x))-orderInGroup.findIndex(x=>b.includes(x)))
+  );
+
+  const sortedSteps = Object.keys(auditByStep).map(Number).sort((a,b)=>a-b);
+
+  // ── Monta a ordem final:
+  // formCols → audit etapa 1 → extraCols → audit etapa 2 → audit etapa 3 ...
+  // (extraCols são os campos de formulários de ação subsequentes)
+  const cols=[...formCols];
+  if(sortedSteps.length){
+    cols.push(...(auditByStep[sortedSteps[0]]||[])); // auditoria da etapa 1 logo após o form 1
+    if(sortedSteps.length>1){
+      // campos extras (do form 2, form 3...) vêm depois da auditoria do form 1
+      extraCols.forEach(c=>{ if(!cols.includes(c)) cols.push(c); });
+      // depois as auditorias das etapas seguintes
+      for(let si=1;si<sortedSteps.length;si++){
+        cols.push(...(auditByStep[sortedSteps[si]]||[]));
+      }
     } else {
-        condField.classList.add('hidden');
+      // só uma etapa: extras ficam depois
+      extraCols.forEach(c=>{ if(!cols.includes(c)) cols.push(c); });
     }
+  } else {
+    extraCols.forEach(c=>{ if(!cols.includes(c)) cols.push(c); });
+    // garante auditoria base
+    ['_data','_hora','_usuario'].forEach(k=>{ if(!cols.includes(k)) cols.push(k); });
+  }
+  return cols;
 }
 
-function renderFields() {
-    const container = document.getElementById('formFields');
-    container.innerHTML = `
-        <label>Item / Código</label>
-        <input type="text" name="item" class="f-input" style="width:100%; padding:8px; margin-bottom:10px">
-        
-        <label>Quantidade</label>
-        <input type="number" name="quantidade" class="f-input" oninput="checkConditions()" style="width:100%; padding:8px; margin-bottom:10px">
-        
-        <div id="campo-condicional" class="hidden">
-            <label style="color:red">Observação Urgente (Qtd Alta!)</label>
-            <input type="text" name="obs" class="f-input" style="width:100%; padding:8px; margin-bottom:10px">
-        </div>
-
-        <label>Grupo de E-mail</label>
-        <input type="text" name="grupo" class="f-input" placeholder="Ex: 101" style="width:100%; padding:8px; margin-bottom:10px">
-    `;
+// label de exibição das colunas de auditoria
+function colLabel(col){
+  if(col==='_images') return '📷 Imagens';
+  const m=col.match(/^_(data|hora|usuario)(_(\d+))?$/);
+  if(!m) return col;
+  const step=m[3]?parseInt(m[3]):1;
+  const base = m[1]==='data'?'Data': m[1]==='hora'?'Hora':'Usuário';
+  return step===1 ? base : `${base} (etapa ${step})`;
 }
 
-// --- GROUPS ---
-async function saveEmailGroup() {
-    const id = document.getElementById('grpId').value;
-    const list = document.getElementById('grpEmails').value;
-    await fbDb.setDoc(fbDb.doc(fb.db, "emailGroups", id), { list });
-    loadGroups();
+function deleteRecord(tableId, ri){
+  if(!confirm('Remover este registro?')) return;
+  state.records[tableId].splice(ri,1);
+  persist(null).then(()=>{ renderTableView(); updateStats(); renderHome(); });
 }
 
-async function loadGroups() {
-    const snap = await fbDb.getDocs(fbDb.collection(fb.db, "emailGroups"));
-    const groups = {};
-    let html = "<ul>";
-    snap.forEach(d => {
-        groups[d.id] = d.data().list;
-        html += `<li><b>${d.id}:</b> ${d.data().list}</li>`;
+// ============================================================
+// EXPORTAR / IMPORTAR
+// ============================================================
+function exportTable(tableId, fmt){
+  const screen=state.screens.find(s=>s.id===tableId);
+  if(!screen) return;
+  const recs=state.records[tableId]||[];
+  const cols=getAllColumns(screen).filter(c=>c!=='_images'); // não exporta imagens
+  const headers=cols.map(colLabel);
+
+  // ── Tabela de resumo (campos de soma por campo mestre)
+  const sumFields=(screen.fields||[]).filter(f=>f.isSum);
+  const masterField=(screen.fields||[]).find(f=>f.isMaster);
+  let summaryData=null;
+  if(sumFields.length&&masterField&&recs.length){
+    const grouped={};
+    recs.forEach(r=>{
+      const key=r[masterField.name]||'(sem valor)';
+      if(!grouped[key]) grouped[key]={};
+      sumFields.forEach(sf=>{
+        grouped[key][sf.name]=(grouped[key][sf.name]||0)+parseRawNum(r[sf.name]);
+      });
     });
-    state.groups = groups;
-    document.getElementById('groupsList').innerHTML = html + "</ul>";
+    summaryData={
+      headers:[masterField.name,...sumFields.map(f=>f.name)],
+      rows:Object.entries(grouped).map(([k,v])=>([k,...sumFields.map(sf=>{
+        const n=v[sf.name]||0;
+        return sf.type==='moeda'?'R$ '+n.toFixed(2).replace('.',','):
+               sf.type==='percentual'?n.toFixed(2)+'%':n.toFixed(2);
+      })])),
+    };
+  }
+
+  if(fmt==='csv'){
+    // Tabela principal
+    const rows=[headers.join(','),...recs.map(r=>cols.map(c=>JSON.stringify(r[c]||'')).join(','))];
+    _dlBlob(new Blob(['\uFEFF'+rows.join('\r\n')],{type:'text/csv;charset=utf-8'}),screen.name+'.csv');
+    // Tabela de resumo (segundo arquivo se existir)
+    if(summaryData){
+      setTimeout(()=>{
+        const rows2=[summaryData.headers.join(','),...summaryData.rows.map(r=>r.map(c=>JSON.stringify(c||'')).join(','))];
+        _dlBlob(new Blob(['\uFEFF'+rows2.join('\r\n')],{type:'text/csv;charset=utf-8'}),screen.name+' — Resumo.csv');
+      },400);
+    }
+  } else {
+    // XLS com múltiplas abas
+    let tbl1='<table border="1"><thead><tr>'+headers.map(h=>`<th>${h}</th>`).join('')+'</tr></thead><tbody>';
+    recs.forEach(r=>{ tbl1+='<tr>'+cols.map(c=>`<td>${r[c]||''}</td>`).join('')+'</tr>'; });
+    tbl1+='</tbody></table>';
+
+    let sheet2='';
+    if(summaryData){
+      sheet2=`<br><br><b>Resumo por ${escHtml(masterField.name)}</b><br>`;
+      sheet2+='<table border="1"><thead><tr>'+summaryData.headers.map(h=>`<th>${h}</th>`).join('')+'</tr></thead><tbody>';
+      summaryData.rows.forEach(r=>{ sheet2+='<tr>'+r.map(c=>`<td>${c}</td>`).join('')+'</tr>'; });
+      sheet2+='</tbody></table>';
+    }
+
+    const html=`<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel">
+      <head><meta charset="UTF-8">
+      <xml><x:ExcelWorkbook><x:ExcelWorksheets>
+        <x:ExcelWorksheet><x:Name>Registros</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet>
+        ${summaryData?'<x:ExcelWorksheet><x:Name>Resumo</x:Name></x:ExcelWorksheet>':''}
+      </x:ExcelWorksheets></x:ExcelWorkbook></xml>
+      </head><body>${tbl1}${sheet2}</body></html>`;
+    _dlBlob(new Blob([html],{type:'application/vnd.ms-excel;charset=utf-8'}),screen.name+'.xls');
+  }
+  showToast('Exportado com sucesso!','success');
 }
 
-// --- UI HELPERS ---
-function showPanel(id) {
-    document.querySelectorAll('.panel').forEach(p => p.classList.add('hidden'));
-    document.getElementById('panel-' + id).classList.remove('hidden');
+function _dlBlob(blob, filename){
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url; a.download=filename; a.click();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
-function openModal(id) { 
-    document.getElementById(id).classList.add('open'); 
-    if(id==='recordModal') renderFields();
+
+async function importTable(tableId, inputEl){
+  const screen=state.screens.find(s=>s.id===tableId);
+  if(!screen||!inputEl.files.length) return;
+  const file=inputEl.files[0];
+  inputEl.value=''; // reset para permitir reimportar mesmo arquivo
+  const cols=getAllColumns(screen).filter(c=>!/^_(data|hora|usuario)/.test(c)); // só colunas de dados
+
+  const ext=file.name.split('.').pop().toLowerCase();
+  try{
+    if(ext==='csv'){
+      const text=await file.text();
+      const lines=text.replace(/\r/g,'').split('\n').filter(Boolean);
+      const rows=lines.slice(1).map(l=>{
+        // parse CSV simples (suporta aspas)
+        const vals=[]; let cur='',inQ=false;
+        for(const ch of l){
+          if(ch==='"'){ inQ=!inQ; }
+          else if(ch===','&&!inQ){ vals.push(cur.trim()); cur=''; }
+          else cur+=ch;
+        }
+        vals.push(cur.trim());
+        return vals;
+      });
+      const now=new Date();
+      const audit={_data:now.toLocaleDateString('pt-BR'),_hora:now.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}),_usuario:(state.currentUserData?.name||'Importação')};
+      rows.forEach(vals=>{
+        if(!vals.some(Boolean)) return;
+        const rec={};
+        cols.forEach((c,i)=>{ rec[c]=vals[i]||''; });
+        Object.assign(rec,audit);
+        state.records[tableId].push(rec);
+      });
+      await FB.saveAll();
+      renderTableView(); updateStats(); renderHome();
+      showToast(`${rows.length} registros importados!`,'success');
+    } else {
+      // XLS/XLSX — usa FileReader + parse manual de HTML table
+      showToast('Para .xlsx use o formato .csv ou salve como CSV no Excel.','info');
+    }
+  }catch(e){
+    showToast('Erro ao importar: '+e.message,'danger');
+  }
 }
-function closeModal(id) { document.getElementById(id).classList.remove('open'); }
-function showToast(msg) {
-    const t = document.getElementById('toast');
-    t.innerText = msg; t.style.background = 'var(--success)'; t.style.display = 'block';
-    setTimeout(() => t.style.display='none', 3000);
+
+// ============================================================
+// RENOMEAR TABELA
+// ============================================================
+function openRenameTable(tableId){
+  const screen = state.screens.find(s=>s.id===tableId);
+  if(!screen) return;
+  state.renamingTableId = tableId;
+  document.getElementById('renameTableInput').value = screen.name;
+  document.getElementById('renameTableModal').classList.add('open');
 }
+
+async function confirmRenameTable(){
+  const newName = document.getElementById('renameTableInput').value.trim();
+  if(!newName){ showToast('Digite um nome','danger'); return; }
+  const screen = state.screens.find(s=>s.id===state.renamingTableId);
+  if(screen){ screen.name = newName; }
+  await FB.saveAll();
+  closeModal('renameTableModal');
+  renderTableView();
+  renderBuilderList();
+  renderHome();
+  showToast('Tabela renomeada!','success');
+}
+
+// ============================================================
+// MASTER
+// ============================================================
+function toggleMaster(){
+  if(state.isMaster){
+    state.isMaster=false;
+    updateUI();
+    showToast('Modo master desativado','success');
+  } else {
+    document.getElementById('masterPwd').value='';
+    document.getElementById('pwdErr').style.display='none';
+    document.getElementById('masterModal').classList.add('open');
+    setTimeout(()=>document.getElementById('masterPwd').focus(),100);
+  }
+}
+
+function checkMaster(){
+  const pwd=document.getElementById('masterPwd').value;
+  if(pwd===state.masterPwd){
+    state.isMaster=true;
+    closeModal('masterModal');
+    updateUI();
+    showToast('Modo ADM Master ativado!','success');
+  } else {
+    document.getElementById('pwdErr').style.display='block';
+  }
+}
+
+function updateUI(){
+  const mb=document.getElementById('masterBtn');
+  const rb=document.getElementById('roleBadge');
+  const roleLabel = state.isMaster?'ADM Master':
+    state.currentUserData?.role==='adm_basico'?'ADM Básico':
+    state.currentUserData?.role==='visualizador'?'Visualizador':'Operador';
+  if(state.isMaster){
+    mb.classList.add('active');
+    rb.className='role-badge role-master';
+    rb.textContent='ADM Master';
+    document.getElementById('tabBuilder').classList.remove('hidden');
+    document.getElementById('tabUsers').classList.remove('hidden');
+  } else {
+    mb.classList.remove('active');
+    rb.className='role-badge role-operator';
+    rb.textContent=roleLabel;
+    document.getElementById('tabBuilder').classList.add('hidden');
+    document.getElementById('tabUsers').classList.add('hidden');
+  }
+  renderHome();
+  if(state.currentTableView) renderTableView();
+}
+
+// ============================================================
+// HOME
+// ============================================================
+// seções colapsáveis: guarda estado de cada seção aberta/fechada
+if(!state.sectionOpen) state.sectionOpen={formulario:true,tabela:true,'tabela-form':true,cadastro:false};
+
+function toggleSection(key){
+  state.sectionOpen[key]=!state.sectionOpen[key];
+  renderHome();
+}
+
+function renderHome(){
+  updateStats();
+  const el = document.getElementById('homeContent');
+
+  const cadastros   = state.screens.filter(s=>s.type==='cadastro');
+  const formularios = state.screens.filter(s=>s.type==='formulario');
+  const tabelas     = state.screens.filter(s=>s.type==='tabela'&&s.linkedFormId);
+  const tabelasAcao = state.screens.filter(s=>s.type==='tabela-form');
+
+  if(!cadastros.length&&!formularios.length&&!tabelas.length&&!tabelasAcao.length){
+    el.innerHTML=`<div class="empty-state" style="padding:48px 20px">
+      <div style="font-size:32px;margin-bottom:12px">📋</div>
+      <div style="font-weight:500;color:var(--text2);margin-bottom:6px">Nenhuma tela criada ainda</div>
+      <div style="font-size:12px">O ADM Master deve criar a estrutura do app no Construtor.</div>
+    </div>`;
+    return;
+  }
+
+  const iconMap={cadastro:'🗂️',formulario:'📝',tabela:'📊','tabela-form':'🔄'};
+  const labelMap={cadastro:'Cadastro',formulario:'Formulário',tabela:'Tabela',['tabela-form']:'Tabela de Fluxo'};
+
+  function makeCard(s, onClick, typeOverride){
+    const t=typeOverride||s.type;
+    const cnt=(state.records[s.id]||[]).length;
+    return `<div class="home-card" onclick="${onClick}" title="${escHtml(s.name)}">
+      <div class="home-card-icon type-${t}-icon">${iconMap[t]||'📄'}</div>
+      <div class="home-card-body">
+        <div class="home-card-name">${escHtml(s.name)}</div>
+        <div class="home-card-meta">
+          <span class="screen-type-badge type-${t}">${labelMap[t]||t}</span>
+          <span class="home-card-count">${cnt} registro${cnt!==1?'s':''}</span>
+        </div>
+      </div>
+      <div class="home-card-arrow">›</div>
+    </div>`;
+  }
+
+  function makeSection(key, icon, title, items, makeCard){
+    if(!items.length) return '';
+    const open=state.sectionOpen[key]!==false;
+    return `<div class="home-section">
+      <div class="home-section-header" onclick="toggleSection('${key}')" style="cursor:pointer;user-select:none">
+        <span class="home-section-icon">${icon}</span>
+        <span>${title}</span>
+        <span class="home-section-count">${items.length}</span>
+        <span style="margin-left:auto;font-size:14px;transition:transform .2s;display:inline-block;transform:rotate(${open?'0':'180'}deg)">⌃</span>
+      </div>
+      ${open?`<div class="home-cards">${items.map(s=>makeCard(s)).join('')}</div>`:''}
+    </div>`;
+  }
+
+  let html='';
+  // ordem: Formulários → Tabelas → Cadastros
+  html+=makeSection('formulario','📝','Formulários de Entrada',formularios,
+    s=>makeCard(s,`openFormModal(${s.id})`,'formulario'));
+  html+=makeSection('tabela','📊','Tabelas de Resultados',[...tabelas,...tabelasAcao],
+    s=>makeCard(s,`openTableView(${s.id})`,s.type));
+  html+=makeSection('cadastro','🗂️','Cadastros',cadastros,
+    s=>makeCard(s,`openFormModal(${s.id})`,'cadastro'));
+
+  el.innerHTML=html;
+}
+
+// ============================================================
+// CRIAR / RENOMEAR TELA
+// ============================================================
+function openNewScreenModal(){
+  state.editingScreenId = null;
+  document.getElementById('newScreenModalTitle').textContent='Nova tela';
+  document.getElementById('newScreenSaveBtn').textContent='Criar';
+  document.getElementById('newScreenName').value='';
+  document.getElementById('newScreenType').value='cadastro';
+  document.getElementById('newScreenType').disabled=false;
+  updateScreenTypeHint();
+  document.getElementById('newScreenModal').classList.add('open');
+}
+
+function openRenameScreen(screenId, e){
+  if(e) e.stopPropagation();
+  const screen = state.screens.find(s=>s.id===screenId);
+  if(!screen) return;
+  state.editingScreenId = screenId;
+  document.getElementById('newScreenModalTitle').textContent='Renomear tela';
+  document.getElementById('newScreenSaveBtn').textContent='Salvar';
+  document.getElementById('newScreenName').value=screen.name;
+  document.getElementById('newScreenType').value=screen.type;
+  document.getElementById('newScreenType').disabled=true;
+  document.getElementById('newScreenModal').classList.add('open');
+}
+
+function updateScreenTypeHint(){
+  const v=document.getElementById('newScreenType').value;
+  const hints={
+    cadastro:'Tela de cadastro: serve de referência para outros formulários.',
+    formulario:'Formulário: permite entrada de dados. Uma tabela de resultados será criada automaticamente.',
+    'formulario-multi':'Formulário multi-linha: tem campos fixos de cabeçalho + linhas repetíveis (ex: itens de NF). Cada linha vira uma linha na tabela.',
+  };
+  document.getElementById('screenTypeHint').textContent=hints[v]||'';
+}
+
+function toggleEmailConfig(){
+  document.getElementById('emailConfigSection').style.display=
+    document.getElementById('screenSendEmail').checked?'block':'none';
+}
+
+async function createOrRenameScreen(){
+  const name=document.getElementById('newScreenName').value.trim();
+  if(!name){ showToast('Digite um nome','danger'); return; }
+
+  if(state.editingScreenId){
+    // RENOMEAR
+    const screen = state.screens.find(s=>s.id===state.editingScreenId);
+    if(screen) screen.name = name;
+    await FB.saveAll();
+    closeModal('newScreenModal');
+    renderBuilderList(); renderBuilderDetail(); renderHome();
+    showToast('Tela renomeada!','success');
+    return;
+  }
+
+  // CRIAR NOVA
+  const type=document.getElementById('newScreenType').value;
+  const allowImages=document.getElementById('screenAllowImages').checked;
+  const sendEmail=document.getElementById('screenSendEmail').checked;
+  const emailRecipients=sendEmail?(document.getElementById('screenEmailRecipients').value.split('\n').map(s=>s.trim()).filter(Boolean)):[];
+
+  const isMulti = type==='formulario-multi';
+  const realType = isMulti?'formulario':type;
+  const screen={id:uid(),name,type:realType,isMulti,fields:[],multiFields:[],linkedTableId:null,linkedFormId:null,actions:[],allowImages,sendEmail,emailRecipients};
+  state.screens.push(screen);
+  state.records[screen.id]=[];
+  if(realType==='formulario'||isMulti){
+    const tableScreen={id:uid(),name:name+' — Tabela',type:'tabela',linkedFormId:screen.id,fields:[],actions:[]};
+    state.screens.push(tableScreen);
+    state.records[tableScreen.id]=[];
+    screen.linkedTableId=tableScreen.id;
+  }
+  await FB.saveAll();
+  closeModal('newScreenModal');
+  renderBuilderList(); renderHome(); updateStats();
+  showToast('Tela "'+name+'" criada!','success');
+}
+
+// ============================================================
+// BUILDER
+// ============================================================
+function selectBuilderScreen(id){
+  state.selectedScreen=id;
+  renderBuilderList();
+  renderBuilderDetail();
+}
+
+function renderBuilderList(){
+  const el=document.getElementById('builderScreenList');
+  if(!state.screens.length){ el.innerHTML='<div class="empty-state">Nenhuma tela criada.</div>'; return; }
+  el.innerHTML=state.screens.map(s=>`
+    <div class="screen-item${state.selectedScreen===s.id?' selected':''}" onclick="selectBuilderScreen(${s.id})">
+      <span class="screen-type-badge type-${s.type}">${s.type==='tabela-form'?'tabela-ação':s.type}</span>
+      <span class="screen-name">${escHtml(s.name)}</span>
+      <div class="screen-actions">
+        <button class="btn btn-sm btn-ghost" title="Renomear" onclick="openRenameScreen(${s.id},event)">✎</button>
+        <button class="btn btn-sm btn-danger" onclick="deleteScreen(${s.id},event)">×</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+async function deleteScreen(id,e){
+  e.stopPropagation();
+  if(!confirm('Excluir esta tela e todos os dados vinculados?')) return;
+  const screen = state.screens.find(s=>s.id===id);
+  if(!screen) return;
+  const toDelete = [id];
+  if(screen.linkedTableId) toDelete.push(screen.linkedTableId);
+  (screen.actions||[]).forEach(act=>{ if(act.targetTableId) toDelete.push(act.targetTableId); });
+  state.screens.filter(s=>s.linkedFormId===id).forEach(s=>{
+    (s.actions||[]).forEach(act=>{ if(act.targetTableId) toDelete.push(act.targetTableId); });
+    toDelete.push(s.id);
+  });
+  state.screens = state.screens.filter(s=>!toDelete.includes(s.id));
+  toDelete.forEach(tid=>delete state.records[tid]);
+  if(toDelete.includes(state.selectedScreen)) state.selectedScreen=null;
+  await FB.saveAll();
+  renderBuilderList(); renderBuilderDetail(); renderHome(); updateStats();
+  showToast('Tela removida','danger');
+}
+
+function renderBuilderDetail(){
+  const el=document.getElementById('builderDetail');
+  if(!state.selectedScreen){ el.innerHTML='<div class="empty-state" style="padding-top:40px">Selecione uma tela para editar.</div>'; return; }
+  const screen=state.screens.find(s=>s.id===state.selectedScreen);
+  if(!screen){ el.innerHTML=''; return; }
+
+  const isTabela = screen.type==='tabela'||screen.type==='tabela-form';
+  const linkedForm = screen.linkedFormId ? state.screens.find(s=>s.id===screen.linkedFormId) : null;
+
+  let html=`
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+      <div class="card-title" style="flex:1">${escHtml(screen.name)}</div>
+      <button class="btn btn-sm btn-ghost" onclick="openRenameScreen(${screen.id})">✎ Renomear</button>
+    </div>
+    <div style="display:flex;gap:6px;margin-bottom:14px;align-items:center">
+      <span class="screen-type-badge type-${screen.type}">${screen.type==='tabela-form'?'tabela-ação':screen.type}</span>
+      ${screen.linkedTableId?`<span style="font-size:11px;color:var(--text3)">→ gera tabela automaticamente</span>`:''}
+      ${screen.linkedFormId?`<span style="font-size:11px;color:var(--text3)">← gerada por "${escHtml(linkedForm?linkedForm.name:'?')}"</span>`:''}
+    </div>`;
+
+  if(screen.isMulti){ renderBuilderDetailMulti(screen); return; }
+
+  if(isTabela){
+    html+=`<div class="hint" style="margin-bottom:10px">Campos espelhados do formulário de origem.</div>`;
+    if(screen.fields.length){
+      html+=`<div class="field-list">`;
+      screen.fields.forEach(f=>{
+        html+=`<div class="field-item">
+          <span class="field-name">${escHtml(f.name)}</span>
+          <span class="field-type-tag">${f.type}</span>
+          ${f.isMaster?`<span class="field-master-tag">mestre</span>`:''}
+          ${f.isSum?`<span class="field-sum-tag">soma</span>`:''}
+        </div>`;
+      });
+      html+=`</div>`;
+    }
+    html+=`<div class="divider"></div>
+      <div class="builder-section">
+        <div class="builder-section-title">Botões de ação</div>
+        <div class="action-list">`;
+    const actions = screen.actions||[];
+    if(!actions.length){
+      html+=`<div style="font-size:12px;color:var(--text3);padding:8px 0">Nenhum botão configurado.</div>`;
+    } else {
+      actions.forEach((act,ai)=>{
+        const targetTable = state.screens.find(s=>s.id===act.targetTableId);
+        html+=`<div class="action-item">
+          <span class="action-item-name">▶ ${escHtml(act.name)}</span>
+          <span class="action-item-detail">→ ${escHtml(targetTable?targetTable.name:'?')}</span>
+          <span style="font-size:10px;padding:2px 6px;border-radius:4px;${act.actionMode==='history'?'background:var(--success-light);color:var(--success)':'background:var(--warning-light);color:var(--warning)'}">${act.actionMode==='history'?'histórico':'fluxo'}</span>
+          <button class="btn btn-sm btn-ghost" title="Editar" onclick="openEditActionModal(${screen.id},${ai})">✎</button>
+          <button class="btn btn-sm btn-danger" onclick="deleteAction(${screen.id},${ai})">×</button>
+        </div>`;
+      });
+    }
+    html+=`</div>
+        <button class="btn btn-sm btn-primary" style="margin-top:8px;width:100%" onclick="openNewActionModal(${screen.id})">+ Novo botão de ação</button>
+      </div>`;
+  } else {
+    html+=`<div class="section-header" style="margin-top:4px">
+        <span class="section-title">Campos</span>
+        <button class="btn btn-sm btn-primary" onclick="openFieldModal(${screen.id},null)">+ Campo</button>
+      </div>
+      <div class="field-list" id="fieldList_${screen.id}">
+        ${renderFieldList(screen)}
+      </div>`;
+    if(screen.type==='formulario'){
+      html+=`<div class="divider"></div>
+        <div class="section-title" style="margin-bottom:8px">Fluxo de dados</div>
+        <div style="font-size:12px;color:var(--text2);margin-bottom:8px">Tabela onde os registros serão salvos:</div>
+        <div style="display:flex;align-items:center;gap:8px;font-size:12px">
+          <span style="padding:4px 8px;background:var(--accent-light);color:var(--accent-text);border-radius:5px">${escHtml(screen.name)}</span>
+          <span style="color:var(--text3)">→</span>
+          <select style="width:auto;flex:1" onchange="setFlowTarget(${screen.id},this.value)">
+            <option value="">Tabela padrão (automática)</option>
+            ${state.screens.filter(s=>s.type==='tabela'||s.type==='tabela-form').map(s=>`<option value="${s.id}" ${screen.flowTarget===s.id?'selected':''}>${escHtml(s.name)}</option>`).join('')}
+          </select>
+        </div>`;
+    }
+  }
+  el.innerHTML=html;
+}
+
+function renderFieldList(screen){
+  if(!screen.fields.length) return '<div class="empty-state" style="padding:16px">Nenhum campo. Clique em "+ Campo".</div>';
+  return screen.fields.map((f,i)=>`
+    <div class="field-item">
+      <span class="field-name">${escHtml(f.name)}</span>
+      <span class="field-type-tag">${f.type}</span>
+      ${f.isMaster?`<span class="field-master-tag">★ mestre</span>`:''}
+      ${(!f.isMaster&&f.isUnique)?`<span class="field-unique-tag">único</span>`:''}
+      ${f.isSum?`<span class="field-sum-tag">Σ soma</span>`:''}
+      ${f.type==='calculado'?`<span class="field-calc-tag">⚙ ${escHtml(f.calcA||'')} ${f.calcOp||''} ${escHtml(f.calcB||'')}</span>`:''}
+      ${f.type==='selecionavel'&&f.linkTarget?`<span class="field-link">→ ${escHtml(state.screens.find(s=>s.id===f.linkTarget)?.name||'?')}</span>`:''}
+      ${f.required?'<span class="required-badge">obrigatório</span>':''}
+      ${state.isMaster?`
+        <button class="btn btn-sm btn-ghost" title="Editar campo" onclick="openFieldModal(${screen.id},${i})">✎</button>
+        <button class="btn btn-sm btn-danger" onclick="removeField(${screen.id},${i})">×</button>
+      `:''}
+    </div>
+  `).join('');
+}
+
+async function setFlowTarget(screenId,val){
+  const s=state.screens.find(x=>x.id===screenId);
+  if(s) s.flowTarget=val?parseInt(val):null;
+  await FB.saveAll();
+}
+
+// ============================================================
+// BUILDER — MULTI-LINE FIELDS SECTION
+// ============================================================
+function renderBuilderDetailMulti(screen){
+  const el=document.getElementById('builderDetail');
+  let html=`
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+      <div class="card-title" style="flex:1">${escHtml(screen.name)}</div>
+      <button class="btn btn-sm btn-ghost" onclick="openRenameScreen(${screen.id})">✎</button>
+    </div>
+    <div style="display:flex;gap:6px;margin-bottom:14px">
+      <span class="screen-type-badge type-formulario">multi-linha</span>
+      <span style="font-size:11px;color:var(--text3)">→ gera tabela automaticamente</span>
+    </div>
+
+    <div class="section-header">
+      <span class="section-title">Campos do cabeçalho</span>
+      <button class="btn btn-sm btn-primary" onclick="openFieldModal(${screen.id},null)">+ Campo</button>
+    </div>
+    <div class="hint" style="margin-bottom:8px">Campos únicos por registro. Ex: número da NF, fornecedor, data.</div>
+    <div class="field-list">${renderFieldList(screen)}</div>
+
+    <div class="divider"></div>
+    <div class="section-header">
+      <span class="section-title">Campos das linhas (repetíveis)</span>
+      <button class="btn btn-sm btn-primary" onclick="openMultiFieldModal(${screen.id},null)">+ Campo de linha</button>
+    </div>
+    <div class="hint" style="margin-bottom:8px">Campos que se repetem por item. Ex: código, quantidade, lote.</div>
+    <div class="field-list" id="multiFieldList_${screen.id}">
+      ${renderMultiFieldList(screen)}
+    </div>`;
+  el.innerHTML=html;
+}
+
+function renderMultiFieldList(screen){
+  const mf=screen.multiFields||[];
+  if(!mf.length) return '<div class="empty-state" style="padding:16px">Nenhum campo de linha.</div>';
+  return mf.map((f,i)=>`
+    <div class="field-item">
+      <span class="field-name">${escHtml(f.name)}</span>
+      <span class="field-type-tag">${f.type}</span>
+      ${f.required?'<span class="required-badge">obrigatório</span>':''}
+      ${state.isMaster?`
+        <button class="btn btn-sm btn-ghost" onclick="openMultiFieldModal(${screen.id},${i})">✎</button>
+        <button class="btn btn-sm btn-danger" onclick="removeMultiField(${screen.id},${i})">×</button>
+      `:''}
+    </div>
+  `).join('');
+}
+
+function openMultiFieldModal(screenId, fieldIdx){
+  // reutiliza o modal de campo normal, mas flag para salvar em multiFields
+  state.activeForm={screenId, isMultiField:true};
+  state.editingFieldIdx=fieldIdx;
+  const screen=state.screens.find(s=>s.id===screenId);
+  const isEdit=fieldIdx!==null&&fieldIdx!==undefined;
+  const field=isEdit?(screen.multiFields||[])[fieldIdx]:null;
+  document.getElementById('fieldModalTitle').textContent=isEdit?'Editar campo de linha':'Novo campo de linha';
+  document.getElementById('fieldSaveBtn').textContent=isEdit?'Salvar':'Adicionar';
+  document.getElementById('newFieldName').value=field?field.name:'';
+  document.getElementById('newFieldType').value=field?field.type:'texto';
+  document.getElementById('fieldRequired').checked=field?!!field.required:false;
+  document.getElementById('fieldIsMaster').checked=false;
+  document.getElementById('fieldIsUnique').checked=false;
+  document.getElementById('fieldIsSum').checked=field?!!field.isSum:false;
+  onFieldTypeChange();
+  const cadastros=state.screens.filter(s=>s.type==='cadastro');
+  document.getElementById('fieldLinkTarget').innerHTML=cadastros.map(s=>`<option value="${s.id}" ${field&&field.linkTarget===s.id?'selected':''}>${escHtml(s.name)}</option>`).join('');
+  document.getElementById('newFieldModal').classList.add('open');
+}
+
+async function removeMultiField(screenId,idx){
+  if(!confirm('Remover este campo de linha?')) return;
+  const screen=state.screens.find(s=>s.id===screenId);
+  screen.multiFields.splice(idx,1);
+  await FB.saveAll();
+  renderBuilderDetail();
+}
+
+// ============================================================
+// FORMULÁRIO MULTI-LINHA — OPERADOR
+// ============================================================
+let _multiRowCount=0;
+let _multiImgs=[];
+let _formImgs=[];
+
+function openMultiFormModal(screenId){
+  const screen=state.screens.find(s=>s.id===screenId);
+  if(!screen) return;
+  state.activeForm={screenId};
+  _multiRowCount=0; _multiImgs=[];
+  document.getElementById('multiFormTitle').textContent=screen.name;
+  document.getElementById('multiFormSubtitle').textContent='Preencha o cabeçalho e adicione quantas linhas precisar.';
+
+  // campos do cabeçalho
+  const hdr=document.getElementById('multiFormHeader');
+  hdr.innerHTML=screen.fields.map((f,i)=>{
+    const tags=(f.isMaster?'<span class="field-master-tag" style="font-size:10px;margin-left:4px">★</span>':'')+
+               (f.isUnique?'<span class="field-unique-tag" style="font-size:10px;margin-left:4px">único</span>':'')+
+               (f.required?'<span class="required-badge" style="margin-left:4px">*</span>':'');
+    return `<label>${escHtml(f.name)}${tags}</label>${buildFieldInput(f,'mhdr_'+i,'',screenId)}`;
+  }).join('');
+
+  document.getElementById('multiFormRows').innerHTML='';
+  document.getElementById('multiImgSection').style.display=screen.allowImages?'block':'none';
+  document.getElementById('multiImgPreviews').innerHTML='';
+  addMultiRow(); // começa com 1 linha
+  document.getElementById('multiFormModal').classList.add('open');
+}
+
+function addMultiRow(){
+  const screenId=state.activeForm.screenId;
+  const screen=state.screens.find(s=>s.id===screenId);
+  const mf=screen.multiFields||[];
+  if(!mf.length){ showToast('Configure campos de linha no Construtor primeiro.','danger'); return; }
+  const ri=_multiRowCount++;
+  const rowEl=document.createElement('div');
+  rowEl.className='multi-row';
+  rowEl.id='multirow_'+ri;
+  rowEl.innerHTML=`
+    <div class="multi-row-header">
+      <span style="font-size:12px;font-weight:500;color:var(--text2)">Linha ${ri+1}</span>
+      ${ri>0?`<button class="btn btn-sm btn-danger" style="padding:2px 8px" onclick="removeMultiRow(${ri})">×</button>`:''}
+    </div>
+    <div class="multi-row-fields">
+      ${mf.map((f,fi)=>{
+        const req=f.required?'<span class="required-badge" style="margin-left:4px">*</span>':'';
+        return `<div class="multi-row-field">
+          <label style="margin-top:0">${escHtml(f.name)}${req}</label>
+          ${buildFieldInput(f,`mrow_${ri}_${fi}`,'',screenId)}
+        </div>`;
+      }).join('')}
+    </div>`;
+  document.getElementById('multiFormRows').appendChild(rowEl);
+}
+
+function removeMultiRow(ri){
+  const el=document.getElementById('multirow_'+ri);
+  if(el) el.remove();
+}
+
+async function submitMultiForm(){
+  const screen=state.screens.find(s=>s.id===state.activeForm.screenId);
+  if(!screen) return;
+  const mf=screen.multiFields||[];
+
+  // valida e coleta cabeçalho
+  const header={};
+  const now=new Date();
+
+  // unicidade do cabeçalho
+  const uniqueFields=screen.fields.filter(f=>f.isUnique===true);
+  const targetForUnique=screen.linkedTableId?(state.records[screen.linkedTableId]||[]):(state.records[screen.id]||[]);
+  for(const uf of uniqueFields){
+    const idx=screen.fields.indexOf(uf);
+    const el=document.getElementById('mhdr_'+idx);
+    const val=el?el.value.trim():'';
+    if(val&&targetForUnique.some(r=>r[uf.name]===val)){
+      showToast('Campo único "'+uf.name+'" já existe: "'+val+'"','danger'); return;
+    }
+  }
+
+  for(let i=0;i<screen.fields.length;i++){
+    const f=screen.fields[i];
+    if(f.type==='calculado') continue;
+    const el=document.getElementById('mhdr_'+i);
+    if(!el) continue;
+    let val=el.tagName==='SELECT'?el.value:el.value;
+    if(f.type==='moeda'&&val) val='R$ '+parseFloat(val).toFixed(2).replace('.',',');
+    if(f.type==='percentual'&&val) val=parseFloat(val).toFixed(2)+'%';
+    if(f.required&&!val){ showToast('Campo obrigatório: "'+f.name+'"','danger'); return; }
+    header[f.name]=val;
+  }
+
+  // coleta linhas
+  const rowEls=document.querySelectorAll('#multiFormRows .multi-row');
+  if(!rowEls.length){ showToast('Adicione pelo menos uma linha.','danger'); return; }
+  const audit={
+    _data:now.toLocaleDateString('pt-BR'),
+    _hora:now.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}),
+    _usuario:state.currentUserData?.name||state.currentUser?.email||'—',
+  };
+  // imagens vão só na primeira linha
+  const firstRowImgs=_multiImgs.length?{_images:JSON.stringify([..._multiImgs])}:{};
+  const records=[];
+  for(const rowEl of rowEls){
+    const ri=parseInt(rowEl.id.replace('multirow_',''));
+    const rowData={};
+    for(let fi=0;fi<mf.length;fi++){
+      const f=mf[fi];
+      const el=document.getElementById(`mrow_${ri}_${fi}`);
+      if(!el) continue;
+      let val=el.tagName==='SELECT'?el.value:el.value;
+      if(f.type==='moeda'&&val) val='R$ '+parseFloat(val).toFixed(2).replace('.',',');
+      if(f.type==='percentual'&&val) val=parseFloat(val).toFixed(2)+'%';
+      if(f.required&&!val){ showToast('Campo obrigatório na linha: "'+f.name+'"','danger'); return; }
+      rowData[f.name]=val;
+    }
+    records.push({...header,...rowData,...audit,...(records.length===0?firstRowImgs:{})});
+  }
+
+  const targetId=screen.flowTarget||screen.linkedTableId||screen.id;
+  state.records[targetId]=state.records[targetId]||[];
+  records.forEach(r=>state.records[targetId].push(r));
+  state.records[screen.id]=state.records[screen.id]||[];
+  if(targetId!==screen.id) records.forEach(r=>state.records[screen.id].push(r));
+
+  await FB.saveAll();
+  // e-mail
+  if(screen.sendEmail&&screen.emailRecipients?.length) sendFormEmail(screen,records);
+  closeModal('multiFormModal');
+  renderHome(); updateStats();
+  showToast(records.length+' linha(s) registradas!','success');
+}
+
+// ============================================================
+// IMAGENS
+// ============================================================
+function handleImgUpload(input, ctx){
+  const files=[...input.files];
+  if(!files.length) return;
+  const previewsId=ctx==='multi'?'multiImgPreviews':'formImgPreviews';
+  const arr=ctx==='multi'?_multiImgs:_formImgs;
+  files.forEach(f=>{
+    // comprime a imagem para max 800px e qualidade 0.7
+    const reader=new FileReader();
+    reader.onload=e=>{
+      const img=new Image();
+      img.onload=()=>{
+        const MAX=800;
+        let w=img.width, h=img.height;
+        if(w>MAX||h>MAX){
+          if(w>h){ h=Math.round(h*MAX/w); w=MAX; }
+          else { w=Math.round(w*MAX/h); h=MAX; }
+        }
+        const canvas=document.createElement('canvas');
+        canvas.width=w; canvas.height=h;
+        canvas.getContext('2d').drawImage(img,0,0,w,h);
+        const compressed=canvas.toDataURL('image/jpeg',0.72);
+        arr.push(compressed);
+        // thumbnail no preview
+        const el=document.getElementById(previewsId);
+        const thumb=document.createElement('img');
+        thumb.src=compressed;
+        thumb.className='img-thumb';
+        thumb.onclick=()=>{ document.getElementById('imgViewerSrc').src=compressed; document.getElementById('imgViewerModal').classList.add('open'); };
+        el.appendChild(thumb);
+      };
+      img.src=e.target.result;
+    };
+    reader.readAsDataURL(f);
+  });
+}
+
+// ============================================================
+// E-MAIL via Web3Forms (sem configuração de servidor)
+// Chave pública gratuita — cada destinatário confirma 1x no primeiro recebimento
+// ============================================================
+const WEB3FORMS_KEY = 'YOUR_ACCESS_KEY'; // substituir pela chave de web3forms.com (gratuito)
+
+function sendFormEmail(screen, records){
+  // Monta lista de destinatários: combinação dos cadastrados na tela + lista global
+  const recipients = [
+    ...(screen.emailRecipients||[]),
+    ...(state.globalEmailRecipients||[]),
+  ].filter(Boolean);
+  if(!recipients.length) return;
+
+  const now = new Date().toLocaleString('pt-BR');
+  const subject = `[FlowBase] ${screen.name} — novo registro em ${now}`;
+  const body = records.map((r,ri)=>{
+    const lines = Object.entries(r)
+      .filter(([k])=>!k.startsWith('_images'))
+      .map(([k,v])=>`• ${colLabel(k)}: ${v||'—'}`).join('\n');
+    return records.length>1 ? `--- Registro ${ri+1} ---\n${lines}` : lines;
+  }).join('\n\n');
+
+  recipients.forEach(to=>{
+    fetch('https://api.web3forms.com/submit',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Accept':'application/json'},
+      body:JSON.stringify({
+        access_key: WEB3FORMS_KEY,
+        to_email: to,
+        subject,
+        message: body,
+        from_name: 'FlowBase',
+      }),
+    }).then(r=>r.json()).then(d=>{
+      if(d.success) console.log('E-mail enviado para',to);
+      else console.warn('Web3Forms erro:',d.message);
+    }).catch(e=>console.warn('E-mail falhou:',e));
+  });
+}
+
+// ── Gerencia destinatários globais no Firestore
+// (editável por qualquer usuário logado — operadores podem alterar)
+async function loadGlobalRecipients(){
+  const db=window._fbDb; const f=window._fbFns;
+  try{
+    const snap=await f.getDoc(f.doc(db,'app','emailRecipients'));
+    state.globalEmailRecipients=snap.exists()?(snap.data().list||[]):[];
+  }catch(e){ state.globalEmailRecipients=[]; }
+}
+
+async function saveGlobalRecipients(list){
+  const db=window._fbDb; const f=window._fbFns;
+  state.globalEmailRecipients=list;
+  await f.setDoc(f.doc(db,'app','emailRecipients'),{list});
+}
+
+function openEmailRecipientsModal(){
+  document.getElementById('globalRecipientsInput').value=(state.globalEmailRecipients||[]).join('\n');
+  document.getElementById('emailRecipientsModal').classList.add('open');
+}
+
+async function saveEmailRecipients(){
+  const list=document.getElementById('globalRecipientsInput').value.split('\n').map(s=>s.trim()).filter(Boolean);
+  await saveGlobalRecipients(list);
+  closeModal('emailRecipientsModal');
+  showToast('Destinatários salvos!','success');
+}
+
+// ============================================================
+// CAMPOS — Abrir, Editar, Salvar
+// ============================================================
+function onFieldTypeChange(){
+  const v=document.getElementById('newFieldType').value;
+  document.getElementById('fieldLinkConfig').style.display=v==='selecionavel'?'block':'none';
+  document.getElementById('fieldCalcConfig').style.display=v==='calculado'?'block':'none';
+  const numericTypes=['numero','moeda','percentual'];
+  document.getElementById('sumFieldRow').style.display=numericTypes.includes(v)?'flex':'none';
+  if(!numericTypes.includes(v)) document.getElementById('fieldIsSum').checked=false;
+
+  // campo calculado não pode ser mestre/único/obrigatório
+  const isCalc = v==='calculado';
+  document.getElementById('fieldIsMaster').disabled=isCalc;
+  document.getElementById('fieldIsUnique').disabled=isCalc;
+  document.getElementById('fieldRequired').disabled=isCalc;
+  if(isCalc){
+    document.getElementById('fieldIsMaster').checked=false;
+    document.getElementById('fieldIsUnique').checked=false;
+    document.getElementById('fieldRequired').checked=false;
+  }
+
+  // popula selects de colunas para campo calculado
+  if(isCalc){
+    const screenId = state.activeForm?.screenId;
+    const screen = state.screens.find(s=>s.id===screenId);
+    const numFields = (screen?.fields||[]).filter(f=>['numero','moeda','percentual'].includes(f.type));
+    const opts = numFields.map(f=>`<option value="${escHtml(f.name)}">${escHtml(f.name)}</option>`).join('');
+    document.getElementById('calcFieldA').innerHTML=opts;
+    document.getElementById('calcFieldB').innerHTML=opts;
+  }
+}
+
+function onMasterOrSumChange(which){
+  // mestre e soma são mutuamente exclusivos, mas mestre NÃO implica único
+  if(which==='master' && document.getElementById('fieldIsMaster').checked){
+    document.getElementById('fieldIsSum').checked=false;
+  }
+  if(which==='sum' && document.getElementById('fieldIsSum').checked){
+    document.getElementById('fieldIsMaster').checked=false;
+  }
+}
+
+function onAafTypeChange(){
+  const v=document.getElementById('aafType').value;
+  const lc=document.getElementById('aafLinkConfig');
+  lc.style.display=v==='selecionavel'?'block':'none';
+  if(v==='selecionavel'){
+    const cadastros=state.screens.filter(s=>s.type==='cadastro');
+    document.getElementById('aafLinkTarget').innerHTML=
+      cadastros.map(s=>`<option value="${s.id}">${escHtml(s.name)}</option>`).join('');
+  }
+}
+
+function openFieldModal(screenId, fieldIdx){
+  state.activeForm={screenId};
+  state.editingFieldIdx = fieldIdx;
+
+  const screen = state.screens.find(s=>s.id===screenId);
+  const isEdit = fieldIdx !== null && fieldIdx !== undefined;
+  const field = isEdit ? screen.fields[fieldIdx] : null;
+
+  document.getElementById('fieldModalTitle').textContent = isEdit ? 'Editar campo' : 'Novo campo';
+  document.getElementById('fieldSaveBtn').textContent = isEdit ? 'Salvar alterações' : 'Adicionar campo';
+
+  document.getElementById('newFieldName').value = field ? field.name : '';
+  document.getElementById('newFieldType').value = field ? field.type : 'texto';
+  document.getElementById('fieldRequired').checked = field ? !!field.required : false;
+  document.getElementById('fieldIsMaster').checked = field ? !!field.isMaster : false;
+  document.getElementById('fieldIsUnique').checked = field ? !!field.isUnique : false;
+  document.getElementById('fieldIsSum').checked = field ? !!field.isSum : false;
+
+  onFieldTypeChange();
+  const cadastros=state.screens.filter(s=>s.type==='cadastro');
+  document.getElementById('fieldLinkTarget').innerHTML=cadastros.map(s=>`<option value="${s.id}" ${field&&field.linkTarget===s.id?'selected':''}>${escHtml(s.name)}</option>`).join('');
+  if(field&&field.type==='selecionavel') document.getElementById('fieldLinkConfig').style.display='block';
+
+  // pré-preenche campos calculados se editando
+  if(field&&field.type==='calculado'&&field.calcA){
+    setTimeout(()=>{
+      const selA=document.getElementById('calcFieldA');
+      const selB=document.getElementById('calcFieldB');
+      const selOp=document.getElementById('calcOp');
+      if(selA) selA.value=field.calcA;
+      if(selB) selB.value=field.calcB;
+      if(selOp) selOp.value=field.calcOp||'+';
+    },50);
+  }
+
+  document.getElementById('newFieldModal').classList.add('open');
+}
+
+async function saveField(){
+  const name=document.getElementById('newFieldName').value.trim();
+  const type=document.getElementById('newFieldType').value;
+  const required=document.getElementById('fieldRequired').checked;
+  const isMaster=document.getElementById('fieldIsMaster').checked;
+  const isUnique=document.getElementById('fieldIsUnique').checked; // independente do mestre
+  const isSum=document.getElementById('fieldIsSum').checked;
+  if(!name){ showToast('Digite o nome do campo','danger'); return; }
+
+  const isMultiField = !!state.activeForm.isMultiField;
+  const screen=state.screens.find(s=>s.id===state.activeForm.screenId);
+  const field={name,type,required,isMaster: isMultiField?false:isMaster, isUnique: isMultiField?false:isUnique, isSum};
+  if(type==='selecionavel') field.linkTarget=parseInt(document.getElementById('fieldLinkTarget').value)||null;
+  if(type==='calculado'){
+    field.calcA = document.getElementById('calcFieldA').value;
+    field.calcOp = document.getElementById('calcOp').value;
+    field.calcB = document.getElementById('calcFieldB').value;
+    field.required=false;
+  }
+
+  const isEdit = state.editingFieldIdx!==null && state.editingFieldIdx!==undefined;
+  if(isMultiField){
+    if(!screen.multiFields) screen.multiFields=[];
+    if(isEdit) screen.multiFields[state.editingFieldIdx]=field;
+    else screen.multiFields.push(field);
+  } else {
+    if(isEdit) screen.fields[state.editingFieldIdx]=field;
+    else screen.fields.push(field);
+    // espelha para tabela vinculada (só campos de cabeçalho)
+    if(screen.linkedTableId){
+      const table=state.screens.find(s=>s.id===screen.linkedTableId);
+      if(table) table.fields=[...screen.fields];
+    }
+  }
+  await FB.saveAll();
+  closeModal('newFieldModal');
+  renderBuilderDetail();
+  showToast(isEdit?'Campo atualizado!':'Campo "'+name+'" adicionado','success');
+}
+
+async function removeField(screenId,idx){
+  if(!confirm('Remover este campo?')) return;
+  const screen=state.screens.find(s=>s.id===screenId);
+  screen.fields.splice(idx,1);
+  if(screen.linkedTableId){
+    const table=state.screens.find(s=>s.id===screen.linkedTableId);
+    if(table) table.fields=[...screen.fields];
+  }
+  await FB.saveAll();
+  renderBuilderDetail();
+  showToast('Campo removido','danger');
+}
+
+// ============================================================
+// BOTÕES DE AÇÃO
+// ============================================================
+function openNewActionModal(tableId){
+  const screen=state.screens.find(s=>s.id===tableId);
+  if(!screen) return;
+  state.activeForm={actionTableId:tableId};
+  state.tempActionFields=[];
+  state.editingActionIdx=null;
+
+  document.getElementById('actionModalTitle').textContent='Novo botão de ação';
+  document.getElementById('actionSaveBtn').textContent='Criar botão de ação';
+  document.getElementById('actionBtnName').value='';
+
+  const masterSel=document.getElementById('actionMasterField');
+  masterSel.innerHTML=`<option value="">Selecione o campo mestre...</option>`+
+    screen.fields.map(f=>`<option value="${escHtml(f.name)}">${escHtml(f.name)}</option>`).join('');
+
+  const targetSel=document.getElementById('actionTargetTable');
+  const outras=state.screens.filter(s=>(s.type==='tabela'||s.type==='tabela-form')&&s.id!==tableId);
+  targetSel.innerHTML=`<option value="__new__">Criar nova tabela automaticamente</option>`+
+    outras.map(s=>`<option value="${s.id}">${escHtml(s.name)}</option>`).join('');
+
+  renderTempActionFields();
+  // pré-seleciona modo 'flow' para novo
+  document.getElementById('actionModeFlow').checked=true;
+  document.getElementById('newActionModal').classList.add('open');
+}
+
+function openEditActionModal(tableId, actionIdx){
+  const screen=state.screens.find(s=>s.id===tableId);
+  if(!screen) return;
+  const act = screen.actions[actionIdx];
+  if(!act) return;
+  state.activeForm={actionTableId:tableId};
+  state.tempActionFields=[...( act.extraFields||[])];
+  state.editingActionIdx=actionIdx;
+
+  document.getElementById('actionModalTitle').textContent='Editar botão de ação';
+  document.getElementById('actionSaveBtn').textContent='Salvar alterações';
+  document.getElementById('actionBtnName').value=act.name;
+
+  const masterSel=document.getElementById('actionMasterField');
+  masterSel.innerHTML=`<option value="">Selecione...</option>`+
+    screen.fields.map(f=>`<option value="${escHtml(f.name)}" ${f.name===act.masterField?'selected':''}>${escHtml(f.name)}</option>`).join('');
+
+  const targetSel=document.getElementById('actionTargetTable');
+  const outras=state.screens.filter(s=>(s.type==='tabela'||s.type==='tabela-form')&&s.id!==tableId);
+  targetSel.innerHTML=`<option value="__new__">Criar nova tabela automaticamente</option>`+
+    outras.map(s=>`<option value="${s.id}" ${s.id===act.targetTableId?'selected':''}>${escHtml(s.name)}</option>`).join('');
+
+  renderTempActionFields();
+  // pré-seleciona o modo salvo
+  const modeVal = act.actionMode||'flow';
+  document.querySelectorAll('input[name="actionMode"]').forEach(r=>{ r.checked=(r.value===modeVal); });
+  document.getElementById('newActionModal').classList.add('open');
+}
+
+function renderTempActionFields(){
+  const el=document.getElementById('actionFieldsList');
+  if(!state.tempActionFields.length){
+    el.innerHTML=`<div style="font-size:12px;color:var(--text3);padding:6px 0">Nenhum campo adicional.</div>`;
+    return;
+  }
+  el.innerHTML=state.tempActionFields.map((f,i)=>`
+    <div class="field-item">
+      <span class="field-name">${escHtml(f.name)}</span>
+      <span class="field-type-tag">${f.type}</span>
+      ${f.required?'<span class="required-badge">obrigatório</span>':''}
+      <button class="btn btn-sm btn-danger" onclick="removeTempActionField(${i})">×</button>
+    </div>
+  `).join('');
+}
+
+function removeTempActionField(i){
+  state.tempActionFields.splice(i,1);
+  renderTempActionFields();
+}
+
+function addActionField(){
+  document.getElementById('aafName').value='';
+  document.getElementById('aafType').value='texto';
+  document.getElementById('aafRequired').checked=false;
+  document.getElementById('addActionFieldModal').classList.add('open');
+}
+
+function confirmActionField(){
+  const name=document.getElementById('aafName').value.trim();
+  if(!name){ showToast('Digite o nome do campo','danger'); return; }
+  const type=document.getElementById('aafType').value;
+  const required=document.getElementById('aafRequired').checked;
+  const field={name,type,required};
+  if(type==='selecionavel'){
+    field.linkTarget=parseInt(document.getElementById('aafLinkTarget').value)||null;
+  }
+  state.tempActionFields.push(field);
+  renderTempActionFields();
+  closeModal('addActionFieldModal');
+}
+
+async function saveAction(){
+  const name=document.getElementById('actionBtnName').value.trim();
+  const masterField=document.getElementById('actionMasterField').value;
+  const targetVal=document.getElementById('actionTargetTable').value;
+  const actionMode=document.querySelector('input[name="actionMode"]:checked')?.value||'flow';
+  if(!name){ showToast('Digite o nome do botão','danger'); return; }
+  if(!masterField){ showToast('Selecione o campo mestre','danger'); return; }
+
+  const tableId=state.activeForm.actionTableId;
+  const sourceTable=state.screens.find(s=>s.id===tableId);
+  if(!sourceTable.actions) sourceTable.actions=[];
+
+  let targetTableId;
+  const isEdit = state.editingActionIdx!==null && state.editingActionIdx!==undefined;
+
+  if(isEdit){
+    // edição: mantém tabela de destino se não mudou para __new__
+    const existingAct = sourceTable.actions[state.editingActionIdx];
+    targetTableId = (targetVal==='__new__') ? existingAct.targetTableId : parseInt(targetVal);
+    if(targetVal==='__new__' && !targetTableId){
+      const newTable={id:uid(),name:sourceTable.name+' → '+name,type:'tabela-form',
+        fields:[...sourceTable.fields,...state.tempActionFields],actions:[],
+        linkedFormId:null,linkedTableId:null,sourceTableId:tableId,actionName:name};
+      state.screens.push(newTable); state.records[newTable.id]=[]; targetTableId=newTable.id;
+    }
+    sourceTable.actions[state.editingActionIdx]={name,masterField,extraFields:[...state.tempActionFields],targetTableId,actionMode};
+  } else {
+    if(targetVal==='__new__'){
+      const newTable={id:uid(),name:sourceTable.name+' → '+name,type:'tabela-form',
+        fields:[...sourceTable.fields,...state.tempActionFields],actions:[],
+        linkedFormId:null,linkedTableId:null,sourceTableId:tableId,actionName:name};
+      state.screens.push(newTable); state.records[newTable.id]=[]; targetTableId=newTable.id;
+    } else {
+      targetTableId=parseInt(targetVal);
+      const destTable=state.screens.find(s=>s.id===targetTableId);
+      if(destTable){
+        const existingNames=destTable.fields.map(f=>f.name);
+        sourceTable.fields.forEach(f=>{ if(!existingNames.includes(f.name)) destTable.fields.push({...f}); });
+        state.tempActionFields.forEach(f=>{ if(!existingNames.includes(f.name)) destTable.fields.push({...f}); });
+      }
+    }
+    sourceTable.actions.push({name,masterField,extraFields:[...state.tempActionFields],targetTableId,actionMode});
+  }
+
+  state.tempActionFields=[];
+  await FB.saveAll();
+  closeModal('newActionModal');
+  renderBuilderDetail(); renderHome();
+  showToast(isEdit?'Botão atualizado!':'Botão "'+name+'" criado!','success');
+}
+
+async function deleteAction(tableId,ai){
+  if(!confirm('Excluir este botão de ação?')) return;
+  const screen=state.screens.find(s=>s.id===tableId);
+  if(!screen||!screen.actions) return;
+  const act=screen.actions[ai];
+  if(act&&act.targetTableId){
+    const dest=state.screens.find(s=>s.id===act.targetTableId);
+    if(dest&&dest.type==='tabela-form'){
+      state.screens=state.screens.filter(s=>s.id!==act.targetTableId);
+      delete state.records[act.targetTableId];
+    }
+  }
+  screen.actions.splice(ai,1);
+  await FB.saveAll();
+  renderBuilderDetail(); renderHome();
+  showToast('Botão removido','danger');
+}
+
+// ============================================================
+// FORMULÁRIO DE AÇÃO
+// ============================================================
+function openActionForm(tableId, actionIdx){
+  const screen=state.screens.find(s=>s.id===tableId);
+  if(!screen) return;
+  const action=screen.actions[actionIdx];
+  if(!action) return;
+  const recs=state.records[tableId]||[];
+  state.activeAction={tableId, actionIdx};
+
+  document.getElementById('actionFormTitle').textContent=action.name;
+  const modeLabel = action.actionMode==='history' ? ' · Modo histórico (linha permanece)' : '';
+  document.getElementById('actionFormSubtitle').textContent=
+    `Selecione um registro pelo campo "${action.masterField}".${modeLabel}`;
+
+  let html='';
+  const masterValues=[...new Set(recs.map(r=>r[action.masterField]).filter(Boolean))];
+  html+=`<label>${escHtml(action.masterField)} <span class="required-badge">*</span></label>
+    <select id="actionMasterValue" style="margin-bottom:8px" onchange="onActionMasterChange(${tableId},${actionIdx},this.value)">
+      <option value="">Selecionar...</option>
+      ${masterValues.map(v=>`<option value="${escHtml(v)}">${escHtml(v)}</option>`).join('')}
+    </select>`;
+
+  // ── Campos de soma — lógica inteligente no modo fluxo
+  const sumFields=(screen.fields||[]).filter(f=>f.isSum);
+  const calcFields=(screen.fields||[]).filter(f=>f.type==='calculado');
+  if(action.actionMode!=='history' && sumFields.length){
+    // Separa campos primários (editáveis pelo operador) dos calculados (auto)
+    // Um campo de soma é "primário" se NÃO é do tipo calculado
+    const primarySumFields=sumFields.filter(f=>f.type!=='calculado');
+    const calcSumFields=sumFields.filter(f=>f.type==='calculado');
+
+    html+=`<div style="background:var(--warning-light);border-radius:8px;padding:10px;margin:6px 0 10px;font-size:12px;color:var(--warning)">
+      Informe a <strong>quantidade a dar saída</strong>. Campos calculados são ajustados automaticamente. A linha só é removida quando o saldo da quantidade principal zera.
+    </div>`;
+
+    primarySumFields.forEach(sf=>{
+      const safeId=sf.name.replace(/[^a-zA-Z0-9]/g,'_');
+      html+=`<label>${escHtml(sf.name)} a transferir <span class="required-badge">*</span></label>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+          ${buildFieldInput(sf,'actionSumField_'+safeId,'')}
+          <span id="saldoLabel_${safeId}" style="font-size:11px;color:var(--text3);white-space:nowrap;min-width:80px">Saldo: —</span>
+        </div>`;
+    });
+    if(calcSumFields.length){
+      html+=`<div style="font-size:11px;color:var(--text3);background:var(--bg3);border-radius:6px;padding:8px;margin-bottom:8px">
+        ⚙ Campos calculados (${calcSumFields.map(f=>escHtml(f.name)).join(', ')}) serão ajustados automaticamente.
+      </div>`;
+    }
+  }
+
+  // campos adicionais do botão de ação
+  (action.extraFields||[]).forEach((f,i)=>{
+    html+=`<label>${escHtml(f.name)}${f.required?' <span class="required-badge">*</span>':''}</label>
+      ${buildFieldInput(f,'actionField_'+i,'')}`;
+  });
+
+  document.getElementById('actionFormFields').innerHTML=html;
+  document.getElementById('actionFormModal').classList.add('open');
+}
+
+// Atualiza labels de saldo ao selecionar item no dropdown
+function onActionMasterChange(tableId, actionIdx, masterVal){
+  if(!masterVal) return;
+  const screen=state.screens.find(s=>s.id===tableId);
+  const action=screen.actions[actionIdx];
+  const recs=state.records[tableId]||[];
+  const row=recs.find(r=>r[action.masterField]===masterVal);
+  if(!row) return;
+  const sumFields=(screen.fields||[]).filter(f=>f.isSum);
+  sumFields.forEach(sf=>{
+    const safeId=sf.name.replace(/[^a-zA-Z0-9]/g,'_');
+    const el=document.getElementById('saldoLabel_'+safeId);
+    if(el) el.textContent='Saldo: '+(row[sf.name]||'0');
+  });
+}
+
+async function submitActionForm(){
+  const {tableId, actionIdx}=state.activeAction;
+  const screen=state.screens.find(s=>s.id===tableId);
+  const action=screen.actions[actionIdx];
+  const recs=state.records[tableId]||[];
+  const masterValue=document.getElementById('actionMasterValue').value;
+  if(!masterValue){ showToast('Selecione um valor para o campo mestre','danger'); return; }
+  const rowIdx=recs.findIndex(r=>r[action.masterField]===masterValue);
+  if(rowIdx===-1){ showToast('Registro não encontrado','danger'); return; }
+  const sourceRow={...recs[rowIdx]};
+
+  // valida campos adicionais
+  const extraData={};
+  const extraFields=action.extraFields||[];
+  for(let i=0;i<extraFields.length;i++){
+    const f=extraFields[i];
+    const el=document.getElementById('actionField_'+i);
+    const val=el?el.value:'';
+    if(f.required&&!val){ showToast('Campo "'+f.name+'" é obrigatório','danger'); return; }
+    extraData[f.name]=val;
+  }
+
+  const now2 = new Date();
+  // ── Auditoria encadeada com ordem garantida
+  // Regra: _data/_hora/_usuario (sem sufixo) = etapa 1 (primeira gravação)
+  // Quando transferimos para outra tabela, renomeamos etapa 1 para _data_1
+  // e adicionamos _data_2 para a nova etapa, etc.
+  const srcKeys = Object.keys(sourceRow);
+  const renamedAudit = {};
+
+  // Descobre a próxima etapa
+  // _data = etapa 1, _data_2 = etapa 2, _data_3 = etapa 3...
+  let nextStep = 2;
+  if(srcKeys.includes('_data') && !srcKeys.includes('_data_1')){
+    // primeira transferência: renomeia etapa 1
+    renamedAudit['_data_1']    = sourceRow._data;
+    renamedAudit['_hora_1']    = sourceRow._hora;
+    renamedAudit['_usuario_1'] = sourceRow._usuario;
+    delete sourceRow._data; delete sourceRow._hora; delete sourceRow._usuario;
+    nextStep = 2;
+  } else {
+    // já tem etapas numeradas: encontra a próxima
+    while(srcKeys.includes(`_data_${nextStep}`)) nextStep++;
+  }
+
+  const auditFields = {
+    [`_data_${nextStep}`]    : now2.toLocaleDateString('pt-BR'),
+    [`_hora_${nextStep}`]    : now2.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}),
+    [`_usuario_${nextStep}`] : state.currentUserData?.name || state.currentUser?.email || '—',
+  };
+
+  const actionMode = action.actionMode || 'flow';
+  const sumFields = (screen.fields||[]).filter(f=>f.isSum);
+  const calcFields = (screen.fields||[]).filter(f=>f.type==='calculado');
+
+  // ── MODO FLUXO
+  if(actionMode==='flow'){
+    if(sumFields.length){
+      const primarySumFields=sumFields.filter(f=>f.type!=='calculado');
+      const calcSumFields=sumFields.filter(f=>f.type==='calculado');
+
+      // 1. Subtrai campos primários (quantidade, etc.)
+      for(const sf of primarySumFields){
+        const safeId=sf.name.replace(/[^a-zA-Z0-9]/g,'_');
+        const inputEl=document.getElementById('actionSumField_'+safeId);
+        if(!inputEl) continue;
+        const qtdRaw=parseFloat(inputEl.value)||0;
+        if(qtdRaw<=0){ showToast('Informe uma quantidade positiva para "'+sf.name+'"','danger'); return; }
+        const saldoAtual=parseRawNum(sourceRow[sf.name]);
+        if(qtdRaw>saldoAtual){
+          showToast('Saldo insuficiente para "'+sf.name+'". Disponível: '+saldoAtual,'danger');
+          return;
+        }
+        const novoSaldo=saldoAtual-qtdRaw;
+        state.records[tableId][rowIdx][sf.name]=formatFieldVal(sf,novoSaldo);
+        extraData[sf.name]=formatFieldVal(sf,qtdRaw);
+      }
+
+      // 2. Para campos calculados de soma: recalcula usando os valores transferidos
+      // Ex: Total = Qnt × Valor_Unit → usa a Qnt transferida × valor unit médio
+      for(const cf of calcSumFields){
+        // busca os valores dos operandos já resolvidos (extraData tem os primários)
+        const getVal=name=>{
+          if(extraData[name]!==undefined) return parseRawNum(extraData[name]);
+          return parseRawNum(sourceRow[name]);
+        };
+        const a=getVal(cf.calcA);
+        const b=getVal(cf.calcB);
+        let res=0;
+        if(cf.calcOp==='+') res=a+b;
+        else if(cf.calcOp==='-') res=a-b;
+        else if(cf.calcOp==='*') res=a*b;
+        else if(cf.calcOp==='/') res=b!==0?a/b:0;
+        const formatted=formatFieldVal(cf,res);
+        extraData[cf.name]=formatted;
+        // atualiza saldo do calculado na origem
+        const primarySrc=primarySumFields[0];
+        if(primarySrc){
+          const novoQtd=parseRawNum(state.records[tableId][rowIdx]?.[primarySrc.name]||'0');
+          const unitValKey=cf.calcA===primarySrc.name?cf.calcB:cf.calcA;
+          const unitVal=parseRawNum(sourceRow[unitValKey]);
+          const novoCalcSaldo=novoQtd*unitVal;
+          state.records[tableId][rowIdx][cf.name]=formatFieldVal(cf,novoCalcSaldo);
+        }
+      }
+
+      // 3. Remove linha se quantidade principal zerou
+      const primaryFirst=primarySumFields[0];
+      if(primaryFirst){
+        const novoSaldoCheck=parseRawNum(state.records[tableId][rowIdx]?.[primaryFirst.name]||'0');
+        if(novoSaldoCheck===0) state.records[tableId].splice(rowIdx,1);
+      }
+    } else {
+      // sem campos de soma: remove a linha inteiramente
+      state.records[tableId].splice(rowIdx,1);
+    }
+  }
+  // MODO HISTÓRICO: linha permanece, só copia para destino
+
+  const destRecord={...sourceRow,...renamedAudit,...extraData,...auditFields};
+  const destId=action.targetTableId;
+  state.records[destId]=state.records[destId]||[];
+  state.records[destId].push(destRecord);
+
+  await FB.saveAll();
+  closeModal('actionFormModal');
+  updateStats(); renderHome();
+  if(state.currentTableView===tableId||state.currentTableView===destId) renderTableView();
+  showToast('Ação executada com sucesso!','success');
+}
+
+// ============================================================
+// FORMULÁRIO NORMAL
+// ============================================================
+function openNewScreenModal(){
+  state.editingScreenId = null;
+  document.getElementById('newScreenModalTitle').textContent='Nova tela';
+  document.getElementById('newScreenSaveBtn').textContent='Criar';
+  document.getElementById('newScreenName').value='';
+  document.getElementById('newScreenType').value='cadastro';
+  document.getElementById('newScreenType').disabled=false;
+  document.getElementById('screenAllowImages').checked=false;
+  document.getElementById('screenSendEmail').checked=false;
+  document.getElementById('emailConfigSection').style.display='none';
+  document.getElementById('screenEmailRecipients').value='';
+  updateScreenTypeHint();
+  document.getElementById('newScreenModal').classList.add('open');
+}
+
+function openFormModal(screenId){
+  const screen=state.screens.find(s=>s.id===screenId);
+  if(!screen) return;
+  // formulário multi-linha tem seu próprio modal
+  if(screen.isMulti){ openMultiFormModal(screenId); return; }
+  state.activeForm={screenId, images:[]};
+  document.getElementById('formModalTitle').textContent=screen.name;
+  document.getElementById('formModalSubtitle').textContent=
+    screen.type==='cadastro'?'Cadastre um novo registro base.':'Preencha o formulário e salve.';
+  const ff=document.getElementById('formFields');
+  if(!screen.fields.length){
+    ff.innerHTML='<div class="empty-state">Este formulário não tem campos configurados.</div>';
+  } else {
+    ff.innerHTML=screen.fields.map((f,i)=>{
+      const masterTag=f.isMaster?'<span class="field-master-tag" style="font-size:10px;padding:2px 6px;border-radius:4px;background:var(--purple-light);color:var(--purple);margin-left:4px">★ mestre</span>':'';
+      const uniqueTag=f.isUnique?'<span style="font-size:10px;padding:2px 6px;border-radius:4px;background:var(--accent-light);color:var(--accent-text);margin-left:4px">único</span>':'';
+      const reqTag=f.required?'<span class="required-badge" style="margin-left:4px">*</span>':'';
+      const calcTag=f.type==='calculado'?'<span style="font-size:10px;padding:2px 6px;border-radius:4px;background:var(--purple-light);color:var(--purple);margin-left:4px">⚙ calc</span>':'';
+      return `<label>${escHtml(f.name)}${masterTag}${uniqueTag}${reqTag}${calcTag}</label>
+        ${buildFieldInput(f,'field_'+i,'',screenId)}`;
+    }).join('');
+  }
+  _formImgs=[];
+  // mostra seção de imagens se a tela permite
+  const imgSec=document.getElementById('formImgSection');
+  imgSec.style.display=screen.allowImages?'block':'none';
+  document.getElementById('formImgPreviews').innerHTML='';
+  document.getElementById('formModal').classList.add('open');
+}
+
+// Constrói o input HTML correto para cada tipo de campo
+function buildFieldInput(f, id, extraStyle='', screenId=null){
+  const style=`style="margin-bottom:6px${extraStyle?';'+extraStyle:''}"`;
+  switch(f.type){
+    case 'data': return `<input type="date" id="${id}" ${style}/>`;
+    case 'hora': return `<input type="time" id="${id}" ${style}/>`;
+    case 'numero': return `<input type="number" id="${id}" placeholder="${escHtml(f.name)}" ${style}/>`;
+    case 'moeda': return `<input type="number" id="${id}" step="0.01" placeholder="0,00" ${style}/>`;
+    case 'percentual': return `<input type="number" id="${id}" step="0.01" min="0" max="100" placeholder="0,00" ${style}/>`;
+    case 'booleano': return `<select id="${id}" ${style}><option value="">Selecionar...</option><option value="Sim">Sim</option><option value="Não">Não</option></select>`;
+    case 'calculado': return `<input type="text" id="${id}" placeholder="(calculado automaticamente)" readonly ${style} style="margin-bottom:6px;background:var(--bg3);color:var(--text3);cursor:not-allowed"/>`;
+    case 'selecionavel':{
+      if(f.linkTarget){
+        const srcScreen=state.screens.find(s=>s.id===f.linkTarget);
+        const recs=state.records[f.linkTarget]||[];
+        const masterF=srcScreen?(srcScreen.fields.find(mf=>mf.isMaster)||srcScreen.fields[0]):null;
+        const masterKey=masterF?masterF.name:null;
+        const opts=recs.map(r=>{
+          const dv=masterKey?(r[masterKey]||''):(Object.values(r).find(v=>v&&typeof v==='string'&&!v.startsWith('R$'))||'?');
+          return `<option value="${escHtml(dv)}">${escHtml(dv)}</option>`;
+        }).join('');
+        const onch=screenId?`onchange="autoFill(${screenId},this)"`:``;
+        return `<select id="${id}" ${style} data-field-name="${escHtml(f.name)}" ${onch}><option value="">Selecionar...</option>${opts}</select>`;
+      }
+      return `<input type="text" id="${id}" placeholder="${escHtml(f.name)}" ${style}/>`;
+    }
+    default: return `<input type="text" id="${id}" placeholder="${escHtml(f.name)}" ${style}/>`;
+  }
+}
+
+function autoFill(screenId, selectEl){
+  const selectedVal = selectEl.value;
+  if(!selectedVal) return;
+  const screen=state.screens.find(s=>s.id===screenId);
+  if(!screen) return;
+  const fieldName = selectEl.getAttribute('data-field-name');
+  const field = screen.fields.find(f=>f.name===fieldName);
+  if(!field||!field.linkTarget) return;
+  const srcScreen=state.screens.find(s=>s.id===field.linkTarget);
+  const recs=state.records[field.linkTarget]||[];
+  const masterF=srcScreen?(srcScreen.fields.find(mf=>mf.isMaster)||srcScreen.fields[0]):null;
+  const masterKey=masterF?masterF.name:null;
+  const rec=masterKey?recs.find(r=>r[masterKey]===selectedVal):recs.find(r=>Object.values(r).includes(selectedVal));
+  if(!rec) return;
+  // preenche campos do formulário pelo nome do campo
+  screen.fields.forEach((f,fi)=>{
+    if(f.name===fieldName) return;
+    if(rec[f.name]!==undefined){
+      const el=document.getElementById('field_'+fi);
+      if(el&&el.tagName==='INPUT') el.value=rec[f.name];
+    }
+  });
+}
+
+async function submitForm(){
+  const screen=state.screens.find(s=>s.id===state.activeForm.screenId);
+  if(!screen) return;
+  if(!screen.fields.length){ closeModal('formModal'); return; }
+
+  // ── Validação de unicidade
+  // APENAS campos com isUnique=true bloqueiam duplicatas.
+  // isMaster NUNCA bloqueia duplicatas por si só.
+  // Em formulários (type=formulario), a validação é feita nos registros da tabela
+  // vinculada (linkedTableId) ou do próprio screen, conforme o caso.
+  // Em cadastros (type=cadastro), verifica no próprio screen.
+  const uniqueFields = screen.fields.filter(f=>f.isUnique===true);
+  const targetForUnique = screen.linkedTableId
+    ? (state.records[screen.linkedTableId]||[])
+    : (state.records[screen.id]||[]);
+  for(const uf of uniqueFields){
+    const idx=screen.fields.indexOf(uf);
+    const el=document.getElementById('field_'+idx);
+    const val=el ? (el.tagName==='SELECT'?el.value:el.value.trim()) : '';
+    if(!val) continue;
+    if(targetForUnique.some(r=>r[uf.name]===val)){
+      showToast('O campo "'+uf.name+'" já possui o valor "'+val+'". Não pode repetir.','danger');
+      return;
+    }
+  }
+
+  const record={};
+  const now = new Date();
+  for(let i=0;i<screen.fields.length;i++){
+    const f=screen.fields[i];
+    if(f.type==='calculado') continue; // calculado é resolvido depois
+    const el=document.getElementById('field_'+i);
+    if(!el) continue;
+    let val = el.tagName==='SELECT' ? el.value : el.value;
+    if(f.type==='moeda'&&val) val='R$ '+parseFloat(val).toFixed(2).replace('.',',');
+    if(f.type==='percentual'&&val) val=parseFloat(val).toFixed(2)+'%';
+    if(f.required&&!val){ showToast('Campo "'+f.name+'" é obrigatório','danger'); return; }
+    record[f.name]=val;
+  }
+
+  // resolve campos calculados
+  screen.fields.filter(f=>f.type==='calculado').forEach(f=>{
+    const a=parseRawNum(record[f.calcA]);
+    const b=parseRawNum(record[f.calcB]);
+    let res=0;
+    if(f.calcOp==='+') res=a+b;
+    else if(f.calcOp==='-') res=a-b;
+    else if(f.calcOp==='*') res=a*b;
+    else if(f.calcOp==='/') res=b!==0?a/b:0;
+    record[f.name]=res%1===0?String(res):res.toFixed(4).replace(/\.?0+$/,'');
+  });
+
+  // imagens: anexa ao registro se houver (comprimidas)
+  if(_formImgs.length){
+    record['_images']=JSON.stringify([..._formImgs]);
+  }
+
+  record['_data'] = now.toLocaleDateString('pt-BR');
+  record['_hora'] = now.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+  record['_usuario'] = state.currentUserData?.name || state.currentUser?.email || '—';
+
+  state.records[screen.id]=state.records[screen.id]||[];
+  state.records[screen.id].push(record);
+  const targetId=screen.flowTarget||screen.linkedTableId;
+  if(targetId&&targetId!==screen.id){
+    state.records[targetId]=state.records[targetId]||[];
+    state.records[targetId].push({...record});
+  }
+
+  await FB.saveAll();
+  if(screen.sendEmail&&screen.emailRecipients?.length) sendFormEmail(screen,[record]);
+  _formImgs=[];
+  closeModal('formModal');
+  renderHome(); updateStats();
+  showToast('Registro salvo!','success');
+}
+
+// ============================================================
+// USUÁRIOS
+// ============================================================
+async function renderUsers(){
+  const el=document.getElementById('userList');
+  const roleLabels={adm_master:'ADM Master',adm_basico:'ADM Básico',operador:'Operador',visualizador:'Visualizador',bloqueado:'Bloqueado'};
+  const roleClasses={adm_master:'role-master',adm_basico:'role-adm',operador:'role-operator',visualizador:'role-viewer',bloqueado:'role-blocked'};
+  const initials=n=>(n||'?').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+  const users = state.users;
+  if(!users.length){ el.innerHTML='<div class="empty-state">Nenhum usuário cadastrado.</div>'; return; }
+  el.innerHTML=users.map(u=>`
+    <div class="user-row">
+      <div class="avatar" style="background:var(--accent-light);color:var(--accent-text)">${initials(u.name)}</div>
+      <div class="user-info">
+        <div class="user-name">${escHtml(u.name)}</div>
+        <div class="user-email">${escHtml(u.email)}</div>
+      </div>
+      <span class="role-badge ${roleClasses[u.blocked?'bloqueado':u.role]}">${roleLabels[u.blocked?'bloqueado':u.role]}</span>
+      <select class="btn btn-sm" style="padding:4px 8px;width:auto" onchange="changeUserRole('${u.id}',this.value)">
+        <option value="operador" ${u.role==='operador'&&!u.blocked?'selected':''}>Operador</option>
+        <option value="visualizador" ${u.role==='visualizador'&&!u.blocked?'selected':''}>Visualizador</option>
+        <option value="adm_basico" ${u.role==='adm_basico'&&!u.blocked?'selected':''}>ADM Básico</option>
+        <option value="adm_master" ${u.role==='adm_master'&&!u.blocked?'selected':''}>ADM Master</option>
+      </select>
+      <button class="btn btn-sm ${u.blocked?'btn-primary':'btn-danger'}" onclick="toggleBlock('${u.id}',${u.blocked})">${u.blocked?'Desbloquear':'Bloquear'}</button>
+    </div>
+  `).join('');
+}
+
+async function changeUserRole(userId,role){
+  await FB.saveUser(userId,{role,blocked:false});
+  showToast('Permissão atualizada','success');
+}
+
+async function toggleBlock(userId, isBlocked){
+  await FB.saveUser(userId,{blocked:!isBlocked});
+  showToast(!isBlocked?'Usuário bloqueado':'Usuário desbloqueado', !isBlocked?'danger':'success');
+}
+
+// ============================================================
+// UTILS
+// ============================================================
+
+// Converte string formatada (R$, %, etc) para número float
+function parseRawNum(str){
+  if(str===null||str===undefined||str==='') return 0;
+  return parseFloat(String(str).replace(/[^0-9.,-]/g,'').replace(',','.').replace(/\.(?=.*\.)/g,''))||0;
+}
+
+// Formata número de volta para o formato do campo
+function formatFieldVal(field, num){
+  if(field.type==='moeda') return 'R$ '+num.toFixed(2).replace('.',',');
+  if(field.type==='percentual') return num.toFixed(2)+'%';
+  return String(num % 1 === 0 ? num : num.toFixed(3).replace(/\.?0+$/,''));
+}
+
+function closeModal(id){ document.getElementById(id).classList.remove('open'); }
+
+function updateStats(){
+  document.getElementById('statScreens').textContent=state.screens.length;
+  document.getElementById('statForms').textContent=state.screens.filter(s=>s.type==='formulario').length;
+  const total=Object.values(state.records).reduce((a,b)=>a+b.length,0);
+  document.getElementById('statRecords').textContent=total;
+}
+
+function showToast(msg,type){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.className='toast '+type; t.style.display='block';
+  clearTimeout(t._to);
+  t._to=setTimeout(()=>t.style.display='none',2800);
+}
+
+function escHtml(s){
+  if(s===null||s===undefined) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── fecha modal ao clicar fora
+document.querySelectorAll('.modal-overlay').forEach(overlay=>{
+  overlay.addEventListener('click', e=>{ if(e.target===overlay) overlay.classList.remove('open'); });
+});
+
+// ── init
+document.addEventListener('DOMContentLoaded',()=>{
+  updateScreenTypeHint();
+});
 </script>
 </body>
 </html>
