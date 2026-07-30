@@ -35,7 +35,7 @@
             display: flex;
             flex-wrap: wrap;
             gap: 15px;
-            max-width: 600px;
+            max-width: 650px;
             width: 100%;
             justify-content: center;
             margin-bottom: 25px;
@@ -45,6 +45,12 @@
             display: flex;
             flex-direction: column;
             gap: 5px;
+            flex: 1;
+            min-width: 140px;
+        }
+
+        .input-group.full-width {
+            flex: 100%;
         }
 
         label {
@@ -65,7 +71,31 @@
             border-color: #58a6ff;
         }
 
-        button {
+        .location-box {
+            display: flex;
+            gap: 8px;
+        }
+
+        .location-box input {
+            flex: 1;
+        }
+
+        .btn-secondary {
+            background-color: #21262d;
+            color: #c9d1d9;
+            border: 1px solid #30363d;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            white-space: nowrap;
+        }
+
+        .btn-secondary:hover {
+            background-color: #30363d;
+        }
+
+        .btn-primary {
             background-color: #238636;
             color: white;
             border: none;
@@ -73,11 +103,12 @@
             border-radius: 6px;
             cursor: pointer;
             font-weight: bold;
-            align-self: flex-end;
+            margin-top: 10px;
+            width: 100%;
             transition: background 0.2s;
         }
 
-        button:hover {
+        .btn-primary:hover {
             background-color: #2ea043;
         }
 
@@ -127,6 +158,12 @@
             font-size: 1.2rem;
             margin-right: 8px;
         }
+
+        .status-msg {
+            font-size: 0.8rem;
+            color: #8b949e;
+            margin-top: 4px;
+        }
     </style>
 </head>
 <body>
@@ -142,15 +179,21 @@
             <label for="time">Horário</label>
             <input type="time" id="time" value="14:30">
         </div>
-        <div class="input-group">
-            <label for="lat">Latitude (Ex: -25.42)</label>
-            <input type="number" id="lat" step="any" value="-25.42">
+
+        <div class="input-group full-width">
+            <label for="citySearch">Cidade, Estado e País</label>
+            <div class="location-box">
+                <input type="text" id="citySearch" placeholder="Ex: Curitiba, PR, Brasil ou São Paulo, Brasil" value="Curitiba, PR, Brasil">
+                <button type="button" class="btn-secondary" onclick="usarGPS()">📍 Usar GPS</button>
+            </div>
+            <div id="statusMsg" class="status-msg"></div>
         </div>
-        <div class="input-group">
-            <label for="lon">Longitude (Ex: -49.27)</label>
-            <input type="number" id="lon" step="any" value="-49.27">
-        </div>
-        <button onclick="calcularMapa()">Gerar Mapa</button>
+
+        <!-- Campos ocultos de latitude/longitude guardados automaticamente -->
+        <input type="hidden" id="lat" value="-25.4284">
+        <input type="hidden" id="lon" value="-49.2733">
+
+        <button class="btn-primary" onclick="processarEMapa()">Gerar Mapa</button>
     </div>
 
     <div class="canvas-container">
@@ -206,27 +249,72 @@
         bgImage.src = 'roda.png';
         bgImage.onload = () => calcularMapa();
 
+        async function buscarCoordenadas(cidade) {
+            const status = document.getElementById('statusMsg');
+            status.textContent = "Buscando localização...";
+            
+            try {
+                const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(cidade)}`);
+                const data = await response.json();
+
+                if (data && data.length > 0) {
+                    document.getElementById('lat').value = data[0].lat;
+                    document.getElementById('lon').value = data[0].lon;
+                    status.textContent = `Localizado: ${data[0].display_name.split(',')[0]}`;
+                    return true;
+                } else {
+                    status.textContent = "Cidade não encontrada. Usando local padrão.";
+                    return false;
+                }
+            } catch (err) {
+                status.textContent = "Erro ao buscar cidade. Verifique sua conexão.";
+                return false;
+            }
+        }
+
+        function usarGPS() {
+            const status = document.getElementById('statusMsg');
+            if (navigator.geolocation) {
+                status.textContent = "Obtendo GPS...";
+                navigator.geolocation.getCurrentPosition(pos => {
+                    document.getElementById('lat').value = pos.coords.latitude;
+                    document.getElementById('lon').value = pos.coords.longitude;
+                    document.getElementById('citySearch').value = "Minha Localização Atual";
+                    status.textContent = "Coordenadas obtidas via GPS!";
+                    calcularMapa();
+                }, () => {
+                    status.textContent = "Permissão de GPS negada.";
+                });
+            } else {
+                status.textContent = "Geolocalização não suportada pelo navegador.";
+            }
+        }
+
+        async function processarEMapa() {
+            const cidade = document.getElementById('citySearch').value;
+            if (cidade && cidade !== "Minha Localização Atual") {
+                await buscarCoordenadas(cidade);
+            }
+            calcularMapa();
+        }
+
         function normalizar(graus) {
             graus = graus % 360;
             return graus < 0 ? graus + 360 : graus;
         }
 
-        // Calcula dias passados desde a época J2000.0 (1 de Jan de 2000, 12:00 UTC)
         function getDaysJ2000(dateObj) {
             return (dateObj.getTime() - Date.UTC(2000, 0, 1, 12, 0, 0)) / 86400000;
         }
 
         function calcularAscendente(diasJ2000, longitude, latitude) {
-            // Tempo Sideral Médio em Greenwich (GMST)
             let gmst = normalizar(280.46061837 + 360.98564736629 * diasJ2000);
-            // Tempo Sideral Local (LST)
             let lst = normalizar(gmst + longitude);
             
             let radLST = lst * Math.PI / 180;
             let radLat = latitude * Math.PI / 180;
-            let obliq = 23.439 * Math.PI / 180; // Obliquidade da Eclíptica
+            let obliq = 23.439 * Math.PI / 180;
 
-            // Fórmula aproximada para o Ascendente
             let y = Math.cos(radLST);
             let x = -Math.sin(radLST) * Math.cos(obliq) - Math.tan(radLat) * Math.sin(obliq);
             let asc = Math.atan2(y, x) * 180 / Math.PI;
@@ -248,13 +336,10 @@
             const ascendente = calcularAscendente(d, lon, lat);
             
             const posicoes = ASTROS.map(astro => {
-                // Cálculo de posição aproximada
                 let lonEcliptica = normalizar(astro.N0 + astro.dN * d);
-                
                 let signoIndex = Math.floor(lonEcliptica / 30);
                 let grauNoSigno = lonEcliptica % 30;
                 
-                // Cálculo da Casa (Sistema Equal House baseado no Ascendente)
                 let diffAsc = normalizar(lonEcliptica - ascendente);
                 let casa = Math.floor(diffAsc / 30) + 1;
 
@@ -267,35 +352,28 @@
                 };
             });
 
-            desenharCanvas(posicoes, ascendente);
+            desenharCanvas(posicoes);
             preencherTabela(posicoes);
         }
 
-        function desenharCanvas(posicoes, ascendente) {
+        function desenharCanvas(posicoes) {
             const canvas = document.getElementById('astroCanvas');
             const ctx = canvas.getContext('2d');
             const cx = canvas.width / 2;
             const cy = canvas.height / 2;
-            const raioPlanetas = 160; // Raio onde os ícones dos planetas serão desenhados
+            const raioPlanetas = 160;
 
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            // 1. Desenha a Imagem de Fundo (roda.png)
             if (bgImage.complete && bgImage.naturalWidth !== 0) {
                 ctx.drawImage(bgImage, 0, 0, canvas.width, canvas.height);
             }
 
-            // 2. Desenha os Astros
             posicoes.forEach(astro => {
-                // Ajusta o ângulo para alinhar com o Zodíaco da imagem (Áries geralmente fica à esquerda/topo)
-                // Na roda padrão, Áries (0°) começa no topo ou na esquerda.
-                // Ajustando -90° para que 0° fique no topo (12 horas).
                 let anguloRad = (astro.grauAbsoluto - 90) * (Math.PI / 180);
-
                 let x = cx + raioPlanetas * Math.cos(anguloRad);
                 let y = cy + raioPlanetas * Math.sin(anguloRad);
 
-                // Círculo de fundo do planeta
                 ctx.beginPath();
                 ctx.arc(x, y, 13, 0, 2 * Math.PI);
                 ctx.fillStyle = '#0d1117';
@@ -304,7 +382,6 @@
                 ctx.lineWidth = 1.5;
                 ctx.stroke();
 
-                // Símbolo do planeta
                 ctx.fillStyle = astro.cor;
                 ctx.font = '14px Arial';
                 ctx.textAlign = 'center';
@@ -319,7 +396,6 @@
 
             posicoes.forEach(p => {
                 const tr = document.createElement('tr');
-                
                 const g = Math.floor(p.grauNoSigno);
                 const m = Math.floor((p.grauNoSigno - g) * 60);
 
