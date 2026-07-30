@@ -4,8 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mapa Astral de Alta Precisão</title>
-    <!-- Carregamento Assíncrono da Biblioteca de Astronomia -->
-    <script src="https://cdn.jsdelivr.net/npm/astronomy-engine@2.1.19/astronomy.browser.min.js"></script>
     <style>
         * {
             box-sizing: border-box;
@@ -197,7 +195,7 @@
                 <input type="text" id="citySearch" placeholder="Ex: Curitiba, PR, Brasil" value="Curitiba, PR, Brasil">
                 <button type="button" class="btn-secondary" onclick="usarGPS()">📍 Usar GPS</button>
             </div>
-            <div id="statusMsg" class="status-msg">Iniciando sistema...</div>
+            <div id="statusMsg" class="status-msg">Pronto.</div>
         </div>
 
         <input type="hidden" id="lat" value="-25.4284">
@@ -242,25 +240,81 @@
             { nome: "Peixes", simbolo: "♓" }
         ];
 
-        const ASTROS_CONFIG = [
-            { id: "Sun", nome: "Sol", simbolo: "☉", cor: "#ffd700" },
-            { id: "Moon", nome: "Lua", simbolo: "☽", cor: "#e6e6fa" },
-            { id: "Mercury", nome: "Mercúrio", simbolo: "☿", cor: "#b0c4de" },
-            { id: "Venus", nome: "Vênus", simbolo: "♀", cor: "#ffb6c1" },
-            { id: "Mars", nome: "Marte", simbolo: "♂", cor: "#ff4500" },
-            { id: "Jupiter", nome: "Júpiter", simbolo: "♃", cor: "#ffa500" },
-            { id: "Saturn", nome: "Saturno", simbolo: "♄", cor: "#daa520" },
-            { id: "Uranus", nome: "Urano", simbolo: "♅", cor: "#7fffd4" },
-            { id: "Neptune", nome: "Netuno", simbolo: "♆", cor: "#1e90ff" },
-            { id: "Pluto", nome: "Plutão", simbolo: "♇", cor: "#9370db" }
-        ];
-
         const bgImage = new Image();
         bgImage.src = 'roda.png';
 
+        function degToRad(deg) { return deg * Math.PI / 180; }
+        function radToDeg(rad) { return rad * 180 / Math.PI; }
         function normalizar(graus) {
             graus = graus % 360;
             return graus < 0 ? graus + 360 : graus;
+        }
+
+        // Algoritmo Keplereano Nativo para Cálculo Planetário
+        function calcularPosicaoPlaneta(planetKey, d) {
+            // Elementos Orbitais (J2000)
+            const elements = {
+                Sun:     { N: 0.0,      i: 0.0,     w: 282.9404 + 4.70935e-5*d, a: 1.000000, e: 0.016709 - 1.151e-9*d, M: 356.0470 + 0.9856002585*d },
+                Moon:    { N: 125.1228 - 0.0529538083*d, i: 5.1454, w: 318.0634 + 0.1643573223*d, a: 60.2666, e: 0.054900, M: 115.3654 + 13.0649929509*d },
+                Mercury: { N: 48.3313 + 3.24587e-5*d, i: 7.0047 + 5.00e-8*d, w: 29.1241 + 1.01444e-5*d, a: 0.387098, e: 0.205635 + 5.59e-10*d, M: 168.6562 + 4.0923344368*d },
+                Venus:   { N: 76.6799 + 2.46590e-5*d, i: 3.3946 + 2.75e-8*d, w: 54.8910 + 1.38374e-5*d, a: 0.723330, e: 0.006773 - 1.302e-9*d, M: 48.0052 + 1.6021302244*d },
+                Mars:    { N: 49.5574 + 2.11081e-5*d, i: 1.8497 - 1.78e-8*d, w: 286.5016 + 2.92961e-5*d, a: 1.523688, e: 0.093405 + 2.516e-9*d, M: 18.6021 + 0.5240207766*d },
+                Jupiter: { N: 100.4542 + 2.76854e-5*d, i: 1.3030 - 1.557e-7*d, w: 273.8777 + 1.64505e-5*d, a: 5.20256, e: 0.048498 + 4.469e-9*d, M: 19.8950 + 0.0830853001*d },
+                Saturn:  { N: 113.6655 + 2.38980e-5*d, i: 2.4886 - 1.081e-7*d, w: 339.3939 + 2.97661e-5*d, a: 9.55475, e: 0.055546 - 9.499e-9*d, M: 316.9670 + 0.0334442282*d },
+                Uranus:  { N: 74.0005 + 1.3978e-5*d, i: 0.7733 + 1.9e-8*d, w: 96.6612 + 3.0565e-5*d, a: 19.18171 - 1.55e-8*d, e: 0.047318 + 7.45e-9*d, M: 142.5905 + 0.011725806*d },
+                Neptune: { N: 131.7806 + 3.0173e-5*d, i: 1.7700 - 2.55e-7*d, w: 272.8461 - 6.027e-6*d, a: 30.05826 + 3.313e-8*d, e: 0.008606 + 2.15e-9*d, M: 260.2471 + 0.005995147*d },
+                Pluto:   { N: 110.3034 - 1.0385e-5*d, i: 17.14175, w: 113.7634 + 3.0295e-5*d, a: 39.48168, e: 0.248807, M: 14.882 + 0.003960*d }
+            };
+
+            const p = elements[planetKey];
+            let M = normalizar(p.M);
+            let radM = degToRad(M);
+
+            // Anomalia Excêntrica (Iteração de Kepler)
+            let E = radM + p.e * Math.sin(radM) * (1.0 + p.e * Math.cos(radM));
+            for(let iter=0; iter<5; iter++) {
+                E = E - (E - p.e * Math.sin(E) - radM) / (1.0 - p.e * Math.cos(E));
+            }
+
+            let x = p.a * (Math.cos(E) - p.e);
+            let y = p.a * Math.sqrt(1.0 - p.e * p.e) * Math.sin(E);
+
+            let r = Math.sqrt(x*x + y*y);
+            let v = Math.atan2(y, x);
+
+            let lonHelio = normalizar(radToDeg(v) + p.w);
+
+            if (planetKey === "Sun") {
+                return normalizar(lonHelio + 180);
+            }
+            if (planetKey === "Moon") {
+                // Perturbações da Lua
+                let Ls = normalizar(elements.Sun.M + elements.Sun.w);
+                let Lm = normalizar(M + p.w + p.N);
+                let D = normalizar(Lm - Ls);
+                let F = normalizar(Lm - p.N);
+
+                let dLon = -1.274 * Math.sin(degToRad(M - 2*D))
+                           + 0.658 * Math.sin(degToRad(2*D))
+                           - 0.186 * Math.sin(degToRad(elements.Sun.M))
+                           - 0.059 * Math.sin(degToRad(2*M - 2*D));
+                return normalizar(lonHelio + p.N + dLon);
+            }
+
+            // Conversão de Heliocêntrico para Geocêntrico
+            let sunLon = calcularPosicaoPlaneta("Sun", d);
+            let radSunLon = degToRad(sunLon);
+            let xs = Math.cos(radSunLon);
+            let ys = Math.sin(radSunLon);
+
+            let radPlanetLon = degToRad(lonHelio);
+            let xp = r * Math.cos(radPlanetLon);
+            let yp = r * Math.sin(radPlanetLon);
+
+            let xg = xp + xs;
+            let yg = yp + ys;
+
+            return normalizar(radToDeg(Math.atan2(yg, xg)));
         }
 
         async function buscarCoordenadas(cidade) {
@@ -276,7 +330,7 @@
                     return true;
                 }
             } catch (err) {}
-            status.textContent = "Local padrão utilizado.";
+            status.textContent = "Usando localização padrão.";
             return false;
         }
 
@@ -299,31 +353,23 @@
             calcularMapa();
         }
 
-        function getEclipticLongitude(body, date) {
-            if (body === "Sun") {
-                return Astronomy.SunPosition(date).lon;
-            }
-            const pos = Astronomy.GeoVector(body, date, true);
-            const ecl = Astronomy.Ecliptic(pos);
-            return ecl.elon;
-        }
+        function calcularAngulos(d, lat, lon) {
+            // Tempo Sideral em Greenwich
+            let GMST0 = normalizar(280.46061837 + 360.98564736629 * d);
+            let LST = normalizar(GMST0 + lon);
 
-        function calcularAngulos(date, lat, lon) {
-            const siderealTimeHours = Astronomy.SiderealTime(date);
-            const lstDegrees = normalizar((siderealTimeHours * 15) + lon);
-
-            const radLST = lstDegrees * Math.PI / 180;
-            const radLat = lat * Math.PI / 180;
-            const obliq = 23.439 * Math.PI / 180;
+            let radLST = degToRad(LST);
+            let radLat = degToRad(lat);
+            let obliq = degToRad(23.4393);
 
             // Meio do Céu (MC)
-            let mc = Math.atan2(Math.sin(radLST), Math.cos(radLST) * Math.cos(obliq)) * 180 / Math.PI;
+            let mc = radToDeg(Math.atan2(Math.sin(radLST), Math.cos(radLST) * Math.cos(obliq)));
             mc = normalizar(mc);
 
             // Ascendente (AC)
-            const y = Math.cos(radLST);
-            const x = -Math.sin(radLST) * Math.cos(obliq) - Math.tan(radLat) * Math.sin(obliq);
-            let asc = Math.atan2(y, x) * 180 / Math.PI;
+            let y = Math.cos(radLST);
+            let x = -Math.sin(radLST) * Math.cos(obliq) - Math.tan(radLat) * Math.sin(obliq);
+            let asc = radToDeg(Math.atan2(y, x));
             asc = normalizar(asc);
 
             return { asc, mc };
@@ -331,11 +377,6 @@
 
         function calcularMapa() {
             const status = document.getElementById('statusMsg');
-            
-            if (typeof Astronomy === 'undefined') {
-                status.textContent = "Erro: Biblioteca astronômica ainda não carregou. Aguarde um instante...";
-                return;
-            }
 
             const dateVal = document.getElementById('date').value;
             const timeVal = document.getElementById('time').value;
@@ -348,14 +389,30 @@
             const [year, month, day] = dateVal.split('-').map(Number);
             const [hours, minutes] = timeVal.split(':').map(Number);
 
+            // Data UTC
             const utcTime = Date.UTC(year, month - 1, day, hours - tzOffset, minutes);
             const dateObj = new Date(utcTime);
 
-            const astroDate = new Astronomy.Date(dateObj);
-            const { asc, mc } = calcularAngulos(astroDate, lat, lon);
+            // Dias desde Época J2000.0
+            const d = (dateObj.getTime() - Date.UTC(2000, 0, 1, 12, 0, 0)) / 86400000;
 
-            const posicoes = ASTROS_CONFIG.map(astro => {
-                const lonEcliptica = normalizar(getEclipticLongitude(astro.id, astroDate));
+            const { asc, mc } = calcularAngulos(d, lat, lon);
+
+            const ASTROS_LISTA = [
+                { id: "Sun", nome: "Sol", simbolo: "☉", cor: "#ffd700" },
+                { id: "Moon", nome: "Lua", simbolo: "☽", cor: "#e6e6fa" },
+                { id: "Mercury", nome: "Mercúrio", simbolo: "☿", cor: "#b0c4de" },
+                { id: "Venus", nome: "Vênus", simbolo: "♀", cor: "#ffb6c1" },
+                { id: "Mars", nome: "Marte", simbolo: "♂", cor: "#ff4500" },
+                { id: "Jupiter", nome: "Júpiter", simbolo: "♃", cor: "#ffa500" },
+                { id: "Saturn", nome: "Saturno", simbolo: "♄", cor: "#daa520" },
+                { id: "Uranus", nome: "Urano", simbolo: "♅", cor: "#7fffd4" },
+                { id: "Neptune", nome: "Netuno", simbolo: "♆", cor: "#1e90ff" },
+                { id: "Pluto", nome: "Plutão", simbolo: "♇", cor: "#9370db" }
+            ];
+
+            const posicoes = ASTROS_LISTA.map(astro => {
+                const lonEcliptica = calcularPosicaoPlaneta(astro.id, d);
                 const signoIndex = Math.floor(lonEcliptica / 30);
                 const grauNoSigno = lonEcliptica % 30;
 
@@ -421,7 +478,7 @@
             const tbody = document.getElementById('tableBody');
             tbody.innerHTML = '';
 
-            // 1. Linha do Ascendente
+            // 1. Ascendente
             const ascIndex = Math.floor(asc / 30);
             const trAsc = document.createElement('tr');
             trAsc.style.fontWeight = "bold";
@@ -434,7 +491,7 @@
             `;
             tbody.appendChild(trAsc);
 
-            // 2. Linha do Meio do Céu
+            // 2. Meio do Céu
             const mcIndex = Math.floor(mc / 30);
             const trMc = document.createElement('tr');
             trMc.style.fontWeight = "bold";
@@ -447,7 +504,7 @@
             `;
             tbody.appendChild(trMc);
 
-            // 3. Demais Planetas
+            // 3. Planetas
             posicoes.forEach(p => {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
@@ -460,15 +517,10 @@
             });
         }
 
-        // Garante a inicialização assim que o script da CDN estiver disponível
-        window.addEventListener('load', () => {
-            bgImage.onload = () => {
-                setTimeout(calcularMapa, 200); // Dá uma leve margem para a CDN registrar o objeto Astronomy
-            };
-            if (bgImage.complete) {
-                setTimeout(calcularMapa, 200);
-            }
-        });
+        window.onload = () => {
+            bgImage.onload = () => calcularMapa();
+            if (bgImage.complete) calcularMapa();
+        };
     </script>
 </body>
 </html>
