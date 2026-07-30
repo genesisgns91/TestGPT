@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mapa Astral de Alta Precisão</title>
+    <title>Mapa Astral Recalibrado</title>
     <style>
         * {
             box-sizing: border-box;
@@ -51,6 +51,20 @@
 
         .input-group.full-width {
             flex: 100%;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 15px;
+            cursor: pointer;
+        }
+
+        .checkbox-group input {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
         }
 
         label {
@@ -179,29 +193,25 @@
             <label for="time">Horário Local</label>
             <input type="time" id="time" value="17:10">
         </div>
-        <div class="input-group">
-            <label for="tz">Fuso / H. Verão</label>
-            <select id="tz">
-                <option value="-3">UTC-3 (Oficial)</option>
-                <option value="-2" selected>UTC-2 (H. Verão)</option>
-                <option value="-4">UTC-4</option>
-                <option value="0">UTC+0 (GMT)</option>
-            </select>
-        </div>
-
+        
         <div class="input-group full-width">
-            <label for="citySearch">Cidade, Estado e País</label>
+            <label for="citySearch">Cidade e Estado</label>
             <div class="location-box">
-                <input type="text" id="citySearch" placeholder="Ex: Curitiba, PR, Brasil" value="Curitiba, PR, Brasil">
-                <button type="button" class="btn-secondary" onclick="usarGPS()">📍 Usar GPS</button>
+                <input type="text" id="citySearch" placeholder="Ex: Curitiba, PR" value="Curitiba, PR">
+                <button type="button" class="btn-secondary" onclick="usarGPS()">📍 GPS</button>
             </div>
             <div id="statusMsg" class="status-msg">Pronto.</div>
+        </div>
+
+        <div class="checkbox-group">
+            <input type="checkbox" id="dst" checked>
+            <label for="dst">Horário de Verão (+1h no relógio / subtrai 1h no cálculo)</label>
         </div>
 
         <input type="hidden" id="lat" value="-25.4284">
         <input type="hidden" id="lon" value="-49.2733">
 
-        <button class="btn-primary" onclick="processarEMapa()">Gerar Mapa</button>
+        <button class="btn-primary" onclick="processarEMapa()">Gerar Mapa Recalibrado</button>
     </div>
 
     <div class="canvas-container">
@@ -241,7 +251,7 @@
         ];
 
         const bgImage = new Image();
-        bgImage.src = 'roda.png';
+        bgImage.src = 'roda_2.png';
 
         function degToRad(deg) { return deg * Math.PI / 180; }
         function radToDeg(rad) { return rad * 180 / Math.PI; }
@@ -250,71 +260,49 @@
             return graus < 0 ? graus + 360 : graus;
         }
 
-        // Algoritmo Keplereano Nativo para Cálculo Planetário
-        function calcularPosicaoPlaneta(planetKey, d) {
-            // Elementos Orbitais (J2000)
-            const elements = {
-                Sun:     { N: 0.0,      i: 0.0,     w: 282.9404 + 4.70935e-5*d, a: 1.000000, e: 0.016709 - 1.151e-9*d, M: 356.0470 + 0.9856002585*d },
-                Moon:    { N: 125.1228 - 0.0529538083*d, i: 5.1454, w: 318.0634 + 0.1643573223*d, a: 60.2666, e: 0.054900, M: 115.3654 + 13.0649929509*d },
-                Mercury: { N: 48.3313 + 3.24587e-5*d, i: 7.0047 + 5.00e-8*d, w: 29.1241 + 1.01444e-5*d, a: 0.387098, e: 0.205635 + 5.59e-10*d, M: 168.6562 + 4.0923344368*d },
-                Venus:   { N: 76.6799 + 2.46590e-5*d, i: 3.3946 + 2.75e-8*d, w: 54.8910 + 1.38374e-5*d, a: 0.723330, e: 0.006773 - 1.302e-9*d, M: 48.0052 + 1.6021302244*d },
-                Mars:    { N: 49.5574 + 2.11081e-5*d, i: 1.8497 - 1.78e-8*d, w: 286.5016 + 2.92961e-5*d, a: 1.523688, e: 0.093405 + 2.516e-9*d, M: 18.6021 + 0.5240207766*d },
-                Jupiter: { N: 100.4542 + 2.76854e-5*d, i: 1.3030 - 1.557e-7*d, w: 273.8777 + 1.64505e-5*d, a: 5.20256, e: 0.048498 + 4.469e-9*d, M: 19.8950 + 0.0830853001*d },
-                Saturn:  { N: 113.6655 + 2.38980e-5*d, i: 2.4886 - 1.081e-7*d, w: 339.3939 + 2.97661e-5*d, a: 9.55475, e: 0.055546 - 9.499e-9*d, M: 316.9670 + 0.0334442282*d },
-                Uranus:  { N: 74.0005 + 1.3978e-5*d, i: 0.7733 + 1.9e-8*d, w: 96.6612 + 3.0565e-5*d, a: 19.18171 - 1.55e-8*d, e: 0.047318 + 7.45e-9*d, M: 142.5905 + 0.011725806*d },
-                Neptune: { N: 131.7806 + 3.0173e-5*d, i: 1.7700 - 2.55e-7*d, w: 272.8461 - 6.027e-6*d, a: 30.05826 + 3.313e-8*d, e: 0.008606 + 2.15e-9*d, M: 260.2471 + 0.005995147*d },
-                Pluto:   { N: 110.3034 - 1.0385e-5*d, i: 17.14175, w: 113.7634 + 3.0295e-5*d, a: 39.48168, e: 0.248807, M: 14.882 + 0.003960*d }
-            };
+        // Motor de Cálculo Eclíptico / VSOP Resumido
+        function calcularLongitudeEcliptica(astro, T) {
+            // T é o número de séculos julianos desde J2000.0
+            let L = 0;
+            switch(astro) {
+                case "Sun":
+                    L = 280.46646 + 36000.76983 * T + 0.0003032 * T * T;
+                    let M = 357.52911 + 35999.05029 * T - 0.0001537 * T * T;
+                    let C = (1.914602 - 0.004817 * T) * Math.sin(degToRad(M)) + (0.019993 - 0.000101 * T) * Math.sin(degToRad(2 * M));
+                    return normalizar(L + C);
 
-            const p = elements[planetKey];
-            let M = normalizar(p.M);
-            let radM = degToRad(M);
+                case "Moon":
+                    let Lm = 218.3165 + 481267.8813 * T;
+                    let Mm = 134.9634 + 477198.8676 * T;
+                    let Ms = 357.5291 + 35999.0503 * T;
+                    let F = 93.2721 + 483202.0175 * T;
+                    let D = 297.8502 + 445267.1115 * T;
+                    
+                    let lCorr = 6.288 * Math.sin(degToRad(Mm)) 
+                              + 1.274 * Math.sin(degToRad(2*D - Mm))
+                              + 0.658 * Math.sin(degToRad(2*D))
+                              - 0.186 * Math.sin(degToRad(Ms));
+                    return normalizar(Lm + lCorr);
 
-            // Anomalia Excêntrica (Iteração de Kepler)
-            let E = radM + p.e * Math.sin(radM) * (1.0 + p.e * Math.cos(radM));
-            for(let iter=0; iter<5; iter++) {
-                E = E - (E - p.e * Math.sin(E) - radM) / (1.0 - p.e * Math.cos(E));
+                case "Mercury":
+                    return normalizar(252.2509 + 149472.6746 * T + 3.0 * Math.sin(degToRad(174.79 + 149472.52 * T)));
+                case "Venus":
+                    return normalizar(181.9798 + 58517.8156 * T + 0.8 * Math.sin(degToRad(50.37 + 58517.81 * T)));
+                case "Mars":
+                    return normalizar(355.4330 + 19140.2993 * T + 10.6 * Math.sin(degToRad(19.37 + 19140.30 * T)));
+                case "Jupiter":
+                    return normalizar(34.3515 + 3034.9057 * T + 5.5 * Math.sin(degToRad(20.0 + 3034.90 * T)));
+                case "Saturn":
+                    return normalizar(50.0774 + 1222.1138 * T + 6.3 * Math.sin(degToRad(316.0 + 1222.11 * T)));
+                case "Uranus":
+                    return normalizar(314.0550 + 428.4669 * T);
+                case "Neptune":
+                    return normalizar(304.3487 + 218.4862 * T);
+                case "Pluto":
+                    return normalizar(238.26 + 145.18 * T);
+                default:
+                    return 0;
             }
-
-            let x = p.a * (Math.cos(E) - p.e);
-            let y = p.a * Math.sqrt(1.0 - p.e * p.e) * Math.sin(E);
-
-            let r = Math.sqrt(x*x + y*y);
-            let v = Math.atan2(y, x);
-
-            let lonHelio = normalizar(radToDeg(v) + p.w);
-
-            if (planetKey === "Sun") {
-                return normalizar(lonHelio + 180);
-            }
-            if (planetKey === "Moon") {
-                // Perturbações da Lua
-                let Ls = normalizar(elements.Sun.M + elements.Sun.w);
-                let Lm = normalizar(M + p.w + p.N);
-                let D = normalizar(Lm - Ls);
-                let F = normalizar(Lm - p.N);
-
-                let dLon = -1.274 * Math.sin(degToRad(M - 2*D))
-                           + 0.658 * Math.sin(degToRad(2*D))
-                           - 0.186 * Math.sin(degToRad(elements.Sun.M))
-                           - 0.059 * Math.sin(degToRad(2*M - 2*D));
-                return normalizar(lonHelio + p.N + dLon);
-            }
-
-            // Conversão de Heliocêntrico para Geocêntrico
-            let sunLon = calcularPosicaoPlaneta("Sun", d);
-            let radSunLon = degToRad(sunLon);
-            let xs = Math.cos(radSunLon);
-            let ys = Math.sin(radSunLon);
-
-            let radPlanetLon = degToRad(lonHelio);
-            let xp = r * Math.cos(radPlanetLon);
-            let yp = r * Math.sin(radPlanetLon);
-
-            let xg = xp + xs;
-            let yg = yp + ys;
-
-            return normalizar(radToDeg(Math.atan2(yg, xg)));
         }
 
         async function buscarCoordenadas(cidade) {
@@ -353,20 +341,20 @@
             calcularMapa();
         }
 
-        function calcularAngulos(d, lat, lon) {
+        function calcularAngulos(T, lat, lon) {
             // Tempo Sideral em Greenwich
-            let GMST0 = normalizar(280.46061837 + 360.98564736629 * d);
-            let LST = normalizar(GMST0 + lon);
+            let gmst = 280.46061837 + 36000.770053608 * T;
+            let lst = normalizar(gmst + lon);
 
-            let radLST = degToRad(LST);
+            let radLST = degToRad(lst);
             let radLat = degToRad(lat);
-            let obliq = degToRad(23.4393);
+            let obliq = degToRad(23.4392911);
 
-            // Meio do Céu (MC)
+            // Meio do Céu
             let mc = radToDeg(Math.atan2(Math.sin(radLST), Math.cos(radLST) * Math.cos(obliq)));
             mc = normalizar(mc);
 
-            // Ascendente (AC)
+            // Ascendente
             let y = Math.cos(radLST);
             let x = -Math.sin(radLST) * Math.cos(obliq) - Math.tan(radLat) * Math.sin(obliq);
             let asc = radToDeg(Math.atan2(y, x));
@@ -379,24 +367,31 @@
             const status = document.getElementById('statusMsg');
 
             const dateVal = document.getElementById('date').value;
-            const timeVal = document.getElementById('time').value;
-            const tzOffset = parseFloat(document.getElementById('tz').value);
+            let timeVal = document.getElementById('time').value;
+            const isDST = document.getElementById('dst').checked;
             const lat = parseFloat(document.getElementById('lat').value);
             const lon = parseFloat(document.getElementById('lon').value);
 
             if (!dateVal || !timeVal) return;
 
             const [year, month, day] = dateVal.split('-').map(Number);
-            const [hours, minutes] = timeVal.split(':').map(Number);
+            let [hours, minutes] = timeVal.split(':').map(Number);
 
-            // Data UTC
-            const utcTime = Date.UTC(year, month - 1, day, hours - tzOffset, minutes);
+            // Regra do Horário de Verão: subtrai 1 hora se selecionado
+            let fusoPadrao = -3; 
+            if (isDST) {
+                hours -= 1; // Ajusta a hora informada para a hora oficial sem HV
+            }
+
+            // Conversão para UTC (UTC-3 padrão)
+            const utcTime = Date.UTC(year, month - 1, day, hours - fusoPadrao, minutes);
             const dateObj = new Date(utcTime);
 
-            // Dias desde Época J2000.0
-            const d = (dateObj.getTime() - Date.UTC(2000, 0, 1, 12, 0, 0)) / 86400000;
+            // Séculos julianos desde J2000.0
+            const jd = (dateObj.getTime() / 86400000) + 2440587.5;
+            const T = (jd - 2451545.0) / 36525.0;
 
-            const { asc, mc } = calcularAngulos(d, lat, lon);
+            const { asc, mc } = calcularAngulos(T, lat, lon);
 
             const ASTROS_LISTA = [
                 { id: "Sun", nome: "Sol", simbolo: "☉", cor: "#ffd700" },
@@ -412,7 +407,7 @@
             ];
 
             const posicoes = ASTROS_LISTA.map(astro => {
-                const lonEcliptica = calcularPosicaoPlaneta(astro.id, d);
+                const lonEcliptica = calcularLongitudeEcliptica(astro.id, T);
                 const signoIndex = Math.floor(lonEcliptica / 30);
                 const grauNoSigno = lonEcliptica % 30;
 
@@ -428,12 +423,12 @@
                 };
             });
 
-            desenharCanvas(posicoes);
+            desenharCanvas(posicoes, asc);
             preencherTabela(posicoes, asc, mc);
             status.textContent = "Mapa gerado com sucesso!";
         }
 
-        function desenharCanvas(posicoes) {
+        function desenharCanvas(posicoes, asc) {
             const canvas = document.getElementById('astroCanvas');
             const ctx = canvas.getContext('2d');
             const cx = canvas.width / 2;
@@ -442,12 +437,22 @@
 
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+            // Renderiza a imagem da roda alinhando Áries (0°) à esquerda (linha de 9 horas / Ascendente)
             if (bgImage.complete && bgImage.naturalWidth !== 0) {
-                ctx.drawImage(bgImage, 0, 0, canvas.width, canvas.height);
+                ctx.save();
+                ctx.translate(cx, cy);
+                // A roda roda.png tem Áries no topo (12h). Rotacionamos para alinhar Áries à esquerda/Ascendente
+                ctx.rotate(degToRad(-90)); 
+                ctx.drawImage(bgImage, -cx, -cy, canvas.width, canvas.height);
+                ctx.restore();
             }
 
+            // Desenha os planetas mapeados no círculo trigonométrico relativo
             posicoes.forEach(astro => {
-                let anguloRad = (astro.grauAbsoluto - 90) * (Math.PI / 180);
+                // Projeto astronômico real: Ascendente na esquerda (180°)
+                let anguloTela = normalizar(180 - (astro.grauAbsoluto - asc));
+                let anguloRad = degToRad(anguloTela);
+
                 let x = cx + raioPlanetas * Math.cos(anguloRad);
                 let y = cy + raioPlanetas * Math.sin(anguloRad);
 
