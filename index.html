@@ -1,99 +1,337 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <title>Mapa Astral em JS Puro</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mapa Astral Interativo</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
 
-  <style>
-    body { font-family: sans-serif; background: #0f172a; color: white; text-align: center; padding: 20px; }
-    button { padding: 10px 20px; font-weight: bold; background: #38bdf8; color: #0f172a; border: none; border-radius: 6px; cursor: pointer; }
-    button:hover { background: #7dd3fc; }
-    svg { background: #1e293b; border-radius: 50%; margin-top: 20px; }
-    #resultado { margin-top: 20px; font-size: 1.1rem; }
-  </style>
+        body {
+            background-color: #0d1117;
+            color: #c9d1d9;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        h1 {
+            margin-bottom: 20px;
+            color: #58a6ff;
+        }
+
+        .controls {
+            background: #161b22;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #30363d;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            max-width: 600px;
+            width: 100%;
+            justify-content: center;
+            margin-bottom: 25px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        label {
+            font-size: 0.85rem;
+            color: #8b949e;
+        }
+
+        input {
+            background: #0d1117;
+            border: 1px solid #30363d;
+            color: #fff;
+            padding: 8px 12px;
+            border-radius: 6px;
+            outline: none;
+        }
+
+        input:focus {
+            border-color: #58a6ff;
+        }
+
+        button {
+            background-color: #238636;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            align-self: flex-end;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            background-color: #2ea043;
+        }
+
+        .canvas-container {
+            position: relative;
+            width: 500px;
+            height: 500px;
+            margin-bottom: 30px;
+        }
+
+        canvas {
+            border-radius: 50%;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+        }
+
+        .results {
+            width: 100%;
+            max-width: 700px;
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            padding: 20px;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        th, td {
+            padding: 12px;
+            border-bottom: 1px solid #30363d;
+        }
+
+        th {
+            color: #58a6ff;
+            font-weight: 600;
+        }
+
+        tr:hover {
+            background-color: #21262d;
+        }
+
+        .symbol {
+            font-size: 1.2rem;
+            margin-right: 8px;
+        }
+    </style>
 </head>
 <body>
 
-  <h1>Mapa Astral em JS Puro</h1>
-  <button onclick="gerarMapa()">Gerar Posições dos Astros</button>
+    <h1>Mapa Astral Completo</h1>
 
-  <div>
-    <svg id="rodaDoCeu" width="300" height="300" viewBox="-150 -150 300 300">
-      <circle cx="0" cy="0" r="130" fill="none" stroke="#475569" stroke-width="2"/>
-      <g id="camadaPlanetas"></g>
-    </svg>
-  </div>
+    <div class="controls">
+        <div class="input-group">
+            <label for="date">Data de Nascimento</label>
+            <input type="date" id="date" value="1995-05-15">
+        </div>
+        <div class="input-group">
+            <label for="time">Horário</label>
+            <input type="time" id="time" value="14:30">
+        </div>
+        <div class="input-group">
+            <label for="lat">Latitude (Ex: -25.42)</label>
+            <input type="number" id="lat" step="any" value="-25.42">
+        </div>
+        <div class="input-group">
+            <label for="lon">Longitude (Ex: -49.27)</label>
+            <input type="number" id="lon" step="any" value="-49.27">
+        </div>
+        <button onclick="calcularMapa()">Gerar Mapa</button>
+    </div>
 
-  <div id="resultado"></div>
+    <div class="canvas-container">
+        <canvas id="astroCanvas" width="500" height="500"></canvas>
+    </div>
 
-  <script>
-    // Converte graus do zodíaco em coordenadas X,Y para o gráfico SVG
-    function grausParaCoordenadas(raio, graus) {
-      const radianos = (graus - 90) * (Math.PI / 180);
-      return {
-        x: raio * Math.cos(radianos),
-        y: raio * Math.sin(radianos)
-      };
-    }
+    <div class="results">
+        <table>
+            <thead>
+                <tr>
+                    <th>Astro</th>
+                    <th>Posição Zodiacal</th>
+                    <th>Signo</th>
+                    <th>Casa</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody">
+                <!-- Preenchido via JavaScript -->
+            </tbody>
+        </table>
+    </div>
 
-    // Algoritmo matemático para calcular a posição aproximada do Sol no zodíaco (0° = Áries)
-    function obterGrauSol(data) {
-      const inicioAno = new Date(data.getFullYear(), 0, 0);
-      const diff = data - inicioAno;
-      const diaDoAno = Math.floor(diff / (1000 * 60 * 60 * 24));
-      // O equinócio de primavera no hemisfério norte (0° de Áries) ocorre por volta do dia 80 (21 de Março)
-      let grau = (diaDoAno - 80) * (360 / 365.25);
-      if (grau < 0) grau += 360;
-      return grau % 360;
-    }
+    <script>
+        const SIGNOS = [
+            { nome: "Áries", simbolo: "♈" },
+            { nome: "Touro", simbolo: "♉" },
+            { nome: "Gêmeos", simbolo: "♊" },
+            { nome: "Câncer", simbolo: "♋" },
+            { nome: "Leão", simbolo: "♌" },
+            { nome: "Virgem", simbolo: "♍" },
+            { nome: "Libras", simbolo: "♎" },
+            { nome: "Escorpião", simbolo: "♏" },
+            { nome: "Sagitário", simbolo: "♐" },
+            { nome: "Capricórnio", simbolo: "♑" },
+            { nome: "Aquário", simbolo: "♒" },
+            { nome: "Peixes", simbolo: "♓" }
+        ];
 
-    // Algoritmo para estimativa da posição da Lua (ciclo sideral de ~27.3 dias)
-    function obterGrauLua(data) {
-      const referencia = new Date(2000, 0, 1, 12, 0, 0); // Época J2000
-      const diasDecorridos = (data - referencia) / (1000 * 60 * 60 * 24);
-      let grau = (218.316 + 13.176396 * diasDecorridos) % 360;
-      if (grau < 0) grau += 360;
-      return grau;
-    }
+        const ASTROS = [
+            { id: "Sol", nome: "Sol", simbolo: "☉", cor: "#ffd700", N0: 280.46, dN: 0.985647 },
+            { id: "Lua", nome: "Lua", simbolo: "☽", cor: "#e6e6fa", N0: 218.32, dN: 13.176396 },
+            { id: "Mercurio", nome: "Mercúrio", simbolo: "☿", cor: "#b0c4de", N0: 252.25, dN: 4.092334 },
+            { id: "Venus", nome: "Vênus", simbolo: "♀", cor: "#ffb6c1", N0: 181.98, dN: 1.602130 },
+            { id: "Marte", nome: "Marte", simbolo: "♂", cor: "#ff4500", N0: 355.45, dN: 0.524033 },
+            { id: "Jupiter", nome: "Júpiter", simbolo: "♃", cor: "#ffa500", N0: 34.40, dN: 0.083085 },
+            { id: "Saturno", nome: "Saturno", simbolo: "♄", cor: "#daa520", N0: 50.08, dN: 0.033459 },
+            { id: "Urano", nome: "Urano", simbolo: "♅", cor: "#7fffd4", N0: 314.05, dN: 0.011728 },
+            { id: "Netuno", nome: "Netuno", simbolo: "♆", cor: "#1e90ff", N0: 304.35, dN: 0.005981 },
+            { id: "Plutao", nome: "Plutão", simbolo: "♇", cor: "#9370db", N0: 238.92, dN: 0.003968 }
+        ];
 
-    function gerarMapa() {
-      const agora = new Date();
+        const bgImage = new Image();
+        bgImage.src = 'roda.png';
+        bgImage.onload = () => calcularMapa();
 
-      // Cálculos feitos internamente, sem depender de nenhuma biblioteca de fora
-      const grauSol = obterGrauSol(agora);
-      const grauLua = obterGrauLua(agora);
+        function normalizar(graus) {
+            graus = graus % 360;
+            return graus < 0 ? graus + 360 : graus;
+        }
 
-      const planetas = [
-        { nome: "Sol", simbolo: "☉", graus: grauSol, cor: "#f59e0b" },
-        { nome: "Lua", simbolo: "☽", graus: grauLua, cor: "#cbd5e1" }
-      ];
+        // Calcula dias passados desde a época J2000.0 (1 de Jan de 2000, 12:00 UTC)
+        function getDaysJ2000(dateObj) {
+            return (dateObj.getTime() - Date.UTC(2000, 0, 1, 12, 0, 0)) / 86400000;
+        }
 
-      const camada = document.getElementById("camadaPlanetas");
-      const divResultado = document.getElementById("resultado");
-      
-      camada.innerHTML = "";
-      divResultado.innerHTML = "";
+        function calcularAscendente(diasJ2000, longitude, latitude) {
+            // Tempo Sideral Médio em Greenwich (GMST)
+            let gmst = normalizar(280.46061837 + 360.98564736629 * diasJ2000);
+            // Tempo Sideral Local (LST)
+            let lst = normalizar(gmst + longitude);
+            
+            let radLST = lst * Math.PI / 180;
+            let radLat = latitude * Math.PI / 180;
+            let obliq = 23.439 * Math.PI / 180; // Obliquidade da Eclíptica
 
-      planetas.forEach(p => {
-        // 1. Calcula posição visual
-        const pos = grausParaCoordenadas(110, p.graus);
+            // Fórmula aproximada para o Ascendente
+            let y = Math.cos(radLST);
+            let x = -Math.sin(radLST) * Math.cos(obliq) - Math.tan(radLat) * Math.sin(obliq);
+            let asc = Math.atan2(y, x) * 180 / Math.PI;
 
-        // 2. Cria o elemento de texto visual direto no SVG
-        const textoSvg = document.createElementNS("http://www.w3.org/2000/svg", "text");
-        textoSvg.setAttribute("x", pos.x);
-        textoSvg.setAttribute("y", pos.y);
-        textoSvg.setAttribute("fill", p.cor);
-        textoSvg.setAttribute("font-size", "24");
-        textoSvg.setAttribute("text-anchor", "middle");
-        textoSvg.setAttribute("dominant-baseline", "central");
-        textoSvg.textContent = p.simbolo;
+            return normalizar(asc);
+        }
 
-        camada.appendChild(textoSvg);
+        function calcularMapa() {
+            const dateVal = document.getElementById('date').value;
+            const timeVal = document.getElementById('time').value;
+            const lat = parseFloat(document.getElementById('lat').value);
+            const lon = parseFloat(document.getElementById('lon').value);
 
-        // 3. Renderiza o texto do resultado abaixo
-        divResultado.innerHTML += `<p><strong>${p.nome}</strong> (${p.simbolo}): ${p.graus.toFixed(2)}° do Zodíaco</p>`;
-      });
-    }
-  </script>
+            if (!dateVal || !timeVal) return;
+
+            const dateObj = new Date(`${dateVal}T${timeVal}:00`);
+            const d = getDaysJ2000(dateObj);
+
+            const ascendente = calcularAscendente(d, lon, lat);
+            
+            const posicoes = ASTROS.map(astro => {
+                // Cálculo de posição aproximada
+                let lonEcliptica = normalizar(astro.N0 + astro.dN * d);
+                
+                let signoIndex = Math.floor(lonEcliptica / 30);
+                let grauNoSigno = lonEcliptica % 30;
+                
+                // Cálculo da Casa (Sistema Equal House baseado no Ascendente)
+                let diffAsc = normalizar(lonEcliptica - ascendente);
+                let casa = Math.floor(diffAsc / 30) + 1;
+
+                return {
+                    ...astro,
+                    grauAbsoluto: lonEcliptica,
+                    signo: SIGNOS[signoIndex],
+                    grauNoSigno: grauNoSigno,
+                    casa: casa
+                };
+            });
+
+            desenharCanvas(posicoes, ascendente);
+            preencherTabela(posicoes);
+        }
+
+        function desenharCanvas(posicoes, ascendente) {
+            const canvas = document.getElementById('astroCanvas');
+            const ctx = canvas.getContext('2d');
+            const cx = canvas.width / 2;
+            const cy = canvas.height / 2;
+            const raioPlanetas = 160; // Raio onde os ícones dos planetas serão desenhados
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // 1. Desenha a Imagem de Fundo (roda.png)
+            if (bgImage.complete && bgImage.naturalWidth !== 0) {
+                ctx.drawImage(bgImage, 0, 0, canvas.width, canvas.height);
+            }
+
+            // 2. Desenha os Astros
+            posicoes.forEach(astro => {
+                // Ajusta o ângulo para alinhar com o Zodíaco da imagem (Áries geralmente fica à esquerda/topo)
+                // Na roda padrão, Áries (0°) começa no topo ou na esquerda.
+                // Ajustando -90° para que 0° fique no topo (12 horas).
+                let anguloRad = (astro.grauAbsoluto - 90) * (Math.PI / 180);
+
+                let x = cx + raioPlanetas * Math.cos(anguloRad);
+                let y = cy + raioPlanetas * Math.sin(anguloRad);
+
+                // Círculo de fundo do planeta
+                ctx.beginPath();
+                ctx.arc(x, y, 13, 0, 2 * Math.PI);
+                ctx.fillStyle = '#0d1117';
+                ctx.fill();
+                ctx.strokeStyle = astro.cor;
+                ctx.lineWidth = 1.5;
+                ctx.stroke();
+
+                // Símbolo do planeta
+                ctx.fillStyle = astro.cor;
+                ctx.font = '14px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(astro.simbolo, x, y);
+            });
+        }
+
+        function preencherTabela(posicoes) {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+
+            posicoes.forEach(p => {
+                const tr = document.createElement('tr');
+                
+                const g = Math.floor(p.grauNoSigno);
+                const m = Math.floor((p.grauNoSigno - g) * 60);
+
+                tr.innerHTML = `
+                    <td><span class="symbol" style="color:${p.cor}">${p.simbolo}</span> ${p.nome}</td>
+                    <td>${g}° ${m}' ${p.signo.simbolo}</td>
+                    <td>${p.signo.nome}</td>
+                    <td>Casa ${p.casa}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+    </script>
 </body>
 </html>
