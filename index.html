@@ -380,11 +380,11 @@
         <form id="astrologyForm" class="controls" onsubmit="event.preventDefault(); executarTudo();">
             <div class="input-group">
                 <label for="date">Data</label>
-                <input type="date" id="date" value="1991-01-25" required>
+                <input type="date" id="date" required>
             </div>
             <div class="input-group">
                 <label for="time">Hora</label>
-                <input type="time" id="time" value="17:10" required>
+                <input type="time" id="time" required>
             </div>
             <div class="input-group">
                 <label for="fuso">Fuso (UTC)</label>
@@ -880,6 +880,10 @@
         }
 
         window.onload = () => {
+            const agora = new Date();
+            document.getElementById('date').value = agora.toISOString().split('T')[0];
+            document.getElementById('time').value = agora.toTimeString().split(' ')[0].substring(0, 5);
+
             executarTudo();
         };
     </script>
