@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mapa Astral de Alta Precisão</title>
-    <!-- Biblioteca de Astronomia de Precisão (Astronomy Engine) -->
+    <!-- Carregamento Assíncrono da Biblioteca de Astronomia -->
     <script src="https://cdn.jsdelivr.net/npm/astronomy-engine@2.1.19/astronomy.browser.min.js"></script>
     <style>
         * {
@@ -184,8 +184,8 @@
         <div class="input-group">
             <label for="tz">Fuso / H. Verão</label>
             <select id="tz">
-                <option value="-3">UTC-3 (Oficial/Normal)</option>
-                <option value="-2" selected>UTC-2 (Horário de Verão)</option>
+                <option value="-3">UTC-3 (Oficial)</option>
+                <option value="-2" selected>UTC-2 (H. Verão)</option>
                 <option value="-4">UTC-4</option>
                 <option value="0">UTC+0 (GMT)</option>
             </select>
@@ -197,7 +197,7 @@
                 <input type="text" id="citySearch" placeholder="Ex: Curitiba, PR, Brasil" value="Curitiba, PR, Brasil">
                 <button type="button" class="btn-secondary" onclick="usarGPS()">📍 Usar GPS</button>
             </div>
-            <div id="statusMsg" class="status-msg"></div>
+            <div id="statusMsg" class="status-msg">Iniciando sistema...</div>
         </div>
 
         <input type="hidden" id="lat" value="-25.4284">
@@ -257,7 +257,6 @@
 
         const bgImage = new Image();
         bgImage.src = 'roda.png';
-        bgImage.onload = () => calcularMapa();
 
         function normalizar(graus) {
             graus = graus % 360;
@@ -300,60 +299,67 @@
             calcularMapa();
         }
 
-        // Converte coordenadas geocêntricas para Posição Eclíptica (Zodíaco Tropical)
         function getEclipticLongitude(body, date) {
             if (body === "Sun") {
-                const pos = Astronomy.SunPosition(date);
-                return pos.lon;
+                return Astronomy.SunPosition(date).lon;
             }
             const pos = Astronomy.GeoVector(body, date, true);
             const ecl = Astronomy.Ecliptic(pos);
             return ecl.elon;
         }
 
-        // Cálculo aproximado do Ascendente
-        function calcularAscendente(date, lat, lon) {
-            const siderealTimeHours = Astronomy.SiderealTime(date); // Tempo Sideral Greenwich em horas
-            const lstDegrees = normalizar((siderealTimeHours * 15) + lon); // LST em graus
+        function calcularAngulos(date, lat, lon) {
+            const siderealTimeHours = Astronomy.SiderealTime(date);
+            const lstDegrees = normalizar((siderealTimeHours * 15) + lon);
 
             const radLST = lstDegrees * Math.PI / 180;
             const radLat = lat * Math.PI / 180;
             const obliq = 23.439 * Math.PI / 180;
 
+            // Meio do Céu (MC)
+            let mc = Math.atan2(Math.sin(radLST), Math.cos(radLST) * Math.cos(obliq)) * 180 / Math.PI;
+            mc = normalizar(mc);
+
+            // Ascendente (AC)
             const y = Math.cos(radLST);
             const x = -Math.sin(radLST) * Math.cos(obliq) - Math.tan(radLat) * Math.sin(obliq);
             let asc = Math.atan2(y, x) * 180 / Math.PI;
+            asc = normalizar(asc);
 
-            return normalizar(asc);
+            return { asc, mc };
         }
 
         function calcularMapa() {
+            const status = document.getElementById('statusMsg');
+            
+            if (typeof Astronomy === 'undefined') {
+                status.textContent = "Erro: Biblioteca astronômica ainda não carregou. Aguarde um instante...";
+                return;
+            }
+
             const dateVal = document.getElementById('date').value;
             const timeVal = document.getElementById('time').value;
             const tzOffset = parseFloat(document.getElementById('tz').value);
             const lat = parseFloat(document.getElementById('lat').value);
             const lon = parseFloat(document.getElementById('lon').value);
 
-            if (!dateVal || !timeVal || typeof Astronomy === 'undefined') return;
+            if (!dateVal || !timeVal) return;
 
-            // Criar objeto Date tratando o fuso horário informado
             const [year, month, day] = dateVal.split('-').map(Number);
             const [hours, minutes] = timeVal.split(':').map(Number);
 
-            // Converter Hora Local para UTC Date
             const utcTime = Date.UTC(year, month - 1, day, hours - tzOffset, minutes);
             const dateObj = new Date(utcTime);
 
             const astroDate = new Astronomy.Date(dateObj);
-            const ascendente = calcularAscendente(astroDate, lat, lon);
+            const { asc, mc } = calcularAngulos(astroDate, lat, lon);
 
             const posicoes = ASTROS_CONFIG.map(astro => {
                 const lonEcliptica = normalizar(getEclipticLongitude(astro.id, astroDate));
                 const signoIndex = Math.floor(lonEcliptica / 30);
                 const grauNoSigno = lonEcliptica % 30;
 
-                // Sistema de Casas Iguais baseado no Ascendente
-                const diffAsc = normalizar(lonEcliptica - ascendente);
+                const diffAsc = normalizar(lonEcliptica - asc);
                 const casa = Math.floor(diffAsc / 30) + 1;
 
                 return {
@@ -365,9 +371,9 @@
                 };
             });
 
-            // Adicionar Ascendente no topo da lista se desejar analisar
             desenharCanvas(posicoes);
-            preencherTabela(posicoes, ascendente);
+            preencherTabela(posicoes, asc, mc);
+            status.textContent = "Mapa gerado com sucesso!";
         }
 
         function desenharCanvas(posicoes) {
@@ -404,42 +410,65 @@
             });
         }
 
-        function preencherTabela(posicoes, ascendente) {
+        function formatarGraus(grausDecimal) {
+            const g = Math.floor(grausDecimal);
+            const m = Math.floor((grausDecimal - g) * 60);
+            const s = Math.floor((((grausDecimal - g) * 60) - m) * 60);
+            return `${g}° ${m.toString().padStart(2, '0')}' ${s.toString().padStart(2, '0')}"`;
+        }
+
+        function preencherTabela(posicoes, asc, mc) {
             const tbody = document.getElementById('tableBody');
             tbody.innerHTML = '';
 
-            // Exibir Ascendente na Tabela
-            const ascSignoIndex = Math.floor(ascendente / 30);
-            const ascGrau = ascendente % 30;
-            const ascG = Math.floor(ascGrau);
-            const ascM = Math.floor((ascGrau - ascG) * 60);
-
+            // 1. Linha do Ascendente
+            const ascIndex = Math.floor(asc / 30);
             const trAsc = document.createElement('tr');
             trAsc.style.fontWeight = "bold";
             trAsc.style.color = "#58a6ff";
             trAsc.innerHTML = `
                 <td><span class="symbol">AC</span> Ascendente</td>
-                <td>${ascG}° ${ascM}' ${SIGNOS[ascSignoIndex].simbolo}</td>
-                <td>${SIGNOS[ascSignoIndex].nome}</td>
+                <td>${formatarGraus(asc % 30)} ${SIGNOS[ascIndex].simbolo}</td>
+                <td>${SIGNOS[ascIndex].nome}</td>
                 <td>Casa 1</td>
             `;
             tbody.appendChild(trAsc);
 
+            // 2. Linha do Meio do Céu
+            const mcIndex = Math.floor(mc / 30);
+            const trMc = document.createElement('tr');
+            trMc.style.fontWeight = "bold";
+            trMc.style.color = "#58a6ff";
+            trMc.innerHTML = `
+                <td><span class="symbol">MC</span> Meio do Céu</td>
+                <td>${formatarGraus(mc % 30)} ${SIGNOS[mcIndex].simbolo}</td>
+                <td>${SIGNOS[mcIndex].nome}</td>
+                <td>Casa 10</td>
+            `;
+            tbody.appendChild(trMc);
+
+            // 3. Demais Planetas
             posicoes.forEach(p => {
                 const tr = document.createElement('tr');
-                const g = Math.floor(p.grauNoSigno);
-                const m = Math.floor((p.grauNoSigno - g) * 60);
-                const s = Math.floor((((p.grauNoSigno - g) * 60) - m) * 60);
-
                 tr.innerHTML = `
                     <td><span class="symbol" style="color:${p.cor}">${p.simbolo}</span> ${p.nome}</td>
-                    <td>${g}° ${m}' ${s}" ${p.signo.simbolo}</td>
+                    <td>${formatarGraus(p.grauNoSigno)} ${p.signo.simbolo}</td>
                     <td>${p.signo.nome}</td>
                     <td>Casa ${p.casa}</td>
                 `;
                 tbody.appendChild(tr);
             });
         }
+
+        // Garante a inicialização assim que o script da CDN estiver disponível
+        window.addEventListener('load', () => {
+            bgImage.onload = () => {
+                setTimeout(calcularMapa, 200); // Dá uma leve margem para a CDN registrar o objeto Astronomy
+            };
+            if (bgImage.complete) {
+                setTimeout(calcularMapa, 200);
+            }
+        });
     </script>
 </body>
 </html>
