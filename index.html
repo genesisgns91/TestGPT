@@ -2,139 +2,202 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="theme-color" content="#0d1117">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>Mapa Astral - Swiss Ephemeris</title>
+    <title>Astro</title>
     
-    <!-- Link do Manifesto PWA -->
     <link rel="manifest" href="manifest.json">
 
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
-        body { background-color: #0d1117; color: #c9d1d9; display: flex; flex-direction: column; align-items: center; padding: 12px; min-height: 100vh; }
-        h1 { margin-bottom: 4px; color: #58a6ff; text-align: center; font-size: 1.4rem; }
-        p.subtitle { color: #8b949e; font-size: 0.8rem; margin-bottom: 16px; text-align: center; }
+        :root {
+            --bg-principal: #0d1117;
+            --bg-card: #161b22;
+            --border: #30363d;
+            --texto: #c9d1d9;
+            --destaque: #58a6ff;
+            --sol: #e3b341;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
         
-        .main-container { display: flex; flex-direction: column; align-items: center; gap: 16px; width: 100%; max-width: 900px; }
-        
-        /* Form Responsivo */
+        body { 
+            background-color: var(--bg-principal); 
+            color: var(--texto); 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            min-height: 100vh;
+            padding-bottom: 70px; /* Espaço para a Bottom Nav no mobile */
+        }
+
+        /* App Header */
+        header {
+            width: 100%;
+            padding: 12px 16px;
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border);
+            text-align: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        header h1 { font-size: 1.1rem; color: var(--sol); font-weight: 600; letter-spacing: 1px; }
+
+        .main-container { width: 100%; max-width: 800px; padding: 12px; display: flex; flex-direction: column; gap: 12px; }
+
+        /* Abas no Mobile (Estilo App Nativo) */
+        .app-tabs {
+            display: flex;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 3px;
+            gap: 4px;
+        }
+        .tab-btn {
+            flex: 1;
+            padding: 8px;
+            background: transparent;
+            border: none;
+            color: #8b949e;
+            font-size: 0.8rem;
+            font-weight: 600;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        .tab-btn.active {
+            background: var(--bg-principal);
+            color: var(--destaque);
+            border: 1px solid var(--border);
+        }
+
+        /* Seções / Views */
+        .tab-content { display: none; flex-direction: column; gap: 12px; }
+        .tab-content.active { display: flex; }
+
+        /* Form Estilo App */
         .controls {
-            background: #161b22; padding: 14px; border-radius: 10px; border: 1px solid #30363d;
-            display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; width: 100%;
+            background: var(--bg-card); padding: 14px; border-radius: 12px; border: 1px solid var(--border);
+            display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;
         }
         .input-group { display: flex; flex-direction: column; gap: 4px; }
         .input-group.full { grid-column: span 2; }
-        label { font-size: 0.75rem; color: #8b949e; font-weight: 600; }
-        input { background: #0d1117; border: 1px solid #30363d; color: #fff; padding: 10px; border-radius: 6px; outline: none; font-size: 0.9rem; }
-        input:focus { border-color: #58a6ff; }
+        label { font-size: 0.75rem; color: #8b949e; }
+        input { background: var(--bg-principal); border: 1px solid var(--border); color: #fff; padding: 10px; border-radius: 8px; outline: none; font-size: 0.9rem; }
+        input:focus { border-color: var(--destaque); }
         
         .btn-primary {
             background-color: #238636; color: white; border: none; padding: 12px;
-            border-radius: 6px; cursor: pointer; font-weight: bold; width: 100%; font-size: 0.95rem;
-            transition: background-color 0.2s;
+            border-radius: 8px; font-weight: bold; width: 100%; font-size: 0.95rem; cursor: pointer;
         }
-        .btn-primary:active { background-color: #2ea043; }
 
-        /* Card da Roda Astrológica */
+        /* Card do Gráfico */
         .chart-card {
-            background: #161b22; border: 1px solid #30363d; border-radius: 10px; padding: 12px;
-            display: flex; flex-direction: column; align-items: center; width: 100%;
+            background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 12px;
+            display: flex; flex-direction: column; align-items: center;
         }
-        .chart-card h2 { color: #58a6ff; font-size: 1.1rem; margin-bottom: 10px; }
-        #chartSvg { width: 100%; max-width: 500px; height: auto; border-radius: 50%; background: #0b0e14; touch-action: manipulation; }
+        #chartSvg { width: 100%; max-width: 480px; height: auto; border-radius: 50%; background: #0b0e14; }
 
-        /* Estilos do SVG */
-        .signo-symbol { font-family: "Segoe UI Symbol", sans-serif; font-size: 24px; fill: #58a6ff; text-anchor: middle; dominant-baseline: central; }
+        /* Estilos do SVG / Ícones dos Planetas */
+        .signo-symbol { font-family: "Segoe UI Symbol", sans-serif; font-size: 22px; fill: var(--destaque); text-anchor: middle; dominant-baseline: central; }
         .planet-node { cursor: pointer; }
-        .planet-node circle { fill: #161b22; stroke: #30363d; stroke-width: 1.5px; }
+        .planet-node circle { fill: var(--bg-card); stroke: var(--border); stroke-width: 1.5px; }
         .planet-node text { font-family: "Segoe UI Symbol", sans-serif; font-size: 14px; font-weight: bold; text-anchor: middle; dominant-baseline: central; }
 
         /* Tabelas e Envoltórios */
-        .sections-wrapper { display: flex; flex-direction: column; gap: 16px; width: 100%; }
-        .card-table { background: #161b22; border: 1px solid #30363d; border-radius: 10px; padding: 12px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
-        .card-table h3 { color: #58a6ff; margin-bottom: 10px; font-size: 1rem; }
+        .card-table { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 12px; overflow-x: auto; }
+        .card-table h3 { color: var(--destaque); margin-bottom: 10px; font-size: 0.95rem; }
         
-        table { width: 100%; border-collapse: collapse; text-align: left; min-width: 450px; }
-        th, td { padding: 8px; border-bottom: 1px solid #30363d; font-size: 0.82rem; }
-        th { color: #8b949e; }
+        table { width: 100%; border-collapse: collapse; text-align: left; }
+        th, td { padding: 10px 8px; border-bottom: 1px solid var(--border); font-size: 0.82rem; white-space: nowrap; }
+        th { color: #8b949e; font-weight: 600; }
         
-        .badge-aspecto { padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 0.75rem; }
+        .badge-aspecto { padding: 3px 6px; border-radius: 4px; font-weight: bold; font-size: 0.75rem; }
         .conj { background: #238636; color: #fff; }
         .opp { background: #da3633; color: #fff; }
         .trig { background: #1f6beb; color: #fff; }
         .quad { background: #d29922; color: #000; }
         .sext { background: #8957e5; color: #fff; }
-        .quinc { background: #6e7681; color: #fff; }
 
-        /* Matriz Triangular Responsiva */
-        .aspect-matrix-wrapper { margin-bottom: 16px; overflow-x: auto; }
+        /* Matriz Triangular */
+        .aspect-matrix-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 8px; }
         .aspect-matrix { border-collapse: collapse; margin: 0 auto; }
         .aspect-matrix th, .aspect-matrix td {
-            width: 28px; height: 28px; min-width: 28px; max-width: 28px;
-            padding: 0; text-align: center; vertical-align: middle; border: 1px solid #30363d; font-size: 0.85rem;
+            width: 30px; height: 30px; min-width: 30px; max-width: 30px;
+            padding: 0; text-align: center; vertical-align: middle; border: 1px solid var(--border); font-size: 0.85rem;
         }
-        .aspect-matrix th.header-astro { background: #0d1117; color: #e3b341; font-weight: bold; }
+        .aspect-matrix th.header-astro { background: var(--bg-principal); color: var(--sol); font-weight: bold; }
         .aspect-matrix td.empty-cell { background: transparent; border: none; }
-        .aspect-matrix td.cell-aspect { background: #0d1117; font-weight: bold; }
+        .aspect-matrix td.cell-aspect { background: var(--bg-principal); font-weight: bold; }
 
-        /* Cores dos Ícones */
         .icon-conj { color: #2ea043; }
         .icon-opp  { color: #f85149; }
         .icon-trig { color: #3fb950; }
         .icon-quad { color: #d29922; }
         .icon-sext { color: #a371f7; }
-        .icon-quinc { color: #8b949e; }
 
-        /* Ajustes específicos para telas acima de 600px */
-        @media (min-width: 600px) {
-            body { padding: 20px; }
-            h1 { font-size: 1.8rem; }
+        /* Estilo Desktop */
+        @media (min-width: 650px) {
+            body { padding-bottom: 20px; }
+            .app-tabs { display: none; } /* Oculta abas no PC */
+            .tab-content { display: flex !important; } /* Exibe tudo no PC */
             .controls { grid-template-columns: repeat(5, 1fr); }
             .input-group.full { grid-column: span 5; }
-            .aspect-matrix th, .aspect-matrix td { width: 32px; height: 32px; min-width: 32px; max-width: 32px; font-size: 0.95rem; }
         }
     </style>
 </head>
 <body>
 
-    <h1>Mapa Astral PWA</h1>
-    <p class="subtitle">Calculadora e Mapa Responsivo</p>
+    <header>
+        <h1>ASTRO</h1>
+    </header>
 
     <div class="main-container">
-        <form id="astrologyForm" class="controls" onsubmit="event.preventDefault(); executarTudo();">
-            <div class="input-group">
-                <label for="date">Data</label>
-                <input type="date" id="date" value="1991-01-25" required>
-            </div>
-            <div class="input-group">
-                <label for="time">Hora</label>
-                <input type="time" id="time" value="17:10" required>
-            </div>
-            <div class="input-group">
-                <label for="fuso">Fuso (UTC)</label>
-                <input type="number" id="fuso" value="-3" step="0.5" required>
-            </div>
-            <div class="input-group">
-                <label for="lat">Latitude</label>
-                <input type="number" id="lat" value="-25.4284" step="0.0001" required>
-            </div>
-            <div class="input-group">
-                <label for="lon">Longitude</label>
-                <input type="number" id="lon" value="-49.2733" step="0.0001" required>
-            </div>
-            <div class="input-group full">
-                <button type="submit" id="btnCalc" class="btn-primary">Calcular Mapa</button>
-            </div>
-        </form>
 
-        <div class="chart-card">
-            <h2>Roda Astrológica</h2>
-            <svg id="chartSvg" viewBox="0 0 600 600"></svg>
+        <!-- Abas de Navegação Estilo App (Exibidas no Celular) -->
+        <div class="app-tabs">
+            <button class="tab-btn active" onclick="trocarAba('tab-mapa', this)">Mapa</button>
+            <button class="tab-btn" onclick="trocarAba('tab-posicoes', this)">Posições</button>
+            <button class="tab-btn" onclick="trocarAba('tab-aspectos', this)">Aspectos</button>
         </div>
 
-        <div class="sections-wrapper">
+        <!-- ABA 1: Formulário e Roda Astrológica -->
+        <div id="tab-mapa" class="tab-content active">
+            <form id="astrologyForm" class="controls" onsubmit="event.preventDefault(); executarTudo();">
+                <div class="input-group">
+                    <label for="date">Data</label>
+                    <input type="date" id="date" value="1991-01-25" required>
+                </div>
+                <div class="input-group">
+                    <label for="time">Hora</label>
+                    <input type="time" id="time" value="17:10" required>
+                </div>
+                <div class="input-group">
+                    <label for="fuso">Fuso (UTC)</label>
+                    <input type="number" id="fuso" value="-3" step="0.5" required>
+                </div>
+                <div class="input-group">
+                    <label for="lat">Latitude</label>
+                    <input type="number" id="lat" value="-25.4284" step="0.0001" required>
+                </div>
+                <div class="input-group">
+                    <label for="lon">Longitude</label>
+                    <input type="number" id="lon" value="-49.2733" step="0.0001" required>
+                </div>
+                <div class="input-group full">
+                    <button type="submit" class="btn-primary">Calcular Mapa</button>
+                </div>
+            </form>
+
+            <div class="chart-card">
+                <svg id="chartSvg" viewBox="0 0 600 600"></svg>
+            </div>
+        </div>
+
+        <!-- ABA 2: Tabela de Posições -->
+        <div id="tab-posicoes" class="tab-content">
             <div class="card-table">
                 <h3>Posições dos Astros</h3>
                 <table>
@@ -149,12 +212,19 @@
                     <tbody id="tableAstros"></tbody>
                 </table>
             </div>
+        </div>
 
+        <!-- ABA 3: Matriz e Lista de Aspectos -->
+        <div id="tab-aspectos" class="tab-content">
             <div class="card-table">
-                <h3>Matriz & Aspectos</h3>
+                <h3>Matriz de Aspectos</h3>
                 <div class="aspect-matrix-wrapper">
                     <table id="matrixAspectos" class="aspect-matrix"></table>
                 </div>
+            </div>
+
+            <div class="card-table">
+                <h3>Lista de Aspectos</h3>
                 <table>
                     <thead>
                         <tr>
@@ -168,11 +238,13 @@
                 </table>
             </div>
         </div>
+
     </div>
 
     <script>
         const SIGNOS = ["Áries", "Touro", "Gêmeos", "Câncer", "Leão", "Virgem", "Libras", "Escorpião", "Sagitário", "Capricórnio", "Aquário", "Peixes"];
         const SIMBOLOS_SIGNOS = ["\u2648\uFE0E", "\u2649\uFE0E", "\u264A\uFE0E", "\u264B\uFE0E", "\u264C\uFE0E", "\u264D\uFE0E", "\u264E\uFE0E", "\u264F\uFE0E", "\u2650\uFE0E", "\u2651\uFE0E", "\u2652\uFE0E", "\u2653\uFE0E"];
+        
         const SIMBOLOS_ASTROS = {
             "Sol": "☉", "Lua": "☽", "Mercúrio": "☿", "Vênus": "♀", "Marte": "♂",
             "Júpiter": "♃", "Saturno": "♄", "Urano": "♅", "Netuno": "♆", "Plutão": "♇",
@@ -186,6 +258,13 @@
             { nome: "Trígono", angulo: 120, orbe: 8, classe: "trig", simbolo: "△", iconClass: "icon-trig" },
             { nome: "Oposição", angulo: 180, orbe: 8, classe: "opp", simbolo: "☍", iconClass: "icon-opp" }
         ];
+
+        function trocarAba(tabId, btn) {
+            document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(tb => tb.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            btn.classList.add('active');
+        }
 
         function degToRad(deg) { return deg * Math.PI / 180; }
         function radToDeg(rad) { return rad * 180 / Math.PI; }
@@ -224,9 +303,8 @@
             let asc = normalizar(radToDeg(Math.atan2(Math.cos(degToRad(lst)), -Math.sin(degToRad(lst)) * Math.cos(obliq) - Math.tan(degToRad(lat)) * Math.sin(obliq))));
             if (asc < 60 || asc > 120) asc = normalizar(asc + 90);
 
+            // ORDENAÇÃO EXPLICITA: Sol Primeiro, AC e MC no final
             const astros = [
-                { nome: "Ascendente (AC)", grau: asc },
-                { nome: "Meio do Céu (MC)", grau: mc },
                 { nome: "Sol", grau: normalizar(305.21) },
                 { nome: "Lua", grau: normalizar(62.15) },
                 { nome: "Mercúrio", grau: normalizar(288.42) },
@@ -236,7 +314,9 @@
                 { nome: "Saturno", grau: normalizar(298.12) },
                 { nome: "Urano", grau: normalizar(281.55) },
                 { nome: "Netuno", grau: normalizar(284.82) },
-                { nome: "Plutão", grau: normalizar(229.40) }
+                { nome: "Plutão", grau: normalizar(229.40) },
+                { nome: "Ascendente (AC)", grau: asc },
+                { nome: "Meio do Céu (MC)", grau: mc }
             ];
 
             const casas = Array.from({ length: 12 }, (_, i) => normalizar(asc + (i * 30)));
@@ -272,10 +352,10 @@
                 html += "<tr>";
                 for (let j = 0; j < total; j++) {
                     if (i === j) {
-                        html += `<th class="header-astro">${SIMBOLOS_ASTROS[astros[i].nome] || astros[i].nome[0]}</th>`;
+                        html += `<th class="header-astro" title="${astros[i].nome}">${SIMBOLOS_ASTROS[astros[i].nome]}</th>`;
                     } else if (i > j) {
                         const asp = aspectos.find(a => (a.astro1 === astros[i].nome && a.astro2 === astros[j].nome) || (a.astro2 === astros[i].nome && a.astro1 === astros[j].nome));
-                        html += asp ? `<td class="cell-aspect ${asp.iconClass}">${asp.simbolo}</td>` : `<td class="cell-aspect"></td>`;
+                        html += asp ? `<td class="cell-aspect ${asp.iconClass}" title="${asp.aspecto}">${asp.simbolo}</td>` : `<td class="cell-aspect"></td>`;
                     } else {
                         html += `<td class="empty-cell"></td>`;
                     }
@@ -296,7 +376,7 @@
                 return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
             };
 
-            // Desenho dos Signos
+            // Signos
             for (let i = 0; i < 12; i++) {
                 const aIn = grauParaAngulo(i * 30), aFim = grauParaAngulo((i + 1) * 30);
                 const p1 = polarToCart(rOuter, aIn), p2 = polarToCart(rOuter, aFim);
@@ -317,7 +397,7 @@
                 svg.appendChild(txt);
             }
 
-            // Casas e Astros
+            // Linhas das Casas
             casas.forEach((c, i) => {
                 const p1 = polarToCart(rInner, grauParaAngulo(c)), p2 = polarToCart(rCore, grauParaAngulo(c));
                 const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
@@ -327,6 +407,13 @@
                 svg.appendChild(line);
             });
 
+            // Círculo Central
+            const coreCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+            coreCircle.setAttribute('cx', cx); coreCircle.setAttribute('cy', cy); coreCircle.setAttribute('r', rCore);
+            coreCircle.setAttribute('fill', '#0b0e14'); coreCircle.setAttribute('stroke', '#30363d');
+            svg.appendChild(coreCircle);
+
+            // Ícones dos Astros Restaurados no SVG
             astros.forEach(a => {
                 const p = polarToCart(rCasas, grauParaAngulo(a.grau));
                 const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
@@ -334,12 +421,20 @@
                 g.setAttribute('transform', `translate(${p.x}, ${p.y})`);
 
                 const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-                c.setAttribute('r', 12);
+                c.setAttribute('r', 13);
+
                 const t = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-                t.setAttribute('y', 1); t.setAttribute('fill', '#e3b341');
+                t.setAttribute('y', 1); 
+                t.setAttribute('fill', a.nome === "Sol" ? '#e3b341' : '#58a6ff');
                 t.textContent = SIMBOLOS_ASTROS[a.nome] || a.nome[0];
 
-                g.appendChild(c); g.appendChild(t);
+                g.appendChild(c); 
+                g.appendChild(t);
+                
+                const title = document.createElementNS('http://www.w3.org/2000/svg', 'title');
+                title.textContent = `${a.nome}: ${formatarDMS(a.grau)}`;
+                g.appendChild(title);
+
                 svg.appendChild(g);
             });
         }
@@ -348,15 +443,27 @@
             const { astros, casas, asc } = calcularDadosNascimento();
             const aspectos = calcularAspectos(astros);
 
+            // Preenche Tabela de Posições respeitando a nova ordem (Sol 1º, AC/MC no fim)
             document.getElementById('tableAstros').innerHTML = astros.map(a => {
                 const idx = Math.floor(a.grau / 30) % 12;
-                return `<tr><td><strong>${a.nome}</strong></td><td>${a.grau.toFixed(1)}°</td><td>${formatarDMS(a.grau)} ${SIMBOLOS_SIGNOS[idx]}</td><td>${SIGNOS[idx]}</td></tr>`;
+                const sim = SIMBOLOS_ASTROS[a.nome] || '';
+                return `<tr>
+                    <td><span style="color:#e3b341; margin-right:5px;">${sim}</span><strong>${a.nome}</strong></td>
+                    <td>${a.grau.toFixed(1)}°</td>
+                    <td>${formatarDMS(a.grau)} ${SIMBOLOS_SIGNOS[idx]}</td>
+                    <td>${SIGNOS[idx]}</td>
+                </tr>`;
             }).join('');
 
             document.getElementById('matrixAspectos').innerHTML = gerarMatrizHtml(astros, aspectos);
             
             document.getElementById('tableAspectos').innerHTML = aspectos.map(a => 
-                `<tr><td>${a.astro1}</td><td><span class="badge-aspecto ${a.classe}">${a.aspecto}</span></td><td>${a.astro2}</td><td>${a.orbe}°</td></tr>`
+                `<tr>
+                    <td>${SIMBOLOS_ASTROS[a.astro1] || ''} ${a.astro1}</td>
+                    <td><span class="badge-aspecto ${a.classe}">${a.aspecto}</span></td>
+                    <td>${SIMBOLOS_ASTROS[a.astro2] || ''} ${a.astro2}</td>
+                    <td>${a.orbe}°</td>
+                </tr>`
             ).join('');
 
             desenharRodaSVG(astros, casas, asc);
@@ -364,11 +471,8 @@
 
         window.onload = () => {
             executarTudo();
-            // Registro do Service Worker para PWA
             if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.register('./sw.js')
-                    .then(() => console.log('Service Worker Registrado com sucesso!'))
-                    .catch((err) => console.error('Falha ao registrar Service Worker:', err));
+                navigator.serviceWorker.register('./sw.js').catch(err => console.error(err));
             }
         };
     </script>
