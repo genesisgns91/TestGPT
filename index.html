@@ -4,12 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="theme-color" content="#0d1117">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>Astro</title>
     
-    <link rel="manifest" href="manifest.json">
-
     <style>
         :root {
             --bg-principal: #0d1117;
@@ -35,7 +31,7 @@
         html, body {
             width: 100%;
             max-width: 100vw;
-            overflow-x: hidden; /* Trava scroll horizontal global */
+            overflow-x: hidden;
             background-color: var(--bg-principal); 
             color: var(--texto); 
         }
@@ -59,7 +55,6 @@
         }
         header h1 { font-size: 1.2rem; color: var(--sol); font-weight: 700; letter-spacing: 1.5px; }
 
-        /* Contêiner Fluido para PC e Mobile */
         .app-layout {
             width: 100%;
             max-width: 1400px;
@@ -68,7 +63,6 @@
             gap: 16px;
         }
 
-        /* Formulário de Entradas */
         .controls {
             background: var(--bg-card); 
             padding: 14px; 
@@ -108,7 +102,6 @@
         }
         .btn-primary:active { background-color: #2ea043; }
 
-        /* Grid Multicoluna para Desktop */
         .dashboard-grid {
             display: grid;
             grid-template-columns: 1fr;
@@ -122,7 +115,6 @@
             }
         }
 
-        /* Card do Gráfico Astrológico */
         .chart-card {
             background: var(--bg-card); 
             border: 1px solid var(--border); 
@@ -136,13 +128,11 @@
         .chart-card h2 { color: var(--destaque); font-size: 1rem; margin-bottom: 10px; text-align: center; }
         #chartSvg { width: 100%; max-width: 460px; height: auto; border-radius: 50%; background: #0b0e14; }
 
-        /* Estilos do SVG */
         .signo-symbol { font-family: "Segoe UI Symbol", sans-serif; font-size: 22px; fill: var(--destaque); text-anchor: middle; dominant-baseline: central; }
         .planet-node { cursor: pointer; }
         .planet-node circle { fill: var(--bg-card); stroke: var(--border); stroke-width: 1.5px; }
         .planet-node text { font-family: "Segoe UI Symbol", sans-serif; font-size: 14px; font-weight: bold; text-anchor: middle; dominant-baseline: central; }
 
-        /* Painel de Balanço e Triplicidades */
         .balance-container {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -163,7 +153,6 @@
         .bar-bg { background: var(--bg-principal); height: 8px; border-radius: 4px; overflow: hidden; }
         .bar-fill { height: 100%; border-radius: 4px; transition: width 0.4s ease; }
 
-        /* Cards Expansíveis (Acordeão) */
         .expand-list { display: flex; flex-direction: column; gap: 8px; width: 100%; }
         
         .expand-card {
@@ -215,26 +204,61 @@
         .expand-card.open .arrow-icon { transform: rotate(180deg); }
         .arrow-icon { transition: transform 0.2s; font-size: 0.8rem; color: #8b949e; }
 
-        /* Matriz de Aspectos */
         .card-table { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 12px; width: 100%; }
         .card-table h3 { color: var(--destaque); margin-bottom: 10px; font-size: 0.95rem; }
 
-        .aspect-matrix-wrapper { 
-            overflow-x: auto; 
-            max-width: 100%; 
-            -webkit-overflow-scrolling: touch; 
-            padding-bottom: 8px; 
+        /* Matriz de Aspectos Otimizada */
+        .matrix-desktop-container {
+            display: block;
+            width: 100%;
+            overflow-x: auto;
         }
-        .aspect-matrix { border-collapse: collapse; margin: 0 auto; }
+
+        .aspect-matrix { 
+            border-collapse: collapse; 
+            margin: 0 auto;
+            width: 100%;
+            max-width: 900px;
+        }
+        
         .aspect-matrix th, .aspect-matrix td {
-            width: 30px; height: 30px; min-width: 30px; max-width: 30px;
-            padding: 0; text-align: center; vertical-align: middle; border: 1px solid var(--border); font-size: 0.85rem;
+            width: 8.33%;
+            height: 42px;
+            min-width: 38px;
+            padding: 0; 
+            text-align: center; 
+            vertical-align: middle; 
+            border: 1px solid var(--border); 
+            font-size: 1rem;
         }
         .aspect-matrix th.header-astro { background: var(--bg-principal); color: var(--sol); font-weight: bold; }
         .aspect-matrix td.empty-cell { background: transparent; border: none; }
         .aspect-matrix td.cell-aspect { background: var(--bg-principal); font-weight: bold; }
 
-        /* Cores das Badges e Aspectos */
+        /* Lista Adaptativa de Aspectos no Mobile */
+        .matrix-mobile-grid {
+            display: none;
+            grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+            gap: 8px;
+        }
+
+        .aspect-mobile-chip {
+            background: var(--bg-principal);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.8rem;
+        }
+
+        @media (max-width: 600px) {
+            .matrix-desktop-container { display: none; }
+            .matrix-mobile-grid { display: grid; }
+        }
+
+        /* Aspectos */
         .badge-aspecto { padding: 3px 6px; border-radius: 4px; font-weight: bold; font-size: 0.75rem; color: #fff; }
         .conj { background: #238636; }
         .opp { background: #da3633; }
@@ -258,8 +282,6 @@
     </header>
 
     <div class="app-layout">
-        
-        <!-- Formulário Geral -->
         <form id="astrologyForm" class="controls" onsubmit="event.preventDefault(); executarTudo();">
             <div class="input-group">
                 <label for="date">Data</label>
@@ -286,16 +308,12 @@
             </div>
         </form>
 
-        <!-- Dashboard em 2 Colunas no Desktop -->
         <div class="dashboard-grid">
-            
-            <!-- Coluna Esquerda: Gráfico SVG -->
             <div class="chart-card">
                 <h2>Roda Astrológica</h2>
                 <svg id="chartSvg" viewBox="0 0 600 600"></svg>
             </div>
 
-            <!-- Coluna Direita: Análise Elementar e Modalidades -->
             <div class="balance-container">
                 <div class="balance-card">
                     <h3>Elementos</h3>
@@ -310,29 +328,25 @@
                     <div id="polaridadesBars"></div>
                 </div>
             </div>
-
         </div>
 
-        <!-- Posições dos Astros (Cards Expansíveis) -->
         <div class="card-table">
             <h3>Posições Astrológicas Detalhadas (Clique para Expandir)</h3>
             <div id="astrosExpandList" class="expand-list"></div>
         </div>
 
-        <!-- Matriz Triangular de Aspectos -->
         <div class="card-table">
             <h3>Matriz de Aspectos</h3>
-            <div class="aspect-matrix-wrapper">
+            <div class="matrix-desktop-container">
                 <table id="matrixAspectos" class="aspect-matrix"></table>
             </div>
+            <div id="matrixMobileGrid" class="matrix-mobile-grid"></div>
         </div>
 
-        <!-- Lista de Aspectos (Cards Expansíveis) -->
         <div class="card-table">
             <h3>Interpretação dos Aspectos (Clique para Expandir)</h3>
             <div id="aspectosExpandList" class="expand-list"></div>
         </div>
-
     </div>
 
     <script>
@@ -342,7 +356,7 @@
             { nome: "Gêmeos", simbolo: "♊︎", elemento: "Ar", ritmo: "Mutável", polaridade: "Yang" },
             { nome: "Câncer", simbolo: "♋︎", elemento: "Água", ritmo: "Cardinal", polaridade: "Yin" },
             { nome: "Leão", simbolo: "♌︎", elemento: "Fogo", ritmo: "Fixo", polaridade: "Yang" },
-            { nome: "Virgem", simbolo: "♍︎", elemento: "Ar", ritmo: "Mutável", polaridade: "Yin" },
+            { nome: "Virgem", simbolo: "♍︎", elemento: "Terra", ritmo: "Mutável", polaridade: "Yin" },
             { nome: "Libras", simbolo: "♎︎", elemento: "Ar", ritmo: "Cardinal", polaridade: "Yang" },
             { nome: "Escorpião", simbolo: "♏︎", elemento: "Água", ritmo: "Fixo", polaridade: "Yin" },
             { nome: "Sagitário", simbolo: "♐︎", elemento: "Fogo", ritmo: "Mutável", polaridade: "Yang" },
@@ -376,6 +390,7 @@
             return `${g}°${m.toString().padStart(2, '0')}'`;
         }
 
+        // Algoritmo Dinâmico de Cálculo Astronômico
         function calcularDadosNascimento() {
             const dateVal = document.getElementById('date').value;
             const timeVal = document.getElementById('time').value;
@@ -402,25 +417,35 @@
             let asc = normalizar(radToDeg(Math.atan2(Math.cos(degToRad(lst)), -Math.sin(degToRad(lst)) * Math.cos(obliq) - Math.tan(degToRad(lat)) * Math.sin(obliq))));
             if (asc < 60 || asc > 120) asc = normalizar(asc + 90);
 
-            // Ordem: Sol em Primeiro, AC e MC no Final
+            // Efemérides dinâmicas aproximadas baseadas no tempo Juliano (T)
+            const sol = normalizar(280.46646 + 36000.76983 * T);
+            const lua = normalizar(218.3165 + 481267.8813 * T);
+            const mercurio = normalizar(sol + 10 * Math.sin(degToRad(360 * T * 4.15)));
+            const venus = normalizar(sol + 22 * Math.sin(degToRad(360 * T * 1.62)));
+            const marte = normalizar(sol + 40 * Math.sin(degToRad(360 * T * 0.53)));
+            const jupiter = normalizar(34.404 + 3034.9057 * T);
+            const saturno = normalizar(50.077 + 1222.1138 * T);
+            const urano = normalizar(314.055 + 428.4661 * T);
+            const netuno = normalizar(304.349 + 218.4862 * T);
+            const plutao = normalizar(238.929 + 145.180 * T);
+
             const astros = [
-                { nome: "Sol", grau: normalizar(305.21), retro: false },
-                { nome: "Lua", grau: normalizar(62.15), retro: false },
-                { nome: "Mercúrio", grau: normalizar(288.42), retro: false },
-                { nome: "Vênus", grau: normalizar(323.10), retro: false },
-                { nome: "Marte", grau: normalizar(74.35), retro: false },
-                { nome: "Júpiter", grau: normalizar(129.85), retro: true },
-                { nome: "Saturno", grau: normalizar(298.12), retro: false },
-                { nome: "Urano", grau: normalizar(281.55), retro: false },
-                { nome: "Netuno", grau: normalizar(284.82), retro: false },
-                { nome: "Plutão", grau: normalizar(229.40), retro: false },
+                { nome: "Sol", grau: sol, retro: false },
+                { nome: "Lua", grau: lua, retro: false },
+                { nome: "Mercúrio", grau: mercurio, retro: false },
+                { nome: "Vênus", grau: venus, retro: false },
+                { nome: "Marte", grau: marte, retro: false },
+                { nome: "Júpiter", grau: jupiter, retro: false },
+                { nome: "Saturno", grau: saturno, retro: false },
+                { nome: "Urano", grau: urano, retro: false },
+                { nome: "Netuno", grau: netuno, retro: false },
+                { nome: "Plutão", grau: plutao, retro: false },
                 { nome: "Ascendente (AC)", grau: asc, retro: false },
                 { nome: "Meio do Céu (MC)", grau: mc, retro: false }
             ];
 
             const casas = Array.from({ length: 12 }, (_, i) => normalizar(asc + (i * 30)));
 
-            // Calcular Casa de cada Astro
             astros.forEach(a => {
                 let casaEncontrada = 12;
                 for (let i = 0; i < 11; i++) {
@@ -462,7 +487,6 @@
             const ritmos = { Cardinal: 0, Fixo: 0, Mutável: 0 };
             const polaridades = { Yang: 0, Yin: 0 };
 
-            // Considera apenas os 10 corpos celestes principais para a proporção
             const planetasPrincipais = astros.filter(a => !["Ascendente (AC)", "Meio do Céu (MC)"].includes(a.nome));
             
             planetasPrincipais.forEach(a => {
@@ -474,10 +498,8 @@
             });
 
             const total = planetasPrincipais.length;
-
             const coresElementos = { Fogo: "var(--fogo)", Terra: "var(--terra)", Ar: "var(--ar)", Água: "var(--agua)" };
 
-            // Render Elementos
             document.getElementById('elementosBars').innerHTML = Object.keys(elementos).map(k => {
                 const pct = Math.round((elementos[k] / total) * 100);
                 return `
@@ -488,7 +510,6 @@
                 `;
             }).join('');
 
-            // Render Ritmos
             document.getElementById('ritmosBars').innerHTML = Object.keys(ritmos).map(k => {
                 const pct = Math.round((ritmos[k] / total) * 100);
                 return `
@@ -499,7 +520,6 @@
                 `;
             }).join('');
 
-            // Render Polaridades
             document.getElementById('polaridadesBars').innerHTML = Object.keys(polaridades).map(k => {
                 const pct = Math.round((polaridades[k] / total) * 100);
                 const label = k === "Yang" ? "Yang (Masculino/Ativo)" : "Yin (Feminino/Receptivo)";
@@ -518,7 +538,6 @@
                 const sIdx = Math.floor(a.grau / 30) % 12;
                 const signo = SIGNOS_DADOS[sIdx];
                 const simAstro = SIMBOLOS_ASTROS[a.nome] || '';
-                const retroText = a.retro ? ' <span class="retro-tag">(Ⓡ Retrógrado)</span>' : '';
 
                 return `
                     <div class="expand-card" onclick="this.classList.toggle('open')">
@@ -526,7 +545,6 @@
                             <div class="expand-title">
                                 <span style="color:var(--sol); font-size:1.1rem;">${simAstro}</span>
                                 <span>${a.nome} em ${signo.nome} ${signo.simbolo}</span>
-                                ${retroText}
                             </div>
                             <div style="display:flex; align-items:center; gap:8px;">
                                 <span class="expand-badge">Casa ${a.casa}</span>
@@ -537,7 +555,7 @@
                             <p><strong>Posição Exata:</strong> ${formatarDMS(a.grau)} (${a.grau.toFixed(2)}° bruto)</p>
                             <p><strong>Elemento/Ritmo:</strong> ${signo.elemento} • ${signo.ritmo} • ${signo.polaridade}</p>
                             <br>
-                            <p><strong>Descrição Arquetípica:</strong> O ${a.nome} expressa sua energia fundamental através das qualidades de ${signo.nome}. Posicionado na Casa ${a.casa}, esta força manifesta-se prioritariamente nos assuntos práticos e experienciais associados a este setor do mapa.</p>
+                            <p><strong>Descrição Arquetípica:</strong> O ${a.nome} expressa sua energia fundamental através das qualidades de ${signo.nome}. Posicionado na Casa ${a.casa}, esta força manifesta-se nos assuntos deste setor do mapa.</p>
                         </div>
                     </div>
                 `;
@@ -564,7 +582,7 @@
                         <div class="expand-content">
                             <p><strong>Orbe de Precisão:</strong> ${asp.orbe}° de desvio</p>
                             <br>
-                            <p><strong>Significado do Aspecto:</strong> A interação em ${asp.aspecto} entre ${asp.astro1} e ${asp.astro2} cria um dinamismo energético específico. Este ângulo geométrico descreve como esses dois princípios arquetípicos dialogam, podendo indicar fluidez, integração ou desafios de harmonização interpessoal e psíquica.</p>
+                            <p><strong>Significado do Aspecto:</strong> A interação em ${asp.aspecto} entre ${asp.astro1} e ${asp.astro2} cria um dinamismo energético específico entre essas duas forças arquetípicas no mapa.</p>
                         </div>
                     </div>
                 `;
@@ -573,7 +591,9 @@
 
         function gerarMatrizHtml(astros, aspectos) {
             let html = "";
+            let mobileHtml = "";
             const total = astros.length;
+
             for (let i = 0; i < total; i++) {
                 html += "<tr>";
                 for (let j = 0; j < total; j++) {
@@ -581,14 +601,30 @@
                         html += `<th class="header-astro" title="${astros[i].nome}">${SIMBOLOS_ASTROS[astros[i].nome]}</th>`;
                     } else if (i > j) {
                         const asp = aspectos.find(a => (a.astro1 === astros[i].nome && a.astro2 === astros[j].nome) || (a.astro2 === astros[i].nome && a.astro1 === astros[j].nome));
-                        html += asp ? `<td class="cell-aspect ${asp.iconClass}" title="${asp.aspecto}">${asp.simbolo}</td>` : `<td class="cell-aspect"></td>`;
+                        if (asp) {
+                            html += `<td class="cell-aspect ${asp.iconClass}" title="${asp.aspecto}">${asp.simbolo}</td>`;
+                        } else {
+                            html += `<td class="cell-aspect"></td>`;
+                        }
                     } else {
                         html += `<td class="empty-cell"></td>`;
                     }
                 }
                 html += "</tr>";
             }
-            return html;
+
+            aspectos.forEach(asp => {
+                mobileHtml += `
+                    <div class="aspect-mobile-chip">
+                        <span>${SIMBOLOS_ASTROS[asp.astro1]} ${asp.astro1}</span>
+                        <span class="${asp.iconClass}" style="font-weight:bold;">${asp.simbolo}</span>
+                        <span>${SIMBOLOS_ASTROS[asp.astro2]} ${asp.astro2}</span>
+                    </div>
+                `;
+            });
+
+            document.getElementById('matrixAspectos').innerHTML = html;
+            document.getElementById('matrixMobileGrid').innerHTML = mobileHtml || '<p style="font-size:0.8rem; color:#8b949e;">Nenhum aspecto encontrado.</p>';
         }
 
         function desenharRodaSVG(astros, casas, asc) {
@@ -602,7 +638,6 @@
                 return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
             };
 
-            // Signos
             for (let i = 0; i < 12; i++) {
                 const aIn = grauParaAngulo(i * 30), aFim = grauParaAngulo((i + 1) * 30);
                 const p1 = polarToCart(rOuter, aIn), p2 = polarToCart(rOuter, aFim);
@@ -623,7 +658,6 @@
                 svg.appendChild(txt);
             }
 
-            // Linhas das Casas
             casas.forEach((c, i) => {
                 const p1 = polarToCart(rInner, grauParaAngulo(c)), p2 = polarToCart(rCore, grauParaAngulo(c));
                 const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
@@ -633,13 +667,11 @@
                 svg.appendChild(line);
             });
 
-            // Círculo Central
             const coreCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
             coreCircle.setAttribute('cx', cx); coreCircle.setAttribute('cy', cy); coreCircle.setAttribute('r', rCore);
             coreCircle.setAttribute('fill', '#0b0e14'); coreCircle.setAttribute('stroke', '#30363d');
             svg.appendChild(coreCircle);
 
-            // Ícones dos Astros
             astros.forEach(a => {
                 const p = polarToCart(rCasas, grauParaAngulo(a.grau));
                 const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
@@ -672,16 +704,12 @@
             renderizarBalanço(astros);
             renderizarAstrosExpansivel(astros);
             renderizarAspectosExpansivel(aspectos);
-
-            document.getElementById('matrixAspectos').innerHTML = gerarMatrizHtml(astros, aspectos);
+            gerarMatrizHtml(astros, aspectos);
             desenharRodaSVG(astros, casas, asc);
         }
 
         window.onload = () => {
             executarTudo();
-            if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.register('./sw.js').catch(err => console.error(err));
-            }
         };
     </script>
 </body>
