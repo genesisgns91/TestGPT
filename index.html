@@ -458,15 +458,7 @@
     </div>
 
     <script>
-       // O script tenta pegar do localStorage; se não existir, pede ao usuário no primeiro uso
-let GEMINI_API_KEY = localStorage.getItem("GEMINI_KEY");
-
-if (!GEMINI_API_KEY) {
-    GEMINI_API_KEY = prompt("AQ.Ab8RN6KCxkLaKJ7e1BkKgvUT4oiWRN5Wtiuv0XCjxSv8z0eqTA");
-    if (GEMINI_API_KEY) {
-        localStorage.setItem("GEMINI_KEY", GEMINI_API_KEY.trim());
-    }
-}
+const GEMINI_API_KEY = "AQ.Ab8RN6LHNITYHbqSiWq5UWP_66s0pSGkhJU3LUTTR7L-UcSkwQ";
 
         const SIGNOS_DADOS = [
             { nome: "Áries", simbolo: "♈︎", elemento: "Fogo", ritmo: "Cardinal", polaridade: "Yang" },
