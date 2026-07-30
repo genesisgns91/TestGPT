@@ -66,7 +66,6 @@
             transition: font-size 0.2s ease;
         }
 
-        /* Destaque HOVER (Aproximação e brilho) */
         .planet-node:hover {
             filter: drop-shadow(0px 0px 8px rgba(88, 166, 255, 0.8));
         }
@@ -75,7 +74,7 @@
             fill: #1f6beb;
             stroke: #58a6ff;
             stroke-width: 2px;
-            r: 18px; /* Aumenta a bolinha no hover */
+            r: 18px;
         }
 
         .planet-node:hover text {
@@ -101,6 +100,57 @@
 
         .retro-tag { color: #f85149; font-weight: bold; margin-left: 4px; }
         .symbol-icon { font-size: 1.1rem; vertical-align: middle; margin-right: 6px; display: inline-block; }
+
+        /* Estilos da Matriz Triangular de Aspectos */
+        .aspect-matrix-wrapper {
+            margin-bottom: 25px;
+            overflow-x: auto;
+            padding-bottom: 10px;
+        }
+        
+        .aspect-matrix {
+            border-collapse: collapse;
+            margin: 0 auto;
+            min-width: auto;
+        }
+
+        .aspect-matrix th, .aspect-matrix td {
+            width: 32px;
+            height: 32px;
+            min-width: 32px;
+            max-width: 32px;
+            padding: 0;
+            text-align: center;
+            vertical-align: middle;
+            border: 1px solid #30363d;
+            font-size: 0.95rem;
+        }
+
+        .aspect-matrix th.header-astro {
+            background: #0d1117;
+            color: #e3b341;
+            font-size: 1.1rem;
+            font-weight: bold;
+        }
+
+        .aspect-matrix td.empty-cell {
+            background: transparent;
+            border: none;
+        }
+
+        .aspect-matrix td.cell-aspect {
+            background: #0d1117;
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        /* Cores dos Ícones na Matriz */
+        .icon-conj { color: #2ea043; }
+        .icon-opp  { color: #f85149; }
+        .icon-trig { color: #3fb950; }
+        .icon-quad { color: #d29922; }
+        .icon-sext { color: #a371f7; }
+        .icon-quinc { color: #8b949e; }
     </style>
 </head>
 <body>
@@ -163,6 +213,13 @@
 
             <div class="card-table">
                 <h3>Aspectos Astrológicos</h3>
+                
+                <!-- Nova Matriz Triangular de Aspectos -->
+                <div class="aspect-matrix-wrapper">
+                    <table id="matrixAspectos" class="aspect-matrix"></table>
+                </div>
+
+                <!-- Tabela de Lista Detalhada existente -->
                 <table>
                     <thead>
                         <tr>
@@ -182,7 +239,6 @@
     <script>
         const SIGNOS = ["Áries", "Touro", "Gêmeos", "Câncer", "Leão", "Virgem", "Libras", "Escorpião", "Sagitário", "Capricórnio", "Aquário", "Peixes"];
         
-        // Glifos Unicode puros sem variação de emoji
         const SIMBOLOS_SIGNOS = ["\u2648\uFE0E", "\u2649\uFE0E", "\u264A\uFE0E", "\u264B\uFE0E", "\u264C\uFE0E", "\u264D\uFE0E", "\u264E\uFE0E", "\u264F\uFE0E", "\u2650\uFE0E", "\u2651\uFE0E", "\u2652\uFE0E", "\u2653\uFE0E"];
         
         const SIMBOLOS_ASTROS = {
@@ -194,12 +250,12 @@
         };
 
         const DEFINICAO_ASPECTOS = [
-            { nome: "Conjunção", angulo: 0, orbe: 8, classe: "conj" },
-            { nome: "Sextil", angulo: 60, orbe: 6, classe: "sext" },
-            { nome: "Quadratura", angulo: 90, orbe: 7, classe: "quad" },
-            { nome: "Trígono", angulo: 120, orbe: 8, classe: "trig" },
-            { nome: "Quincúncio", angulo: 150, orbe: 3, classe: "quinc" },
-            { nome: "Oposição", angulo: 180, orbe: 8, classe: "opp" }
+            { nome: "Conjunção", angulo: 0, orbe: 8, classe: "conj", simbolo: "☌", iconClass: "icon-conj" },
+            { nome: "Sextil", angulo: 60, orbe: 6, classe: "sext", simbolo: "✶", iconClass: "icon-sext" },
+            { nome: "Quadratura", angulo: 90, orbe: 7, classe: "quad", simbolo: "□", iconClass: "icon-quad" },
+            { nome: "Trígono", angulo: 120, orbe: 8, classe: "trig", simbolo: "△", iconClass: "icon-trig" },
+            { nome: "Quincúncio", angulo: 150, orbe: 3, classe: "quinc", simbolo: "⚻", iconClass: "icon-quinc" },
+            { nome: "Oposição", angulo: 180, orbe: 8, classe: "opp", simbolo: "☍", iconClass: "icon-opp" }
         ];
 
         function degToRad(deg) { return deg * Math.PI / 180; }
@@ -323,6 +379,8 @@
                                 astro2: a2.nome,
                                 aspecto: asp.nome,
                                 classe: asp.classe,
+                                simbolo: asp.simbolo,
+                                iconClass: asp.iconClass,
                                 anguloExato: diff.toFixed(2),
                                 orbe: orbeAtual.toFixed(2)
                             });
@@ -331,6 +389,47 @@
                 }
             }
             return aspectos;
+        }
+
+        function gerarMatrizAspectosHtml(astros, aspectos) {
+            // Filtrar pontos irrelevantes para manter a matriz concisa e idêntica à imagem tradicional
+            const listaFiltrada = astros.filter(a => !["Descendente (DC)", "Fundo do Céu (IC)"].includes(a.nome));
+            
+            let html = "";
+            const total = listaFiltrada.length;
+
+            for (let i = 0; i < total; i++) {
+                html += "<tr>";
+                for (let j = 0; j < total; j++) {
+                    const astroLinha = listaFiltrada[i];
+                    const astroColuna = listaFiltrada[j];
+
+                    // Célula da Diagonal (Cabeçalho com ícone do Astro)
+                    if (i === j) {
+                        const sim = SIMBOLOS_ASTROS[astroLinha.nome] || astroLinha.nome.substring(0, 2);
+                        html += `<th class="header-astro" title="${astroLinha.nome}">${sim}</th>`;
+                    } 
+                    // Parte Inferior da Matriz (Matriz Triangular)
+                    else if (i > j) {
+                        const asp = aspectos.find(a => 
+                            (a.astro1 === astroLinha.nome && a.astro2 === astroColuna.nome) ||
+                            (a.astro2 === astroLinha.nome && a.astro1 === astroColuna.nome)
+                        );
+
+                        if (asp) {
+                            html += `<td class="cell-aspect ${asp.iconClass}" title="${astroLinha.nome} ${asp.aspecto} ${astroColuna.nome} (Orbe: ${asp.orbe}°)">${asp.simbolo}</td>`;
+                        } else {
+                            html += `<td class="cell-aspect"></td>`;
+                        }
+                    } 
+                    // Parte Superior Vazia
+                    else {
+                        html += `<td class="empty-cell"></td>`;
+                    }
+                }
+                html += "</tr>";
+            }
+            return html;
         }
 
         function desenharRodaSVG(astros, casas, asc) {
@@ -355,7 +454,7 @@
                 };
             }
 
-            // 1. Anel dos Signos (Glifos limpos sem quadrado roxo)
+            // 1. Anel dos Signos
             for (let i = 0; i < 12; i++) {
                 const gInicio = i * 30;
                 const gFim = (i + 1) * 30;
@@ -421,11 +520,10 @@
             coreCircle.setAttribute('fill', '#0b0e14'); coreCircle.setAttribute('stroke', '#30363d');
             svg.appendChild(coreCircle);
 
-            // Container para colocar os elementos no topo da renderização
             const layerPlanetas = document.createElementNS('http://www.w3.org/2000/svg', 'g');
             svg.appendChild(layerPlanetas);
 
-            // 3. Astros com Círculos ("Bolinhas") e Interatividade
+            // 3. Astros com Círculos
             astros.forEach(astro => {
                 const ang = grauParaAngulo(astro.grau);
                 const pIcone = polarParaCartesiano(cx, cy, rCasas, ang);
@@ -434,19 +532,16 @@
                 group.setAttribute('class', 'planet-node');
                 group.setAttribute('transform', `translate(${pIcone.x}, ${pIcone.y})`);
 
-                // Trazer para o topo no HOVER
                 group.addEventListener('mouseenter', () => {
                     layerPlanetas.appendChild(group);
                 });
 
-                // Círculo de fundo para a bolinha
                 const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
                 circle.setAttribute('cx', 0);
                 circle.setAttribute('cy', 0);
-                circle.setAttribute('r', 13); // Tamanho compacto e elegante
+                circle.setAttribute('r', 13);
                 group.appendChild(circle);
 
-                // Ícone do Planeta
                 const txtAstro = document.createElementNS('http://www.w3.org/2000/svg', 'text');
                 txtAstro.setAttribute('x', 0);
                 txtAstro.setAttribute('y', 1);
@@ -456,7 +551,6 @@
                 txtAstro.textContent = sim;
                 group.appendChild(txtAstro);
 
-                // Indicador de Retrógrado
                 if (astro.retro) {
                     const txtR = document.createElementNS('http://www.w3.org/2000/svg', 'text');
                     txtR.setAttribute('x', 9);
@@ -468,7 +562,6 @@
                     group.appendChild(txtR);
                 }
 
-                // Tooltip simples nativo SVG
                 const title = document.createElementNS('http://www.w3.org/2000/svg', 'title');
                 title.textContent = `${astro.nome}: ${formatarDMS(astro.grau)}`;
                 group.appendChild(title);
@@ -482,6 +575,7 @@
                 const { astros, casas, asc } = calcularDadosNascimento();
                 const aspectos = calcularAspectos(astros);
 
+                // Preencher Tabela de Astros
                 const tbodyAstros = document.getElementById('tableAstros');
                 tbodyAstros.innerHTML = '';
                 astros.forEach(item => {
@@ -498,6 +592,11 @@
                     tbodyAstros.appendChild(tr);
                 });
 
+                // Preencher Matriz Triangular de Aspectos
+                const matrixAspectos = document.getElementById('matrixAspectos');
+                matrixAspectos.innerHTML = gerarMatrizAspectosHtml(astros, aspectos);
+
+                // Preencher Lista Detalhada de Aspectos
                 const tbodyAspectos = document.getElementById('tableAspectos');
                 tbodyAspectos.innerHTML = '';
                 aspectos.forEach(asp => {
