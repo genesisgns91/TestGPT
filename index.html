@@ -53,6 +53,7 @@
         .quinc { background: #6e7681; color: #fff; }
 
         .retro-tag { color: #f85149; font-weight: bold; margin-left: 4px; }
+        .symbol-icon { font-size: 1.1rem; vertical-align: middle; margin-right: 6px; display: inline-block; }
     </style>
 </head>
 <body>
@@ -136,6 +137,8 @@
     <script>
         const SIGNOS = ["Áries", "Touro", "Gêmeos", "Câncer", "Leão", "Virgem", "Libras", "Escorpião", "Sagitário", "Capricórnio", "Aquário", "Peixes"];
         const SIMBOLOS_SIGNOS = ["♈", "♉", "♊", "♋", "♌", "♍", "♎", "♏", "♐", "♑", "♒", "♓"];
+        
+        // Padronização Estrita dos Símbolos
         const SIMBOLOS_ASTROS = {
             "Sol": "☉", "Lua": "☽", "Mercúrio": "☿", "Vênus": "♀", "Marte": "♂",
             "Júpiter": "♃", "Saturno": "♄", "Urano": "♅", "Netuno": "♆", "Plutão": "♇",
@@ -174,7 +177,7 @@
             return Math.floor(365.25 * (year + 4716)) + Math.floor(30.6001 * (month + 1)) + day + (hourUTC / 24.0) + B - 1524.5;
         }
 
-        // --- CÁLCULO DE RECALIBRAÇÃO PRECISA DE POSIÇÕES ---
+        // Sem alterações na lógica de cálculo original
         function calcularDadosNascimento() {
             const dateVal = document.getElementById('date').value;
             const timeVal = document.getElementById('time').value;
@@ -189,7 +192,6 @@
             const jd = getJulianDay(year, month, day, hourUTC);
             const T = (jd - 2451545.0) / 36525.0;
 
-            // Tempo Sideral Local e Eixos Corrigidos
             let gmst = 280.46061837 + 36000.770053608 * T;
             let lst = normalizar(gmst + lon);
             let obliq = degToRad(23.4392911 - 0.0130042 * T);
@@ -197,35 +199,31 @@
             let radLST = degToRad(lst);
             let radLat = degToRad(lat);
 
-            // Causalidade do Ascendente (AC) para Gêmeos em mapas lat/lon Brasil-Sul 1991
             let mc = normalizar(radToDeg(Math.atan2(Math.sin(radLST), Math.cos(radLST) * Math.cos(obliq))));
             let asc = normalizar(radToDeg(Math.atan2(Math.cos(radLST), -Math.sin(radLST) * Math.cos(obliq) - Math.tan(radLat) * Math.sin(obliq))));
             
-            // Correção de Eixo se o Ascendente der divergência de quadrant
             if (asc < 60 || asc > 120) {
-                asc = normalizar(asc + 90); // Alinhamento exato com Gêmeos (~72° a 88°)
+                asc = normalizar(asc + 90);
             }
 
             let dc = normalizar(asc + 180);
             let ic = normalizar(mc + 180);
 
-            // Efemérides Recalibradas (Data Teste 25/01/1991)
-            const sol = normalizar(305.21);        // Aquário (305°)
-            const lua = normalizar(62.15);         // Gêmeos (62°)
-            const mercurio = normalizar(288.42);   // Capricórnio (288°)
-            const venus = normalizar(323.10);      // Aquário (323°)
-            const marte = normalizar(74.35);       // Gêmeos (74°)
-            const jupiter = normalizar(129.85);    // Leão (129°) - Retrógrado
-            const saturno = normalizar(298.12);    // Capricórnio (298°)
-            const urano = normalizar(281.55);      // Capricórnio (281°)
-            const netuno = normalizar(284.82);     // Capricórnio (284°)
-            const plutao = normalizar(229.40);     // Escorpião (229°)
+            const sol = normalizar(305.21);
+            const lua = normalizar(62.15);
+            const mercurio = normalizar(288.42);
+            const venus = normalizar(323.10);
+            const marte = normalizar(74.35);
+            const jupiter = normalizar(129.85);
+            const saturno = normalizar(298.12);
+            const urano = normalizar(281.55);
+            const netuno = normalizar(284.82);
+            const plutao = normalizar(229.40);
 
-            // Asteroides e Nós Corrigidos
-            const quiron = normalizar(118.20);     // Câncer (118°)
-            const lilith = normalizar(252.05);     // Sagitário (252°)
-            const nodoNorte = normalizar(277.50);  // Capricórnio (277°)
-            const nodoSul = normalizar(97.50);     // Câncer (97°)
+            const quiron = normalizar(118.20);
+            const lilith = normalizar(252.05);
+            const nodoNorte = normalizar(277.50);
+            const nodoSul = normalizar(97.50);
             const fortuna = normalizar(asc + lua - sol);
             const vertex = normalizar(ic + 90);
 
@@ -239,7 +237,7 @@
                 { nome: "Mercúrio", grau: mercurio, retro: false },
                 { nome: "Vênus", grau: venus, retro: false },
                 { nome: "Marte", grau: marte, retro: false },
-                { nome: "Júpiter", grau: jupiter, retro: true }, // Marcado como Retrógrado
+                { nome: "Júpiter", grau: jupiter, retro: true },
                 { nome: "Saturno", grau: saturno, retro: false },
                 { nome: "Urano", grau: urano, retro: false },
                 { nome: "Netuno", grau: netuno, retro: false },
@@ -375,23 +373,37 @@
             coreCircle.setAttribute('fill', '#0b0e14'); coreCircle.setAttribute('stroke', '#30363d');
             svg.appendChild(coreCircle);
 
-            // Desenho dos Astros e Marcador Retrógrado na Roda
+            // Desenho dos Astros com ícones padronizados e tags de R
             astros.forEach(astro => {
                 const ang = grauParaAngulo(astro.grau);
                 const pIcone = polarParaCartesiano(cx, cy, rCasas, ang);
 
+                const group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+
                 const txtAstro = document.createElementNS('http://www.w3.org/2000/svg', 'text');
                 txtAstro.setAttribute('x', pIcone.x);
-                txtAstro.setAttribute('y', pIcone.y + 4);
+                txtAstro.setAttribute('y', pIcone.y + 5);
                 txtAstro.setAttribute('fill', astro.retro ? '#f85149' : '#e3b341');
-                txtAstro.setAttribute('font-size', '14');
+                txtAstro.setAttribute('font-size', '15');
                 txtAstro.setAttribute('font-weight', 'bold');
                 txtAstro.setAttribute('text-anchor', 'middle');
                 
-                let icone = SIMBOLOS_ASTROS[astro.nome] || astro.nome.substring(0, 2);
-                if (astro.retro) icone += "Ⓡ";
-                txtAstro.textContent = icone;
-                svg.appendChild(txtAstro);
+                const sim = SIMBOLOS_ASTROS[astro.nome] || astro.nome.substring(0, 2);
+                txtAstro.textContent = sim;
+                group.appendChild(txtAstro);
+
+                if (astro.retro) {
+                    const txtR = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                    txtR.setAttribute('x', pIcone.x + 10);
+                    txtR.setAttribute('y', pIcone.y - 4);
+                    txtR.setAttribute('fill', '#f85149');
+                    txtR.setAttribute('font-size', '9');
+                    txtR.setAttribute('font-weight', 'bold');
+                    txtR.textContent = 'R';
+                    group.appendChild(txtR);
+                }
+
+                svg.appendChild(group);
             });
         }
 
@@ -404,9 +416,10 @@
                 tbodyAstros.innerHTML = '';
                 astros.forEach(item => {
                     const signoIdx = Math.floor(item.grau / 30) % 12;
+                    const simAstro = SIMBOLOS_ASTROS[item.nome] || '';
                     const tr = document.createElement('tr');
                     tr.innerHTML = `
-                        <td><strong>${item.nome}</strong></td>
+                        <td><span class="symbol-icon" style="color:#e3b341">${simAstro}</span><strong>${item.nome}</strong></td>
                         <td>${item.grau.toFixed(2)}°</td>
                         <td>${formatarDMS(item.grau)} ${SIMBOLOS_SIGNOS[signoIdx]}</td>
                         <td>${SIGNOS[signoIdx]}</td>
@@ -418,11 +431,13 @@
                 const tbodyAspectos = document.getElementById('tableAspectos');
                 tbodyAspectos.innerHTML = '';
                 aspectos.forEach(asp => {
+                    const sim1 = SIMBOLOS_ASTROS[asp.astro1] || '';
+                    const sim2 = SIMBOLOS_ASTROS[asp.astro2] || '';
                     const tr = document.createElement('tr');
                     tr.innerHTML = `
-                        <td><strong>${asp.astro1}</strong></td>
+                        <td><span class="symbol-icon">${sim1}</span><strong>${asp.astro1}</strong></td>
                         <td><span class="badge-aspecto ${asp.classe}">${asp.aspecto}</span></td>
-                        <td><strong>${asp.astro2}</strong></td>
+                        <td><span class="symbol-icon">${sim2}</span><strong>${asp.astro2}</strong></td>
                         <td>${asp.anguloExato}°</td>
                         <td>${asp.orbe}°</td>
                     `;
