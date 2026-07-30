@@ -36,6 +36,53 @@
         .chart-card h2 { color: #58a6ff; font-size: 1.2rem; margin-bottom: 15px; }
         #chartSvg { width: 100%; max-width: 580px; height: auto; border-radius: 50%; background: #0b0e14; }
 
+        /* Estilos e Efeitos Interativos no SVG */
+        .signo-symbol {
+            font-family: "Segoe UI Symbol", Symbola, "Arial Unicode MS", "Times New Roman", sans-serif;
+            font-size: 26px;
+            fill: #58a6ff;
+            text-anchor: middle;
+            dominant-baseline: central;
+        }
+
+        .planet-node {
+            cursor: pointer;
+            transition: transform 0.2s ease, filter 0.2s ease;
+        }
+
+        .planet-node circle {
+            fill: #161b22;
+            stroke: #30363d;
+            stroke-width: 1.5px;
+            transition: all 0.2s ease;
+        }
+
+        .planet-node text {
+            font-family: "Segoe UI Symbol", Symbola, "Arial Unicode MS", sans-serif;
+            font-size: 15px;
+            font-weight: bold;
+            text-anchor: middle;
+            dominant-baseline: central;
+            transition: font-size 0.2s ease;
+        }
+
+        /* Destaque HOVER (Aproximação e brilho) */
+        .planet-node:hover {
+            filter: drop-shadow(0px 0px 8px rgba(88, 166, 255, 0.8));
+        }
+
+        .planet-node:hover circle {
+            fill: #1f6beb;
+            stroke: #58a6ff;
+            stroke-width: 2px;
+            r: 18px; /* Aumenta a bolinha no hover */
+        }
+
+        .planet-node:hover text {
+            fill: #ffffff !important;
+            font-size: 18px;
+        }
+
         .sections-wrapper { display: flex; flex-direction: column; gap: 20px; width: 100%; }
         .card-table { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 20px; overflow-x: auto; }
         .card-table h3 { color: #58a6ff; margin-bottom: 12px; font-size: 1.1rem; }
@@ -98,7 +145,6 @@
 
         <!-- Tabelas de Dados -->
         <div class="sections-wrapper">
-            <!-- Posição dos Astros e Ângulos -->
             <div class="card-table">
                 <h3>Posições dos Astros e Ângulos</h3>
                 <table>
@@ -115,7 +161,6 @@
                 </table>
             </div>
 
-            <!-- Aspectos Astrológicos -->
             <div class="card-table">
                 <h3>Aspectos Astrológicos</h3>
                 <table>
@@ -136,7 +181,9 @@
 
     <script>
         const SIGNOS = ["Áries", "Touro", "Gêmeos", "Câncer", "Leão", "Virgem", "Libras", "Escorpião", "Sagitário", "Capricórnio", "Aquário", "Peixes"];
-        const SIMBOLOS_SIGNOS = ["♈", "♉", "♊", "♋", "♌", "♍", "♎", "♏", "♐", "♑", "♒", "♓"];
+        
+        // Glifos Unicode puros sem variação de emoji
+        const SIMBOLOS_SIGNOS = ["\u2648\uFE0E", "\u2649\uFE0E", "\u264A\uFE0E", "\u264B\uFE0E", "\u264C\uFE0E", "\u264D\uFE0E", "\u264E\uFE0E", "\u264F\uFE0E", "\u2650\uFE0E", "\u2651\uFE0E", "\u2652\uFE0E", "\u2653\uFE0E"];
         
         const SIMBOLOS_ASTROS = {
             "Sol": "☉", "Lua": "☽", "Mercúrio": "☿", "Vênus": "♀", "Marte": "♂",
@@ -290,12 +337,11 @@
             const svg = document.getElementById('chartSvg');
             svg.innerHTML = '';
 
-            // Raios adaptados para ícones 300% maiores
             const cx = 300, cy = 300;
             const rOuter = 285;
-            const rInner = 205; 
-            const rCasas = 145; 
-            const rCore = 85;
+            const rInner = 230; 
+            const rCasas = 160; 
+            const rCore = 80;
 
             function grauParaAngulo(grau) {
                 return (180 + (grau - asc)) % 360;
@@ -309,7 +355,7 @@
                 };
             }
 
-            // 1. Anel dos Signos (Ícones a 48px)
+            // 1. Anel dos Signos (Glifos limpos sem quadrado roxo)
             for (let i = 0; i < 12; i++) {
                 const gInicio = i * 30;
                 const gFim = (i + 1) * 30;
@@ -339,16 +385,13 @@
                 const pTexto = polarParaCartesiano(cx, cy, (rOuter + rInner) / 2, aMeio);
                 const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
                 text.setAttribute('x', pTexto.x);
-                text.setAttribute('y', pTexto.y + 16); 
-                text.setAttribute('fill', '#58a6ff');
-                text.setAttribute('font-size', '48'); 
-                text.setAttribute('font-family', 'Segoe UI Symbol, Symbola, "Arial Unicode MS", sans-serif');
-                text.setAttribute('text-anchor', 'middle');
+                text.setAttribute('y', pTexto.y);
+                text.setAttribute('class', 'signo-symbol');
                 text.textContent = SIMBOLOS_SIGNOS[i];
                 svg.appendChild(text);
             }
 
-            // 2. Divisões das Casas
+            // 2. Linhas e Números das Casas
             for (let i = 0; i < 12; i++) {
                 const aCuspe = grauParaAngulo(casas[i]);
                 const p1 = polarParaCartesiano(cx, cy, rInner, aCuspe);
@@ -362,11 +405,12 @@
                 svg.appendChild(line);
 
                 const aMid = grauParaAngulo((casas[i] + 15) % 360);
-                const pNum = polarParaCartesiano(cx, cy, (rInner + rCore) / 2, aMid);
+                const pNum = polarParaCartesiano(cx, cy, rCore + 15, aMid);
                 const txtNum = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-                txtNum.setAttribute('x', pNum.x); txtNum.setAttribute('y', pNum.y + 4);
-                txtNum.setAttribute('fill', '#8b949e'); txtNum.setAttribute('font-size', '12');
+                txtNum.setAttribute('x', pNum.x); txtNum.setAttribute('y', pNum.y);
+                txtNum.setAttribute('fill', '#8b949e'); txtNum.setAttribute('font-size', '11');
                 txtNum.setAttribute('text-anchor', 'middle');
+                txtNum.setAttribute('dominant-baseline', 'central');
                 txtNum.textContent = i + 1;
                 svg.appendChild(txtNum);
             }
@@ -377,38 +421,59 @@
             coreCircle.setAttribute('fill', '#0b0e14'); coreCircle.setAttribute('stroke', '#30363d');
             svg.appendChild(coreCircle);
 
-            // 3. Desenho dos Astros (Ícones a 45px)
+            // Container para colocar os elementos no topo da renderização
+            const layerPlanetas = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+            svg.appendChild(layerPlanetas);
+
+            // 3. Astros com Círculos ("Bolinhas") e Interatividade
             astros.forEach(astro => {
                 const ang = grauParaAngulo(astro.grau);
                 const pIcone = polarParaCartesiano(cx, cy, rCasas, ang);
 
                 const group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                group.setAttribute('class', 'planet-node');
+                group.setAttribute('transform', `translate(${pIcone.x}, ${pIcone.y})`);
 
+                // Trazer para o topo no HOVER
+                group.addEventListener('mouseenter', () => {
+                    layerPlanetas.appendChild(group);
+                });
+
+                // Círculo de fundo para a bolinha
+                const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                circle.setAttribute('cx', 0);
+                circle.setAttribute('cy', 0);
+                circle.setAttribute('r', 13); // Tamanho compacto e elegante
+                group.appendChild(circle);
+
+                // Ícone do Planeta
                 const txtAstro = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-                txtAstro.setAttribute('x', pIcone.x);
-                txtAstro.setAttribute('y', pIcone.y + 15); 
+                txtAstro.setAttribute('x', 0);
+                txtAstro.setAttribute('y', 1);
                 txtAstro.setAttribute('fill', astro.retro ? '#f85149' : '#e3b341');
-                txtAstro.setAttribute('font-size', '45');
-                txtAstro.setAttribute('font-family', 'Segoe UI Symbol, Symbola, "Arial Unicode MS", sans-serif');
-                txtAstro.setAttribute('font-weight', 'bold');
-                txtAstro.setAttribute('text-anchor', 'middle');
                 
                 const sim = SIMBOLOS_ASTROS[astro.nome] || astro.nome.substring(0, 2);
                 txtAstro.textContent = sim;
                 group.appendChild(txtAstro);
 
+                // Indicador de Retrógrado
                 if (astro.retro) {
                     const txtR = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-                    txtR.setAttribute('x', pIcone.x + 22);
-                    txtR.setAttribute('y', pIcone.y - 12);
+                    txtR.setAttribute('x', 9);
+                    txtR.setAttribute('y', -8);
                     txtR.setAttribute('fill', '#f85149');
-                    txtR.setAttribute('font-size', '14');
+                    txtR.setAttribute('font-size', '9');
                     txtR.setAttribute('font-weight', 'bold');
-                    txtR.textContent = 'R';
+                    txtR.textContent = 'r';
                     group.appendChild(txtR);
                 }
 
-                svg.appendChild(group);
+                // Tooltip simples nativo SVG
+                const title = document.createElementNS('http://www.w3.org/2000/svg', 'title');
+                title.textContent = `${astro.nome}: ${formatarDMS(astro.grau)}`;
+                group.appendChild(title);
+
+                layerPlanetas.appendChild(group);
             });
         }
 
