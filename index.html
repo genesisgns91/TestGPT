@@ -458,7 +458,7 @@
     </div>
 
     <script>
-        const GEMINI_API_KEY = "AQ.Ab8RN6I10-hOmgql8ggA-yIwVJ-Ae1s58_lkLtD-LkwsYHSoWQ";
+        const GEMINI_API_KEY = "AQ.Ab8RN6LHNITYHbqSiWq5UWP_66s0pSGkhJU3LUTTR7L-UcSkwQ";
 
         const SIGNOS_DADOS = [
             { nome: "Áries", simbolo: "♈︎", elemento: "Fogo", ritmo: "Cardinal", polaridade: "Yang" },
@@ -837,19 +837,26 @@ async function gerarAnaliseIA(combinacao) {
     - Use formatação HTML básica com parágrafos <p> e destaques em <strong> para facilitar a leitura.
     - Mantenha um tom profissional, acolhedor e profundo.`;
 
-    const cleanKey = GEMINI_API_KEY.trim();
-    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${encodeURIComponent(cleanKey)}`;
+// SUBSTITUA A LINHA DO ENDPOINT E DO FETCH POR ESTA:
 
-    try {
-        const response = await fetch(endpoint, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                contents: [{ parts: [{ text: promptText }] }]
-            })
-        });
+const cleanKey = GEMINI_API_KEY.trim();
+// Endpoint sem a chave na URL
+const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent`;
 
-        const data = await response.json();
+try {
+    const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 
+            'Content-Type': 'application/json',
+            'x-goog-api-key': cleanKey // <--- Passando a chave no Header do Google
+        },
+        body: JSON.stringify({
+            contents: [{ parts: [{ text: promptText }] }]
+        })
+    });
+
+    const data = await response.json();
+  
 
         if (!response.ok) {
             // Mostra o motivo exato se for 401, 403, etc.
