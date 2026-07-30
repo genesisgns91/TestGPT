@@ -1,67 +1,81 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>FlowGNS</title>
-<link rel="stylesheet" href="estilo.css">
-</head>
+  <meta charset="UTF-8">
+  <title>Meu Mapa Astral Sem JSX</title>
 
+  <!-- 1. Importa a biblioteca de Astronomia por CDN (Sem baixar nada no PC) -->
+  <script src="https://cdn.jsdelivr.net/npm/astronomy-engine@2.1.19/astronomy.min.js"></script>
+
+  <style>
+    body { font-family: sans-serif; background: #0f172a; color: white; text-align: center; }
+    svg { background: #1e293b; border-radius: 50%; margin-top: 20px; }
+  </style>
+</head>
 <body>
 
-<!-- SCRIPTS DEVEM ESTAR AQUI -->
-<script type="module" src="firebase.js"></script>
-<script type="module" src="core.js"></script>
+  <h1>Mapa Astral em JS Puro</h1>
+  <button onclick="gerarMapa()">Gerar Posições dos Astros</button>
 
-<!-- ============================================================
-     TELA DE AUTENTICAÇÃO
-============================================================ -->
-<div id="authScreen">
-  <div class="auth-card">
-    <div class="auth-logo">Flow<span>GNS-teste</span></div>
-    <div class="auth-subtitle">Sistema de gestão FLOWGNS-t</div>
-
-    <div class="auth-tabs">
-      <button class="auth-tab active" onclick="switchAuthTab('login')">Entrar</button>
-      <button class="auth-tab" onclick="switchAuthTab('cadastro')">Criar conta</button>
-    </div>
-
-    <!-- LOGIN -->
-    <div class="auth-form active" id="authLogin">
-      <label>E-mail</label>
-      <input type="email" id="loginEmail" placeholder="login@email.com" onkeydown="if(event.key==='Enter')doLogin()"/>
-      <label>Senha</label>
-      <input type="password" id="loginPwd" placeholder="Sua senha" onkeydown="if(event.key==='Enter')doLogin()"/>
-      <div class="auth-error" id="loginErr"></div>
-      <button class="btn btn-primary" style="width:100%;margin-top:16px" onclick="doLogin()">Entrar</button>
-      <span class="auth-link" onclick="switchAuthTab('recover')">Esqueceu a senha?</span>
-    </div>
-
-    <!-- CADASTRO -->
-    <div class="auth-form" id="authCadastro">
-      <label>Nome completo</label>
-      <input type="text" id="cadNome" placeholder="Seu nome"/>
-      <label>E-mail</label>
-      <input type="email" id="cadEmail" placeholder="seu@email.com"/>
-      <label>Senha</label>
-      <input type="password" id="cadPwd" placeholder="Mínimo 6 caracteres"/>
-      <div class="auth-error" id="cadErr"></div>
-      <button class="btn btn-primary" style="width:100%;margin-top:16px" onclick="doCadastro()">Criar conta</button>
-      <div class="hint" style="text-align:center;margin-top:10px">
-        Novos usuários ficam como <strong>Operador</strong> até o Master alterar o nível.
-      </div>
-    </div>
-
-    <!-- RECUPERAR SENHA -->
-    <div class="auth-form" id="authRecover">
-      <label>E-mail da conta</label>
-      <input type="email" id="recoverEmail" placeholder="seu@email.com" onkeydown="if(event.key==='Enter')doRecover()"/>
-      <div class="auth-error" id="recoverErr" style="color:var(--success)"></div>
-      <button class="btn btn-primary" style="width:100%;margin-top:16px" onclick="doRecover()">Enviar link de recuperação</button>
-      <span class="auth-link" onclick="switchAuthTab('login')">← Voltar ao login</span>
-    </div>
+  <!-- 2. O Gráfico SVG onde o JavaScript vai desenhar -->
+  <div>
+    <svg id="rodaDoCeu" width="300" height="300" viewBox="-150 -150 300 300">
+      <circle cx="0" cy="0" r="130" fill="none" stroke="#475569" stroke-width="2"/>
+      <g id="camadaPlanetas"></g>
+    </svg>
   </div>
-</div>
 
+  <div id="resultado"></div>
+
+  <!-- 3. JavaScript Puro (Zero React, Zero JSX) -->
+  <script>
+    // Função matemática para converter graus do zodíaco em coordenadas (X,Y) no SVG
+    function grausParaCoordenadas(raio, graus) {
+      const radianos = (graus - 90) * (Math.PI / 180);
+      return {
+        x: raio * Math.cos(radianos),
+        y: raio * Math.sin(radianos)
+      };
+    }
+
+    function gerarMapa() {
+      const agora = new Date();
+
+      // Cálculo usando a biblioteca importada via CDN
+      const sol = Astronomy.Ecliptic(Astronomy.Body.Sun, agora);
+      const lua = Astronomy.Ecliptic(Astronomy.Body.Moon, agora);
+
+      const planetas = [
+        { nome: "Sol", simbolo: "☉", graus: sol.elon, cor: "#f59e0b" },
+        { nome: "Lua", simbolo: "☽", graus: lua.elon, cor: "#cbd5e1" }
+      ];
+
+      const camada = document.getElementById("camadaPlanetas");
+      const divResultado = document.getElementById("resultado");
+      
+      camada.innerHTML = "";
+      divResultado.innerHTML = "";
+
+      planetas.forEach(p => {
+        // 1. Calcula posição visual no SVG
+        const pos = grausParaCoordenadas(110, p.graus);
+
+        // 2. Cria o elemento de texto visual direto via DOM do navegador
+        const textoSvg = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        textoSvg.setAttribute("x", pos.x);
+        textoSvg.setAttribute("y", pos.y);
+        textoSvg.setAttribute("fill", p.cor);
+        textoSvg.setAttribute("font-size", "22");
+        textoSvg.setAttribute("text-anchor", "middle");
+        textoSvg.setAttribute("dominant-baseline", "central");
+        textoSvg.textContent = p.simbolo;
+
+        camada.appendChild(textoSvg);
+
+        // 3. Adiciona na lista do resultado
+        divResultado.innerHTML += `<p>${p.nome} (${p.simbolo}): ${p.graus.toFixed(2)}°</p>`;
+      });
+    }
+  </script>
 </body>
 </html>
