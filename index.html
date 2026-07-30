@@ -3,7 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mapa Astral Interativo</title>
+    <title>Mapa Astral de Alta Precisão</title>
+    <!-- Biblioteca de Astronomia de Precisão (Astronomy Engine) -->
+    <script src="https://cdn.jsdelivr.net/npm/astronomy-engine@2.1.19/astronomy.browser.min.js"></script>
     <style>
         * {
             box-sizing: border-box;
@@ -46,7 +48,7 @@
             flex-direction: column;
             gap: 5px;
             flex: 1;
-            min-width: 140px;
+            min-width: 130px;
         }
 
         .input-group.full-width {
@@ -58,7 +60,7 @@
             color: #8b949e;
         }
 
-        input {
+        input, select {
             background: #0d1117;
             border: 1px solid #30363d;
             color: #fff;
@@ -67,7 +69,7 @@
             outline: none;
         }
 
-        input:focus {
+        input:focus, select:focus {
             border-color: #58a6ff;
         }
 
@@ -168,28 +170,36 @@
 </head>
 <body>
 
-    <h1>Mapa Astral Completo</h1>
+    <h1>Mapa Astral de Alta Precisão</h1>
 
     <div class="controls">
         <div class="input-group">
             <label for="date">Data de Nascimento</label>
-            <input type="date" id="date" value="1995-05-15">
+            <input type="date" id="date" value="1991-01-25">
         </div>
         <div class="input-group">
-            <label for="time">Horário</label>
-            <input type="time" id="time" value="14:30">
+            <label for="time">Horário Local</label>
+            <input type="time" id="time" value="17:10">
+        </div>
+        <div class="input-group">
+            <label for="tz">Fuso / H. Verão</label>
+            <select id="tz">
+                <option value="-3">UTC-3 (Oficial/Normal)</option>
+                <option value="-2" selected>UTC-2 (Horário de Verão)</option>
+                <option value="-4">UTC-4</option>
+                <option value="0">UTC+0 (GMT)</option>
+            </select>
         </div>
 
         <div class="input-group full-width">
             <label for="citySearch">Cidade, Estado e País</label>
             <div class="location-box">
-                <input type="text" id="citySearch" placeholder="Ex: Curitiba, PR, Brasil ou São Paulo, Brasil" value="Curitiba, PR, Brasil">
+                <input type="text" id="citySearch" placeholder="Ex: Curitiba, PR, Brasil" value="Curitiba, PR, Brasil">
                 <button type="button" class="btn-secondary" onclick="usarGPS()">📍 Usar GPS</button>
             </div>
             <div id="statusMsg" class="status-msg"></div>
         </div>
 
-        <!-- Campos ocultos de latitude/longitude guardados automaticamente -->
         <input type="hidden" id="lat" value="-25.4284">
         <input type="hidden" id="lon" value="-49.2733">
 
@@ -211,7 +221,7 @@
                 </tr>
             </thead>
             <tbody id="tableBody">
-                <!-- Preenchido via JavaScript -->
+                <!-- Preenchido via JS -->
             </tbody>
         </table>
     </div>
@@ -232,61 +242,53 @@
             { nome: "Peixes", simbolo: "♓" }
         ];
 
-        const ASTROS = [
-            { id: "Sol", nome: "Sol", simbolo: "☉", cor: "#ffd700", N0: 280.46, dN: 0.985647 },
-            { id: "Lua", nome: "Lua", simbolo: "☽", cor: "#e6e6fa", N0: 218.32, dN: 13.176396 },
-            { id: "Mercurio", nome: "Mercúrio", simbolo: "☿", cor: "#b0c4de", N0: 252.25, dN: 4.092334 },
-            { id: "Venus", nome: "Vênus", simbolo: "♀", cor: "#ffb6c1", N0: 181.98, dN: 1.602130 },
-            { id: "Marte", nome: "Marte", simbolo: "♂", cor: "#ff4500", N0: 355.45, dN: 0.524033 },
-            { id: "Jupiter", nome: "Júpiter", simbolo: "♃", cor: "#ffa500", N0: 34.40, dN: 0.083085 },
-            { id: "Saturno", nome: "Saturno", simbolo: "♄", cor: "#daa520", N0: 50.08, dN: 0.033459 },
-            { id: "Urano", nome: "Urano", simbolo: "♅", cor: "#7fffd4", N0: 314.05, dN: 0.011728 },
-            { id: "Netuno", nome: "Netuno", simbolo: "♆", cor: "#1e90ff", N0: 304.35, dN: 0.005981 },
-            { id: "Plutao", nome: "Plutão", simbolo: "♇", cor: "#9370db", N0: 238.92, dN: 0.003968 }
+        const ASTROS_CONFIG = [
+            { id: "Sun", nome: "Sol", simbolo: "☉", cor: "#ffd700" },
+            { id: "Moon", nome: "Lua", simbolo: "☽", cor: "#e6e6fa" },
+            { id: "Mercury", nome: "Mercúrio", simbolo: "☿", cor: "#b0c4de" },
+            { id: "Venus", nome: "Vênus", simbolo: "♀", cor: "#ffb6c1" },
+            { id: "Mars", nome: "Marte", simbolo: "♂", cor: "#ff4500" },
+            { id: "Jupiter", nome: "Júpiter", simbolo: "♃", cor: "#ffa500" },
+            { id: "Saturn", nome: "Saturno", simbolo: "♄", cor: "#daa520" },
+            { id: "Uranus", nome: "Urano", simbolo: "♅", cor: "#7fffd4" },
+            { id: "Neptune", nome: "Netuno", simbolo: "♆", cor: "#1e90ff" },
+            { id: "Pluto", nome: "Plutão", simbolo: "♇", cor: "#9370db" }
         ];
 
         const bgImage = new Image();
         bgImage.src = 'roda.png';
         bgImage.onload = () => calcularMapa();
 
+        function normalizar(graus) {
+            graus = graus % 360;
+            return graus < 0 ? graus + 360 : graus;
+        }
+
         async function buscarCoordenadas(cidade) {
             const status = document.getElementById('statusMsg');
             status.textContent = "Buscando localização...";
-            
             try {
                 const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(cidade)}`);
                 const data = await response.json();
-
                 if (data && data.length > 0) {
                     document.getElementById('lat').value = data[0].lat;
                     document.getElementById('lon').value = data[0].lon;
                     status.textContent = `Localizado: ${data[0].display_name.split(',')[0]}`;
                     return true;
-                } else {
-                    status.textContent = "Cidade não encontrada. Usando local padrão.";
-                    return false;
                 }
-            } catch (err) {
-                status.textContent = "Erro ao buscar cidade. Verifique sua conexão.";
-                return false;
-            }
+            } catch (err) {}
+            status.textContent = "Local padrão utilizado.";
+            return false;
         }
 
         function usarGPS() {
-            const status = document.getElementById('statusMsg');
             if (navigator.geolocation) {
-                status.textContent = "Obtendo GPS...";
                 navigator.geolocation.getCurrentPosition(pos => {
                     document.getElementById('lat').value = pos.coords.latitude;
                     document.getElementById('lon').value = pos.coords.longitude;
                     document.getElementById('citySearch').value = "Minha Localização Atual";
-                    status.textContent = "Coordenadas obtidas via GPS!";
                     calcularMapa();
-                }, () => {
-                    status.textContent = "Permissão de GPS negada.";
                 });
-            } else {
-                status.textContent = "Geolocalização não suportada pelo navegador.";
             }
         }
 
@@ -298,25 +300,28 @@
             calcularMapa();
         }
 
-        function normalizar(graus) {
-            graus = graus % 360;
-            return graus < 0 ? graus + 360 : graus;
+        // Converte coordenadas geocêntricas para Posição Eclíptica (Zodíaco Tropical)
+        function getEclipticLongitude(body, date) {
+            if (body === "Sun") {
+                const pos = Astronomy.SunPosition(date);
+                return pos.lon;
+            }
+            const pos = Astronomy.GeoVector(body, date, true);
+            const ecl = Astronomy.Ecliptic(pos);
+            return ecl.elon;
         }
 
-        function getDaysJ2000(dateObj) {
-            return (dateObj.getTime() - Date.UTC(2000, 0, 1, 12, 0, 0)) / 86400000;
-        }
+        // Cálculo aproximado do Ascendente
+        function calcularAscendente(date, lat, lon) {
+            const siderealTimeHours = Astronomy.SiderealTime(date); // Tempo Sideral Greenwich em horas
+            const lstDegrees = normalizar((siderealTimeHours * 15) + lon); // LST em graus
 
-        function calcularAscendente(diasJ2000, longitude, latitude) {
-            let gmst = normalizar(280.46061837 + 360.98564736629 * diasJ2000);
-            let lst = normalizar(gmst + longitude);
-            
-            let radLST = lst * Math.PI / 180;
-            let radLat = latitude * Math.PI / 180;
-            let obliq = 23.439 * Math.PI / 180;
+            const radLST = lstDegrees * Math.PI / 180;
+            const radLat = lat * Math.PI / 180;
+            const obliq = 23.439 * Math.PI / 180;
 
-            let y = Math.cos(radLST);
-            let x = -Math.sin(radLST) * Math.cos(obliq) - Math.tan(radLat) * Math.sin(obliq);
+            const y = Math.cos(radLST);
+            const x = -Math.sin(radLST) * Math.cos(obliq) - Math.tan(radLat) * Math.sin(obliq);
             let asc = Math.atan2(y, x) * 180 / Math.PI;
 
             return normalizar(asc);
@@ -325,23 +330,31 @@
         function calcularMapa() {
             const dateVal = document.getElementById('date').value;
             const timeVal = document.getElementById('time').value;
+            const tzOffset = parseFloat(document.getElementById('tz').value);
             const lat = parseFloat(document.getElementById('lat').value);
             const lon = parseFloat(document.getElementById('lon').value);
 
-            if (!dateVal || !timeVal) return;
+            if (!dateVal || !timeVal || typeof Astronomy === 'undefined') return;
 
-            const dateObj = new Date(`${dateVal}T${timeVal}:00`);
-            const d = getDaysJ2000(dateObj);
+            // Criar objeto Date tratando o fuso horário informado
+            const [year, month, day] = dateVal.split('-').map(Number);
+            const [hours, minutes] = timeVal.split(':').map(Number);
 
-            const ascendente = calcularAscendente(d, lon, lat);
-            
-            const posicoes = ASTROS.map(astro => {
-                let lonEcliptica = normalizar(astro.N0 + astro.dN * d);
-                let signoIndex = Math.floor(lonEcliptica / 30);
-                let grauNoSigno = lonEcliptica % 30;
-                
-                let diffAsc = normalizar(lonEcliptica - ascendente);
-                let casa = Math.floor(diffAsc / 30) + 1;
+            // Converter Hora Local para UTC Date
+            const utcTime = Date.UTC(year, month - 1, day, hours - tzOffset, minutes);
+            const dateObj = new Date(utcTime);
+
+            const astroDate = new Astronomy.Date(dateObj);
+            const ascendente = calcularAscendente(astroDate, lat, lon);
+
+            const posicoes = ASTROS_CONFIG.map(astro => {
+                const lonEcliptica = normalizar(getEclipticLongitude(astro.id, astroDate));
+                const signoIndex = Math.floor(lonEcliptica / 30);
+                const grauNoSigno = lonEcliptica % 30;
+
+                // Sistema de Casas Iguais baseado no Ascendente
+                const diffAsc = normalizar(lonEcliptica - ascendente);
+                const casa = Math.floor(diffAsc / 30) + 1;
 
                 return {
                     ...astro,
@@ -352,8 +365,9 @@
                 };
             });
 
+            // Adicionar Ascendente no topo da lista se desejar analisar
             desenharCanvas(posicoes);
-            preencherTabela(posicoes);
+            preencherTabela(posicoes, ascendente);
         }
 
         function desenharCanvas(posicoes) {
@@ -390,18 +404,36 @@
             });
         }
 
-        function preencherTabela(posicoes) {
+        function preencherTabela(posicoes, ascendente) {
             const tbody = document.getElementById('tableBody');
             tbody.innerHTML = '';
+
+            // Exibir Ascendente na Tabela
+            const ascSignoIndex = Math.floor(ascendente / 30);
+            const ascGrau = ascendente % 30;
+            const ascG = Math.floor(ascGrau);
+            const ascM = Math.floor((ascGrau - ascG) * 60);
+
+            const trAsc = document.createElement('tr');
+            trAsc.style.fontWeight = "bold";
+            trAsc.style.color = "#58a6ff";
+            trAsc.innerHTML = `
+                <td><span class="symbol">AC</span> Ascendente</td>
+                <td>${ascG}° ${ascM}' ${SIGNOS[ascSignoIndex].simbolo}</td>
+                <td>${SIGNOS[ascSignoIndex].nome}</td>
+                <td>Casa 1</td>
+            `;
+            tbody.appendChild(trAsc);
 
             posicoes.forEach(p => {
                 const tr = document.createElement('tr');
                 const g = Math.floor(p.grauNoSigno);
                 const m = Math.floor((p.grauNoSigno - g) * 60);
+                const s = Math.floor((((p.grauNoSigno - g) * 60) - m) * 60);
 
                 tr.innerHTML = `
                     <td><span class="symbol" style="color:${p.cor}">${p.simbolo}</span> ${p.nome}</td>
-                    <td>${g}° ${m}' ${p.signo.simbolo}</td>
+                    <td>${g}° ${m}' ${s}" ${p.signo.simbolo}</td>
                     <td>${p.signo.nome}</td>
                     <td>Casa ${p.casa}</td>
                 `;
