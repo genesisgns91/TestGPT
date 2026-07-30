@@ -3,186 +3,43 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mapa Astral Recalibrado</title>
+    <title>Motor Astrológico Swiss Ephemeris WASM</title>
+    <!-- Carregamento do Módulo WebAssembly da Swiss Ephemeris via CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/swisseph-wasm@0.2.1/dist/swisseph.js"></script>
     <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-
-        body {
-            background-color: #0d1117;
-            color: #c9d1d9;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 20px;
-            min-height: 100vh;
-        }
-
-        h1 {
-            margin-bottom: 20px;
-            color: #58a6ff;
-        }
-
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #0d1117; color: #c9d1d9; display: flex; flex-direction: column; align-items: center; padding: 20px; min-height: 100vh; }
+        h1 { margin-bottom: 10px; color: #58a6ff; }
+        p.subtitle { color: #8b949e; font-size: 0.9rem; margin-bottom: 25px; }
+        
         .controls {
-            background: #161b22;
-            padding: 20px;
-            border-radius: 8px;
-            border: 1px solid #30363d;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 15px;
-            max-width: 650px;
-            width: 100%;
-            justify-content: center;
-            margin-bottom: 25px;
+            background: #161b22; padding: 20px; border-radius: 8px; border: 1px solid #30363d;
+            display: flex; flex-wrap: wrap; gap: 15px; max-width: 650px; width: 100%; margin-bottom: 25px;
         }
-
-        .input-group {
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-            flex: 1;
-            min-width: 130px;
-        }
-
-        .input-group.full-width {
-            flex: 100%;
-        }
-
-        .checkbox-group {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-top: 15px;
-            cursor: pointer;
-        }
-
-        .checkbox-group input {
-            width: 18px;
-            height: 18px;
-            cursor: pointer;
-        }
-
-        label {
-            font-size: 0.85rem;
-            color: #8b949e;
-        }
-
-        input, select {
-            background: #0d1117;
-            border: 1px solid #30363d;
-            color: #fff;
-            padding: 8px 12px;
-            border-radius: 6px;
-            outline: none;
-        }
-
-        input:focus, select:focus {
-            border-color: #58a6ff;
-        }
-
-        .location-box {
-            display: flex;
-            gap: 8px;
-        }
-
-        .location-box input {
-            flex: 1;
-        }
-
-        .btn-secondary {
-            background-color: #21262d;
-            color: #c9d1d9;
-            border: 1px solid #30363d;
-            padding: 8px 12px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 0.85rem;
-            white-space: nowrap;
-        }
-
-        .btn-secondary:hover {
-            background-color: #30363d;
-        }
-
+        .input-group { display: flex; flex-direction: column; gap: 5px; flex: 1; min-width: 140px; }
+        .input-group.full { flex: 100%; }
+        label { font-size: 0.85rem; color: #8b949e; }
+        input { background: #0d1117; border: 1px solid #30363d; color: #fff; padding: 8px 12px; border-radius: 6px; outline: none; }
+        input:focus { border-color: #58a6ff; }
+        
         .btn-primary {
-            background-color: #238636;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: bold;
-            margin-top: 10px;
-            width: 100%;
-            transition: background 0.2s;
+            background-color: #238636; color: white; border: none; padding: 10px 20px;
+            border-radius: 6px; cursor: pointer; font-weight: bold; width: 100%; margin-top: 10px;
         }
+        .btn-primary:hover { background-color: #2ea043; }
+        .btn-primary:disabled { background-color: #21262d; color: #8b949e; cursor: not-allowed; }
 
-        .btn-primary:hover {
-            background-color: #2ea043;
-        }
-
-        .canvas-container {
-            position: relative;
-            width: 500px;
-            height: 500px;
-            margin-bottom: 30px;
-        }
-
-        canvas {
-            border-radius: 50%;
-            box-shadow: 0 0 20px rgba(0,0,0,0.5);
-        }
-
-        .results {
-            width: 100%;
-            max-width: 700px;
-            background: #161b22;
-            border: 1px solid #30363d;
-            border-radius: 8px;
-            padding: 20px;
-            overflow-x: auto;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            text-align: left;
-        }
-
-        th, td {
-            padding: 12px;
-            border-bottom: 1px solid #30363d;
-        }
-
-        th {
-            color: #58a6ff;
-            font-weight: 600;
-        }
-
-        tr:hover {
-            background-color: #21262d;
-        }
-
-        .symbol {
-            font-size: 1.2rem;
-            margin-right: 8px;
-        }
-
-        .status-msg {
-            font-size: 0.8rem;
-            color: #8b949e;
-            margin-top: 4px;
-        }
+        .results { width: 100%; max-width: 700px; background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 20px; }
+        table { width: 100%; border-collapse: collapse; text-align: left; }
+        th, td { padding: 10px; border-bottom: 1px solid #30363d; }
+        th { color: #58a6ff; }
+        .status { font-size: 0.85rem; color: #e3b341; margin-top: 5px; }
     </style>
 </head>
 <body>
 
-    <h1>Mapa Astral de Alta Precisão</h1>
+    <h1>Swiss Ephemeris WASM Engine</h1>
+    <p class="subtitle">Cálculo astronômico em C++ executado nativamente no navegador via WebAssembly</p>
 
     <div class="controls">
         <div class="input-group">
@@ -190,342 +47,169 @@
             <input type="date" id="date" value="1991-01-25">
         </div>
         <div class="input-group">
-            <label for="time">Horário Local</label>
+            <label for="time">Hora Local (Hora:Minuto)</label>
             <input type="time" id="time" value="17:10">
         </div>
+        <div class="input-group">
+            <label for="fuso">Fuso Horário (UTC)</label>
+            <input type="number" id="fuso" value="-3" step="0.5">
+        </div>
         
-        <div class="input-group full-width">
-            <label for="citySearch">Cidade e Estado</label>
-            <div class="location-box">
-                <input type="text" id="citySearch" placeholder="Ex: Curitiba, PR" value="Curitiba, PR">
-                <button type="button" class="btn-secondary" onclick="usarGPS()">📍 GPS</button>
-            </div>
-            <div id="statusMsg" class="status-msg">Pronto.</div>
+        <div class="input-group">
+            <label for="lat">Latitude (Decimal)</label>
+            <input type="number" id="lat" value="-25.4284" step="0.0001">
+        </div>
+        <div class="input-group">
+            <label for="lon">Longitude (Decimal)</label>
+            <input type="number" id="lon" value="-49.2733" step="0.0001">
         </div>
 
-        <div class="checkbox-group">
-            <input type="checkbox" id="dst" checked>
-            <label for="dst">Horário de Verão (+1h no relógio / subtrai 1h no cálculo)</label>
+        <div class="input-group full">
+            <div id="statusMsg" class="status">Carregando motor WebAssembly...</div>
+            <button id="btnCalc" class="btn-primary" onclick="executarCalculo()" disabled>Calcular Mapa Astral</button>
         </div>
-
-        <input type="hidden" id="lat" value="-25.4284">
-        <input type="hidden" id="lon" value="-49.2733">
-
-        <button class="btn-primary" onclick="processarEMapa()">Gerar Mapa Recalibrado</button>
-    </div>
-
-    <div class="canvas-container">
-        <canvas id="astroCanvas" width="500" height="500"></canvas>
     </div>
 
     <div class="results">
         <table>
             <thead>
                 <tr>
-                    <th>Astro</th>
+                    <th>Elemento</th>
+                    <th>Grau Bruto (0°-360°)</th>
                     <th>Posição Zodiacal</th>
                     <th>Signo</th>
-                    <th>Casa</th>
                 </tr>
             </thead>
             <tbody id="tableBody">
-                <!-- Preenchido via JS -->
+                <tr><td colspan="4" style="text-align: center; color: #8b949e;">Aguardando inicialização do WASM...</td></tr>
             </tbody>
         </table>
     </div>
 
     <script>
-        const SIGNOS = [
-            { nome: "Áries", simbolo: "♈" },
-            { nome: "Touro", simbolo: "♉" },
-            { nome: "Gêmeos", simbolo: "♊" },
-            { nome: "Câncer", simbolo: "♋" },
-            { nome: "Leão", simbolo: "♌" },
-            { nome: "Virgem", simbolo: "♍" },
-            { nome: "Libras", simbolo: "♎" },
-            { nome: "Escorpião", simbolo: "♏" },
-            { nome: "Sagitário", simbolo: "♐" },
-            { nome: "Capricórnio", simbolo: "♑" },
-            { nome: "Aquário", simbolo: "♒" },
-            { nome: "Peixes", simbolo: "♓" }
-        ];
+        const SIGNOS = ["Áries", "Touro", "Gêmeos", "Câncer", "Leão", "Virgem", "Libras", "Escorpião", "Sagitário", "Capricórnio", "Aquário", "Peixes"];
+        const SIMBOLOS = ["♈", "♉", "♊", "♋", "♌", "♍", "♎", "♏", "♐", "♑", "♒", "♓"];
 
-        const bgImage = new Image();
-        bgImage.src = 'roda_2.png';
+        let sweModule = null;
 
-        function degToRad(deg) { return deg * Math.PI / 180; }
-        function radToDeg(rad) { return rad * 180 / Math.PI; }
-        function normalizar(graus) {
-            graus = graus % 360;
-            return graus < 0 ? graus + 360 : graus;
-        }
-
-        // Motor de Cálculo Eclíptico / VSOP Resumido
-        function calcularLongitudeEcliptica(astro, T) {
-            // T é o número de séculos julianos desde J2000.0
-            let L = 0;
-            switch(astro) {
-                case "Sun":
-                    L = 280.46646 + 36000.76983 * T + 0.0003032 * T * T;
-                    let M = 357.52911 + 35999.05029 * T - 0.0001537 * T * T;
-                    let C = (1.914602 - 0.004817 * T) * Math.sin(degToRad(M)) + (0.019993 - 0.000101 * T) * Math.sin(degToRad(2 * M));
-                    return normalizar(L + C);
-
-                case "Moon":
-                    let Lm = 218.3165 + 481267.8813 * T;
-                    let Mm = 134.9634 + 477198.8676 * T;
-                    let Ms = 357.5291 + 35999.0503 * T;
-                    let F = 93.2721 + 483202.0175 * T;
-                    let D = 297.8502 + 445267.1115 * T;
-                    
-                    let lCorr = 6.288 * Math.sin(degToRad(Mm)) 
-                              + 1.274 * Math.sin(degToRad(2*D - Mm))
-                              + 0.658 * Math.sin(degToRad(2*D))
-                              - 0.186 * Math.sin(degToRad(Ms));
-                    return normalizar(Lm + lCorr);
-
-                case "Mercury":
-                    return normalizar(252.2509 + 149472.6746 * T + 3.0 * Math.sin(degToRad(174.79 + 149472.52 * T)));
-                case "Venus":
-                    return normalizar(181.9798 + 58517.8156 * T + 0.8 * Math.sin(degToRad(50.37 + 58517.81 * T)));
-                case "Mars":
-                    return normalizar(355.4330 + 19140.2993 * T + 10.6 * Math.sin(degToRad(19.37 + 19140.30 * T)));
-                case "Jupiter":
-                    return normalizar(34.3515 + 3034.9057 * T + 5.5 * Math.sin(degToRad(20.0 + 3034.90 * T)));
-                case "Saturn":
-                    return normalizar(50.0774 + 1222.1138 * T + 6.3 * Math.sin(degToRad(316.0 + 1222.11 * T)));
-                case "Uranus":
-                    return normalizar(314.0550 + 428.4669 * T);
-                case "Neptune":
-                    return normalizar(304.3487 + 218.4862 * T);
-                case "Pluto":
-                    return normalizar(238.26 + 145.18 * T);
-                default:
-                    return 0;
-            }
-        }
-
-        async function buscarCoordenadas(cidade) {
+        // 1. Inicializar o Módulo WebAssembly assim que a página carregar
+        window.addEventListener('DOMContentLoaded', async () => {
             const status = document.getElementById('statusMsg');
-            status.textContent = "Buscando localização...";
             try {
-                const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(cidade)}`);
-                const data = await response.json();
-                if (data && data.length > 0) {
-                    document.getElementById('lat').value = data[0].lat;
-                    document.getElementById('lon').value = data[0].lon;
-                    status.textContent = `Localizado: ${data[0].display_name.split(',')[0]}`;
-                    return true;
+                if (typeof SwissEph === 'undefined') {
+                    throw new Error("Não foi possível carregar o arquivo da CDN.");
                 }
-            } catch (err) {}
-            status.textContent = "Usando localização padrão.";
-            return false;
-        }
-
-        function usarGPS() {
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(pos => {
-                    document.getElementById('lat').value = pos.coords.latitude;
-                    document.getElementById('lon').value = pos.coords.longitude;
-                    document.getElementById('citySearch').value = "Minha Localização Atual";
-                    calcularMapa();
-                });
+                
+                // Instancia o binário em C compilado em WASM
+                sweModule = await SwissEph();
+                status.textContent = "Motor Swiss Ephemeris WASM pronto!";
+                status.style.color = "#3fb950";
+                document.getElementById('btnCalc').disabled = false;
+                
+                // Executa um cálculo inicial
+                executarCalculo();
+            } catch (err) {
+                status.textContent = "Erro ao carregar WASM: " + err.message;
+                status.style.color = "#f85149";
             }
-        }
+        });
 
-        async function processarEMapa() {
-            const cidade = document.getElementById('citySearch').value;
-            if (cidade && cidade !== "Minha Localização Atual") {
-                await buscarCoordenadas(cidade);
-            }
-            calcularMapa();
-        }
-
-        function calcularAngulos(T, lat, lon) {
-            // Tempo Sideral em Greenwich
-            let gmst = 280.46061837 + 36000.770053608 * T;
-            let lst = normalizar(gmst + lon);
-
-            let radLST = degToRad(lst);
-            let radLat = degToRad(lat);
-            let obliq = degToRad(23.4392911);
-
-            // Meio do Céu
-            let mc = radToDeg(Math.atan2(Math.sin(radLST), Math.cos(radLST) * Math.cos(obliq)));
-            mc = normalizar(mc);
-
-            // Ascendente
-            let y = Math.cos(radLST);
-            let x = -Math.sin(radLST) * Math.cos(obliq) - Math.tan(radLat) * Math.sin(obliq);
-            let asc = radToDeg(Math.atan2(y, x));
-            asc = normalizar(asc);
-
-            return { asc, mc };
-        }
-
-        function calcularMapa() {
-            const status = document.getElementById('statusMsg');
-
-            const dateVal = document.getElementById('date').value;
-            let timeVal = document.getElementById('time').value;
-            const isDST = document.getElementById('dst').checked;
-            const lat = parseFloat(document.getElementById('lat').value);
-            const lon = parseFloat(document.getElementById('lon').value);
-
-            if (!dateVal || !timeVal) return;
-
-            const [year, month, day] = dateVal.split('-').map(Number);
-            let [hours, minutes] = timeVal.split(':').map(Number);
-
-            // Regra do Horário de Verão: subtrai 1 hora se selecionado
-            let fusoPadrao = -3; 
-            if (isDST) {
-                hours -= 1; // Ajusta a hora informada para a hora oficial sem HV
-            }
-
-            // Conversão para UTC (UTC-3 padrão)
-            const utcTime = Date.UTC(year, month - 1, day, hours - fusoPadrao, minutes);
-            const dateObj = new Date(utcTime);
-
-            // Séculos julianos desde J2000.0
-            const jd = (dateObj.getTime() / 86400000) + 2440587.5;
-            const T = (jd - 2451545.0) / 36525.0;
-
-            const { asc, mc } = calcularAngulos(T, lat, lon);
-
-            const ASTROS_LISTA = [
-                { id: "Sun", nome: "Sol", simbolo: "☉", cor: "#ffd700" },
-                { id: "Moon", nome: "Lua", simbolo: "☽", cor: "#e6e6fa" },
-                { id: "Mercury", nome: "Mercúrio", simbolo: "☿", cor: "#b0c4de" },
-                { id: "Venus", nome: "Vênus", simbolo: "♀", cor: "#ffb6c1" },
-                { id: "Mars", nome: "Marte", simbolo: "♂", cor: "#ff4500" },
-                { id: "Jupiter", nome: "Júpiter", simbolo: "♃", cor: "#ffa500" },
-                { id: "Saturn", nome: "Saturno", simbolo: "♄", cor: "#daa520" },
-                { id: "Uranus", nome: "Urano", simbolo: "♅", cor: "#7fffd4" },
-                { id: "Neptune", nome: "Netuno", simbolo: "♆", cor: "#1e90ff" },
-                { id: "Pluto", nome: "Plutão", simbolo: "♇", cor: "#9370db" }
-            ];
-
-            const posicoes = ASTROS_LISTA.map(astro => {
-                const lonEcliptica = calcularLongitudeEcliptica(astro.id, T);
-                const signoIndex = Math.floor(lonEcliptica / 30);
-                const grauNoSigno = lonEcliptica % 30;
-
-                const diffAsc = normalizar(lonEcliptica - asc);
-                const casa = Math.floor(diffAsc / 30) + 1;
-
-                return {
-                    ...astro,
-                    grauAbsoluto: lonEcliptica,
-                    signo: SIGNOS[signoIndex],
-                    grauNoSigno: grauNoSigno,
-                    casa: casa
-                };
-            });
-
-            desenharCanvas(posicoes, asc);
-            preencherTabela(posicoes, asc, mc);
-            status.textContent = "Mapa gerado com sucesso!";
-        }
-
-        function desenharCanvas(posicoes, asc) {
-            const canvas = document.getElementById('astroCanvas');
-            const ctx = canvas.getContext('2d');
-            const cx = canvas.width / 2;
-            const cy = canvas.height / 2;
-            const raioPlanetas = 160;
-
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            // Renderiza a imagem da roda alinhando Áries (0°) à esquerda (linha de 9 horas / Ascendente)
-            if (bgImage.complete && bgImage.naturalWidth !== 0) {
-                ctx.save();
-                ctx.translate(cx, cy);
-                // A roda roda.png tem Áries no topo (12h). Rotacionamos para alinhar Áries à esquerda/Ascendente
-                ctx.rotate(degToRad(-90)); 
-                ctx.drawImage(bgImage, -cx, -cy, canvas.width, canvas.height);
-                ctx.restore();
-            }
-
-            // Desenha os planetas mapeados no círculo trigonométrico relativo
-            posicoes.forEach(astro => {
-                // Projeto astronômico real: Ascendente na esquerda (180°)
-                let anguloTela = normalizar(180 - (astro.grauAbsoluto - asc));
-                let anguloRad = degToRad(anguloTela);
-
-                let x = cx + raioPlanetas * Math.cos(anguloRad);
-                let y = cy + raioPlanetas * Math.sin(anguloRad);
-
-                ctx.beginPath();
-                ctx.arc(x, y, 13, 0, 2 * Math.PI);
-                ctx.fillStyle = '#0d1117';
-                ctx.fill();
-                ctx.strokeStyle = astro.cor;
-                ctx.lineWidth = 1.5;
-                ctx.stroke();
-
-                ctx.fillStyle = astro.cor;
-                ctx.font = '14px Arial';
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
-                ctx.fillText(astro.simbolo, x, y);
-            });
-        }
-
-        function formatarGraus(grausDecimal) {
-            const g = Math.floor(grausDecimal);
-            const m = Math.floor((grausDecimal - g) * 60);
-            const s = Math.floor((((grausDecimal - g) * 60) - m) * 60);
+        function formatarDMS(grausDecimal) {
+            const gAbs = grausDecimal % 30;
+            const g = Math.floor(gAbs);
+            const m = Math.floor((gAbs - g) * 60);
+            const s = Math.round((((gAbs - g) * 60) - m) * 60);
             return `${g}° ${m.toString().padStart(2, '0')}' ${s.toString().padStart(2, '0')}"`;
         }
 
-        function preencherTabela(posicoes, asc, mc) {
+        // 2. Executar os Cálculos do Mapa Astral
+        function executarCalculo() {
+            if (!sweModule) return;
+
+            const dateVal = document.getElementById('date').value;
+            const timeVal = document.getElementById('time').value;
+            const fuso = parseFloat(document.getElementById('fuso').value);
+            const lat = parseFloat(document.getElementById('lat').value);
+            const lon = parseFloat(document.getElementById('lon').value);
+
+            const [year, month, day] = dateVal.split('-').map(Number);
+            const [hours, minutes] = timeVal.split(':').map(Number);
+
+            // Converter Horário Local para Hora UTC em decimal
+            let utcHours = hours + (minutes / 60) - fuso;
+            
+            // a) Calcular Julian Day (swe_julday)
+            const julDay = sweModule.swe_julday(year, month, day, utcHours, sweModule.SE_GREG_CAL);
+
+            const resultados = [];
+
+            // b) Calcular Casas Astrológicas e Ângulos (Placidus = 'P')
+            // Retorna array de cuspes e array de ascmc (Asc, MC, Armc, Vertex, etc.)
+            const houses = sweModule.swe_houses(julDay, lat, lon, 'P');
+            
+            resultados.push({
+                nome: "Ascendente (AC)",
+                grau: houses.ascmc[0]
+            });
+
+            resultados.push({
+                nome: "Meio do Céu (MC)",
+                grau: houses.ascmc[1]
+            });
+
+            // c) Calcular Planetas
+            const PLANETAS = [
+                { id: sweModule.SE_SUN, nome: "Sol" },
+                { id: sweModule.SE_MOON, nome: "Lua" },
+                { id: sweModule.SE_MERCURY, nome: "Mercúrio" },
+                { id: sweModule.SE_VENUS, nome: "Vênus" },
+                { id: sweModule.SE_MARS, nome: "Marte" },
+                { id: sweModule.SE_JUPITER, nome: "Júpiter" },
+                { id: sweModule.SE_SATURN, nome: "Saturno" },
+                { id: sweModule.SE_URANUS, nome: "Urano" },
+                { id: sweModule.SE_NEPTUNE, nome: "Netuno" },
+                { id: sweModule.SE_PLUTO, nome: "Plutão" }
+            ];
+
+            const flag = sweModule.SEFLG_SPEED; // Ativa cálculo de velocidade/precisão
+
+            PLANETAS.forEach(p => {
+                const calc = sweModule.swe_calc_ut(julDay, p.id, flag);
+                resultados.push({
+                    nome: p.nome,
+                    grau: calc.longitude
+                });
+            });
+
+            // d) Adicionar os Cuspes das 12 Casas
+            for (let i = 1; i <= 12; i++) {
+                resultados.push({
+                    nome: `Cuspe da Casa ${i}`,
+                    grau: houses.house[i]
+                });
+            }
+
+            renderizarTabela(resultados);
+        }
+
+        // 3. Renderização Visual dos Dados
+        function renderizarTabela(dados) {
             const tbody = document.getElementById('tableBody');
             tbody.innerHTML = '';
 
-            // 1. Ascendente
-            const ascIndex = Math.floor(asc / 30);
-            const trAsc = document.createElement('tr');
-            trAsc.style.fontWeight = "bold";
-            trAsc.style.color = "#58a6ff";
-            trAsc.innerHTML = `
-                <td><span class="symbol">AC</span> Ascendente</td>
-                <td>${formatarGraus(asc % 30)} ${SIGNOS[ascIndex].simbolo}</td>
-                <td>${SIGNOS[ascIndex].nome}</td>
-                <td>Casa 1</td>
-            `;
-            tbody.appendChild(trAsc);
-
-            // 2. Meio do Céu
-            const mcIndex = Math.floor(mc / 30);
-            const trMc = document.createElement('tr');
-            trMc.style.fontWeight = "bold";
-            trMc.style.color = "#58a6ff";
-            trMc.innerHTML = `
-                <td><span class="symbol">MC</span> Meio do Céu</td>
-                <td>${formatarGraus(mc % 30)} ${SIGNOS[mcIndex].simbolo}</td>
-                <td>${SIGNOS[mcIndex].nome}</td>
-                <td>Casa 10</td>
-            `;
-            tbody.appendChild(trMc);
-
-            // 3. Planetas
-            posicoes.forEach(p => {
+            dados.forEach(item => {
+                const signoIdx = Math.floor(item.grau / 30);
                 const tr = document.createElement('tr');
+                
                 tr.innerHTML = `
-                    <td><span class="symbol" style="color:${p.cor}">${p.simbolo}</span> ${p.nome}</td>
-                    <td>${formatarGraus(p.grauNoSigno)} ${p.signo.simbolo}</td>
-                    <td>${p.signo.nome}</td>
-                    <td>Casa ${p.casa}</td>
+                    <td><strong>${item.nome}</strong></td>
+                    <td>${item.grau.toFixed(4)}°</td>
+                    <td>${formatarDMS(item.grau)} ${SIMBOLOS[signoIdx]}</td>
+                    <td>${SIGNOS[signoIdx]}</td>
                 `;
                 tbody.appendChild(tr);
             });
         }
-
-        window.onload = () => {
-            bgImage.onload = () => calcularMapa();
-            if (bgImage.complete) calcularMapa();
-        };
     </script>
 </body>
 </html>
