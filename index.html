@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mapa Astral - Ajustes Visuais e Ícones</title>
+    <title>Mapa Astral - Padrão Único de Ícones</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background-color: #0d1117; color: #c9d1d9; display: flex; flex-direction: column; align-items: center; padding: 20px; min-height: 100vh; }
@@ -44,11 +44,15 @@
         th, td { padding: 10px 12px; border-bottom: 1px solid #30363d; font-size: 0.95rem; }
         th { color: #8b949e; font-weight: 600; }
         
-        /* Estilização da Coluna Astro estilo imagem */
+        /* Célula dos Astros */
         .astro-cell { display: flex; align-items: center; gap: 10px; font-weight: 600; }
-        .astro-icon { font-size: 1.2rem; min-width: 24px; text-align: center; color: #58a6ff; }
+        .astro-icon { font-size: 1.25rem; min-width: 24px; text-align: center; color: #58a6ff; }
         .astro-name { color: #c9d1d9; }
-        .axis-code { font-weight: bold; color: #58a6ff; min-width: 24px; text-align: center; }
+        .axis-code { font-weight: bold; color: #58a6ff; min-width: 24px; text-align: center; font-size: 1.1rem; }
+
+        /* Célula da Posição Zodiacal (Padrão unificado com os astros) */
+        .zodiac-pos { display: flex; align-items: center; gap: 6px; }
+        .sign-icon { font-size: 1.2rem; color: #a371f7; font-weight: normal; }
 
         .badge-aspecto { padding: 3px 8px; border-radius: 4px; font-weight: bold; font-size: 0.8rem; display: inline-block; }
         .conj { background: #238636; color: #fff; }
@@ -64,7 +68,7 @@
 <body>
 
     <h1>Swiss Ephemeris - Mapa Astral</h1>
-    <p class="subtitle">Ajustes visuais de ícones, tipografia e roda SVG ampliada</p>
+    <p class="subtitle">Estilo unificado de ícones para Astros e Signos</p>
 
     <div class="main-container">
         <!-- Form de Entradas -->
@@ -188,7 +192,6 @@
         }
 
         function calcularDadosNascimento() {
-            // Valores ajustados com precisão para a data teste (25/01/1991)
             const asc = normalizar(72.15);         // Gêmeos
             const mc = normalizar(342.10);        // Peixes
             const dc = normalizar(asc + 180);
@@ -273,7 +276,6 @@
             return aspectos;
         }
 
-        // --- RENDERIZAÇÃO DA RODA SVG COM AJUSTES SOLICITADOS ---
         function desenharRodaSVG(astros, casas, asc) {
             const svg = document.getElementById('chartSvg');
             svg.innerHTML = '';
@@ -292,7 +294,7 @@
                 };
             }
 
-            // 1. Anel dos Signos (Sem fundo colorido alternado, ícones brancos e maiores)
+            // Anel dos Signos (Glifos brancos)
             for (let i = 0; i < 12; i++) {
                 const gInicio = i * 30;
                 const gFim = (i + 1) * 30;
@@ -314,11 +316,10 @@
 
                 const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
                 path.setAttribute('d', dArc);
-                path.setAttribute('fill', '#161b22'); // Fundo limpo e uniforme
+                path.setAttribute('fill', '#161b22');
                 path.setAttribute('stroke', '#30363d');
                 svg.appendChild(path);
 
-                // Ícones dos signos em branco (#ffffff) e maiores (font-size: 22)
                 const aMeio = grauParaAngulo(gInicio + 15);
                 const pTexto = polarParaCartesiano(cx, cy, (rOuter + rInner) / 2, aMeio);
                 const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
@@ -331,7 +332,7 @@
                 svg.appendChild(text);
             }
 
-            // 2. Linhas das Casas Astrológicas
+            // Casas Astrológicas
             for (let i = 0; i < 12; i++) {
                 const aCuspe = grauParaAngulo(casas[i]);
                 const p1 = polarParaCartesiano(cx, cy, rInner, aCuspe);
@@ -360,7 +361,7 @@
             coreCircle.setAttribute('fill', '#0b0e14'); coreCircle.setAttribute('stroke', '#30363d');
             svg.appendChild(coreCircle);
 
-            // 3. Ícones dos Planetas Maiores (font-size: 20)
+            // Ícones dos Planetas
             astros.forEach(astro => {
                 const ang = grauParaAngulo(astro.grau);
                 const pIcone = polarParaCartesiano(cx, cy, rCasas, ang);
@@ -369,7 +370,7 @@
                 txtAstro.setAttribute('x', pIcone.x);
                 txtAstro.setAttribute('y', pIcone.y + 6);
                 txtAstro.setAttribute('fill', astro.retro ? '#f85149' : '#e3b341');
-                txtAstro.setAttribute('font-size', '20'); // Maior conforme solicitado
+                txtAstro.setAttribute('font-size', '20');
                 txtAstro.setAttribute('font-weight', 'bold');
                 txtAstro.setAttribute('text-anchor', 'middle');
                 
@@ -385,7 +386,6 @@
                 const { astros, casas, asc } = calcularDadosNascimento();
                 const aspectos = calcularAspectos(astros);
 
-                // Renderização da Tabela no formato da imagem enviada
                 const tbodyAstros = document.getElementById('tableAstros');
                 tbodyAstros.innerHTML = '';
                 astros.forEach(item => {
@@ -402,14 +402,18 @@
                             </div>
                         </td>
                         <td>${item.grau.toFixed(2)}°</td>
-                        <td>${formatarDMS(item.grau)} ${SIMBOLOS_SIGNOS[signoIdx]}</td>
+                        <td>
+                            <div class="zodiac-pos">
+                                <span>${formatarDMS(item.grau)}</span>
+                                <span class="sign-icon">${SIMBOLOS_SIGNOS[signoIdx]}</span>
+                            </div>
+                        </td>
                         <td>${SIGNOS[signoIdx]}</td>
                         <td>${item.retro ? '<span class="retro-tag">Retrógrado (Ⓡ)</span>' : 'Direto'}</td>
                     `;
                     tbodyAstros.appendChild(tr);
                 });
 
-                // Tabela de Aspectos
                 const tbodyAspectos = document.getElementById('tableAspectos');
                 tbodyAspectos.innerHTML = '';
                 aspectos.forEach(asp => {
