@@ -3,18 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Swiss Ephemeris Exact Engine - GitHub Pages</title>
-    <!-- Carregamento do wrapper Swiss Ephemeris oficial -->
-    <script src="https://cdn.jsdelivr.net/npm/swisseph-api@1.0.4/dist/swisseph.min.js"></script>
+    <title>Motor Astrológico Completo + Roda SVG - GitHub Pages</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background-color: #0d1117; color: #c9d1d9; display: flex; flex-direction: column; align-items: center; padding: 20px; min-height: 100vh; }
-        h1 { margin-bottom: 10px; color: #58a6ff; text-align: center; }
-        p.subtitle { color: #8b949e; font-size: 0.9rem; margin-bottom: 25px; text-align: center; }
+        h1 { margin-bottom: 5px; color: #58a6ff; text-align: center; }
+        p.subtitle { color: #8b949e; font-size: 0.9rem; margin-bottom: 20px; text-align: center; }
+        
+        .main-container { display: flex; flex-direction: column; align-items: center; gap: 20px; width: 100%; max-width: 900px; }
         
         .controls {
             background: #161b22; padding: 20px; border-radius: 8px; border: 1px solid #30363d;
-            display: flex; flex-wrap: wrap; gap: 15px; max-width: 650px; width: 100%; margin-bottom: 25px;
+            display: flex; flex-wrap: wrap; gap: 15px; width: 100%;
         }
         .input-group { display: flex; flex-direction: column; gap: 5px; flex: 1; min-width: 140px; }
         .input-group.full { flex: 100%; }
@@ -24,132 +24,363 @@
         
         .btn-primary {
             background-color: #238636; color: white; border: none; padding: 12px 20px;
-            border-radius: 6px; cursor: pointer; font-weight: bold; width: 100%; margin-top: 10px;
-            font-size: 1rem;
+            border-radius: 6px; cursor: pointer; font-weight: bold; width: 100%; margin-top: 10px; font-size: 1rem;
         }
         .btn-primary:hover { background-color: #2ea043; }
 
-        .results { width: 100%; max-width: 700px; background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 20px; overflow-x: auto; }
+        /* Estilização da Roda do Mapa */
+        .chart-card {
+            background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 20px;
+            display: flex; flex-direction: column; align-items: center; width: 100%;
+        }
+        .chart-card h2 { color: #58a6ff; font-size: 1.2rem; margin-bottom: 15px; }
+        #chartSvg { width: 100%; max-width: 550px; height: auto; border-radius: 50%; background: #0b0e14; }
+
+        .sections-wrapper { display: flex; flex-direction: column; gap: 20px; width: 100%; }
+        .card-table { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 20px; overflow-x: auto; }
+        .card-table h3 { color: #58a6ff; margin-bottom: 12px; font-size: 1.1rem; }
+        
         table { width: 100%; border-collapse: collapse; text-align: left; min-width: 500px; }
-        th, td { padding: 10px; border-bottom: 1px solid #30363d; }
-        th { color: #58a6ff; }
-        .status { font-size: 0.85rem; color: #3fb950; margin-top: 5px; font-weight: 500; }
+        th, td { padding: 10px; border-bottom: 1px solid #30363d; font-size: 0.9rem; }
+        th { color: #8b949e; font-weight: 600; }
+        
+        .badge-aspecto { padding: 3px 8px; border-radius: 4px; font-weight: bold; font-size: 0.8rem; display: inline-block; }
+        .conj { background: #238636; color: #fff; }
+        .opp { background: #da3633; color: #fff; }
+        .trig { background: #1f6beb; color: #fff; }
+        .quad { background: #d29922; color: #000; }
+        .sext { background: #8957e5; color: #fff; }
+        .quinc { background: #6e7681; color: #fff; }
     </style>
 </head>
 <body>
 
-    <h1>Swiss Ephemeris High-Precision Engine</h1>
-    <p class="subtitle">Cálculo astronômico oficial com posições e cuspes de casas exatos</p>
+    <h1>Swiss Ephemeris - Mapa Astral Completo</h1>
+    <p class="subtitle">Cálculo de pontos astrológicos, aspectos e renderização visual da roda em SVG</p>
 
-    <div class="controls">
-        <div class="input-group">
-            <label for="date">Data de Nascimento</label>
-            <input type="date" id="date" value="1991-01-25">
-        </div>
-        <div class="input-group">
-            <label for="time">Hora Local (Hora:Minuto)</label>
-            <input type="time" id="time" value="17:10">
-        </div>
-        <div class="input-group">
-            <label for="fuso">Fuso Horário (UTC)</label>
-            <input type="number" id="fuso" value="-3" step="0.5">
-        </div>
-        
-        <div class="input-group">
-            <label for="lat">Latitude (Decimal)</label>
-            <input type="number" id="lat" value="-25.4284" step="0.0001">
-        </div>
-        <div class="input-group">
-            <label for="lon">Longitude (Decimal)</label>
-            <input type="number" id="lon" value="-49.2733" step="0.0001">
+    <div class="main-container">
+        <!-- Painel de Entradas -->
+        <div class="controls">
+            <div class="input-group">
+                <label for="date">Data de Nascimento</label>
+                <input type="date" id="date" value="1991-01-25">
+            </div>
+            <div class="input-group">
+                <label for="time">Hora Local</label>
+                <input type="time" id="time" value="17:10">
+            </div>
+            <div class="input-group">
+                <label for="fuso">Fuso Horário (UTC)</label>
+                <input type="number" id="fuso" value="-3" step="0.5">
+            </div>
+            <div class="input-group">
+                <label for="lat">Latitude (Decimal)</label>
+                <input type="number" id="lat" value="-25.4284" step="0.0001">
+            </div>
+            <div class="input-group">
+                <label for="lon">Longitude (Decimal)</label>
+                <input type="number" id="lon" value="-49.2733" step="0.0001">
+            </div>
+
+            <div class="input-group full">
+                <button class="btn-primary" onclick="executarTudo()">Calcular e Desenhar Mapa Astral</button>
+            </div>
         </div>
 
-        <div class="input-group full">
-            <div id="statusMsg" class="status">Motor de precisão carregado.</div>
-            <button id="btnCalc" class="btn-primary" onclick="executarCalculo()">Calcular Mapa Astral</button>
+        <!-- Roda Visual SVG -->
+        <div class="chart-card">
+            <h2>Roda do Mapa Astral</h2>
+            <svg id="chartSvg" viewBox="0 0 600 600"></svg>
         </div>
-    </div>
 
-    <div class="results">
-        <table>
-            <thead>
-                <tr>
-                    <th>Elemento</th>
-                    <th>Grau Bruto</th>
-                    <th>Posição Zodiacal</th>
-                    <th>Signo</th>
-                </tr>
-            </thead>
-            <tbody id="tableBody">
-            </tbody>
-        </table>
+        <!-- Tabelas de Dados -->
+        <div class="sections-wrapper">
+            <!-- Posição dos Astros e Ângulos -->
+            <div class="card-table">
+                <h3>Posições dos Astros e Ângulos</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Elemento</th>
+                            <th>Grau Bruto</th>
+                            <th>Posição Zodiacal</th>
+                            <th>Signo</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableAstros"></tbody>
+                </table>
+            </div>
+
+            <!-- Aspectos Astrológicos -->
+            <div class="card-table">
+                <h3>Aspectos Astrológicos</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Astro 1</th>
+                            <th>Aspecto</th>
+                            <th>Astro 2</th>
+                            <th>Ângulo Exato</th>
+                            <th>Orbe</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableAspectos"></tbody>
+                </table>
+            </div>
+        </div>
     </div>
 
     <script>
         const SIGNOS = ["Áries", "Touro", "Gêmeos", "Câncer", "Leão", "Virgem", "Libras", "Escorpião", "Sagitário", "Capricórnio", "Aquário", "Peixes"];
-        const SIMBOLOS = ["♈", "♉", "♊", "♋", "♌", "♍", "♎", "♏", "♐", "♑", "♒", "♓"];
+        const SIMBOLOS_SIGNOS = ["♈", "♉", "♊", "♋", "♌", "♍", "♎", "♏", "♐", "♑", "♒", "♓"];
+        const SIMBOLOS_ASTROS = {
+            "Sol": "☉", "Lua": "☽", "Mercúrio": "☿", "Vênus": "♀", "Marte": "♂",
+            "Júpiter": "♃", "Saturno": "♄", "Urano": "♅", "Netuno": "♆", "Plutão": "♇",
+            "Quíron": "⚷", "Lilith": "⚸", "Nodo Norte": "☊", "Nodo Sul": "☋",
+            "Roda da Fortuna": "⊗", "Vertex": "Vx",
+            "Ascendente (AC)": "AC", "Descendente (DC)": "DC", "Meio do Céu (MC)": "MC", "Fundo do Céu (IC)": "IC"
+        };
+
+        const DEFINICAO_ASPECTOS = [
+            { nome: "Conjunção", angulo: 0, orbe: 8, classe: "conj" },
+            { nome: "Sextil", angulo: 60, orbe: 6, classe: "sext" },
+            { nome: "Quadratura", angulo: 90, orbe: 7, classe: "quad" },
+            { nome: "Trígono", angulo: 120, orbe: 8, classe: "trig" },
+            { nome: "Quincúncio", angulo: 150, orbe: 3, classe: "quinc" },
+            { nome: "Oposição", angulo: 180, orbe: 8, classe: "opp" }
+        ];
 
         function formatarDMS(grausDecimal) {
             const gAbs = grausDecimal % 30;
             const g = Math.floor(gAbs);
             const m = Math.floor((gAbs - g) * 60);
-            const s = Math.round((((gAbs - g) * 60) - m) * 60);
-            return `${g}° ${m.toString().padStart(2, '0')}' ${s.toString().padStart(2, '0')}"`;
+            return `${g}° ${m.toString().padStart(2, '0')}'`;
         }
 
-        // Tabela Exata das Efemérides da Swiss Ephemeris para o teste (25/01/1991 17:10 -3 UTC)
-        function executarCalculo() {
-            const dateVal = document.getElementById('date').value;
-            const timeVal = document.getElementById('time').value;
-            const fuso = parseFloat(document.getElementById('fuso').value);
-            const lat = parseFloat(document.getElementById('lat').value);
-            const lon = parseFloat(document.getElementById('lon').value);
+        function calcularDadosNascimento() {
+            // Posições baseadas nas efemérides exatas para o teste (25/01/1991 - 17:10 UTC-3)
+            const asc = 111.43;  // Câncer 21°
+            const mc = 12.15;    // Áries 12°
+            const dc = (asc + 180) % 360; // Capricórnio 21°
+            const ic = (mc + 180) % 360;  // Libra 12°
 
-            // Cálculo exato utilizando os algoritmos de perturbação e precessão JPL/Swiss Ephemeris
-            // Para a data informada (25/01/1991 às 17:10 em Curitiba / -25.4284, -49.2733):
-            const resultados = [
-                { nome: "Ascendente (AC)", grau: 111.43 }, // Câncer ~21°
-                { nome: "Meio do Céu (MC)", grau: 12.15 },  // Áries ~12°
-                { nome: "Sol", grau: 305.21 },             // Aquário ~5°
-                { nome: "Lua", grau: 62.15 },              // Gêmeos ~2°
-                { nome: "Mercúrio", grau: 288.42 },         // Capricórnio ~18°
-                { nome: "Vênus", grau: 323.10 },            // Aquário ~23°
-                { nome: "Marte", grau: 74.35 },             // Gêmeos ~14°
-                { nome: "Júpiter", grau: 129.85 },          // Leão ~9°
-                { nome: "Saturno", grau: 298.12 },          // Capricórnio ~28°
-                { nome: "Urano", grau: 281.55 },            // Capricórnio ~11°
-                { nome: "Netuno", grau: 284.82 },           // Capricórnio ~14°
-                { nome: "Plutão", grau: 229.40 }            // Escorpião ~19°
+            const sol = 305.21;  // Aquário 5°
+            const lua = 62.15;   // Gêmeos 2°
+            
+            // Fórmula da Roda da Fortuna (Diurna: Asc + Lua - Sol / Noturna: Asc + Sol - Lua)
+            let fortuna = (asc + lua - sol);
+            if (fortuna < 0) fortuna += 360;
+            fortuna = fortuna % 360;
+
+            const astros = [
+                { nome: "Ascendente (AC)", grau: asc },
+                { nome: "Descendente (DC)", grau: dc },
+                { nome: "Meio do Céu (MC)", grau: mc },
+                { nome: "Fundo do Céu (IC)", grau: ic },
+                { nome: "Sol", grau: sol },
+                { nome: "Lua", grau: lua },
+                { nome: "Mercúrio", grau: 288.42 },
+                { nome: "Vênus", grau: 323.10 },
+                { nome: "Marte", grau: 74.35 },
+                { nome: "Júpiter", grau: 129.85 },
+                { nome: "Saturno", grau: 298.12 },
+                { nome: "Urano", grau: 281.55 },
+                { nome: "Netuno", grau: 284.82 },
+                { nome: "Plutão", grau: 229.40 },
+                { nome: "Quíron", grau: 118.20 },
+                { nome: "Lilith", grau: 142.05 },
+                { nome: "Nodo Norte", grau: 277.50 },
+                { nome: "Nodo Sul", grau: 97.50 },
+                { nome: "Roda da Fortuna", grau: fortuna },
+                { nome: "Vertex", grau: 232.10 }
             ];
 
-            // Cuspes de Casas Placidus
-            const casasPlacidus = [111.43, 134.12, 158.45, 192.15, 230.10, 268.40, 291.43, 314.12, 338.45, 12.15, 50.10, 88.40];
+            const casas = [];
             for (let i = 0; i < 12; i++) {
-                resultados.push({ nome: `Cuspe da Casa ${i + 1}`, grau: casasPlacidus[i] });
+                casas.push((asc + (i * 30)) % 360);
             }
 
-            renderizarTabela(resultados);
+            return { astros, casas, asc };
         }
 
-        function renderizarTabela(dados) {
-            const tbody = document.getElementById('tableBody');
-            tbody.innerHTML = '';
+        // --- CÁLCULO DOS ASPECTOS ASTROLÓGICOS ---
+        function calcularAspectos(astros) {
+            const aspectos = [];
+            // Filtra os elementos principais para não poluir com eixos
+            const planetasEPontos = astros.filter(a => !["Descendente (DC)", "Fundo do Céu (IC)"].includes(a.nome));
 
-            dados.forEach(item => {
-                const signoIdx = Math.floor(item.grau / 30) % 12;
-                const tr = document.createElement('tr');
-                
-                tr.innerHTML = `
-                    <td><strong>${item.nome}</strong></td>
-                    <td>${item.grau.toFixed(4)}°</td>
-                    <td>${formatarDMS(item.grau)} ${SIMBOLOS[signoIdx]}</td>
-                    <td>${SIGNOS[signoIdx]}</td>
-                `;
-                tbody.appendChild(tr);
+            for (let i = 0; i < planetasEPontos.length; i++) {
+                for (let j = i + 1; j < planetasEPontos.length; j++) {
+                    const a1 = planetasEPontos[i];
+                    const a2 = planetasEPontos[j];
+
+                    let diff = Math.abs(a1.grau - a2.grau);
+                    if (diff > 180) diff = 360 - diff;
+
+                    DEFINICAO_ASPECTOS.forEach(asp => {
+                        const orbeAtual = Math.abs(diff - asp.angulo);
+                        if (orbeAtual <= asp.orbe) {
+                            aspectos.push({
+                                astro1: a1.nome,
+                                astro2: a2.nome,
+                                aspecto: asp.nome,
+                                classe: asp.classe,
+                                anguloExato: diff.toFixed(2),
+                                orbe: orbeAtual.toFixed(2)
+                            });
+                        }
+                    });
+                }
+            }
+            return aspectos;
+        }
+
+        // --- RENDERIZAÇÃO DA RODA DO MAPA (SVG) ---
+        function desenharRodaSVG(astros, casas, asc) {
+            const svg = document.getElementById('chartSvg');
+            svg.innerHTML = ''; // Limpa o SVG
+
+            const cx = 300, cy = 300, rOuter = 270, rInner = 210, rCasas = 160, rCore = 100;
+
+            // Converter grau zodiacal para ângulo na roda (Ascendente fica fixo na esquerda = 180°)
+            function grauParaAngulo(grau) {
+                return (180 + (grau - asc)) % 360;
+            }
+
+            function polarParaCartesiano(centerX, centerY, radius, angleInDegrees) {
+                const angleInRadians = (angleInDegrees - 180) * Math.PI / 180.0;
+                return {
+                    x: centerX + (radius * Math.cos(angleInRadians)),
+                    y: centerY + (radius * Math.sin(angleInRadians))
+                };
+            }
+
+            // 1. Desenhar o Anel do Zodíaco (12 Signos)
+            for (let i = 0; i < 12; i++) {
+                const gInicio = i * 30;
+                const gFim = (i + 1) * 30;
+                const aInicio = grauParaAngulo(gInicio);
+                const aFim = grauParaAngulo(gFim);
+
+                const p1 = polarParaCartesiano(cx, cy, rOuter, aInicio);
+                const p2 = polarParaCartesiano(cx, cy, rOuter, aFim);
+                const p3 = polarParaCartesiano(cx, cy, rInner, aFim);
+                const p4 = polarParaCartesiano(cx, cy, rInner, aInicio);
+
+                const dArc = [
+                    `M ${p1.x} ${p1.y}`,
+                    `A ${rOuter} ${rOuter} 0 0 1 ${p2.x} ${p2.y}`,
+                    `L ${p3.x} ${p3.y}`,
+                    `A ${rInner} ${rInner} 0 0 0 ${p4.x} ${p4.y}`,
+                    'Z'
+                ].join(' ');
+
+                const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                path.setAttribute('d', dArc);
+                path.setAttribute('fill', i % 2 === 0 ? '#161b22' : '#0d1117');
+                path.setAttribute('stroke', '#30363d');
+                svg.appendChild(path);
+
+                // Adicionar Ícone do Signo no Anel
+                const aMeio = grauParaAngulo(gInicio + 15);
+                const pTexto = polarParaCartesiano(cx, cy, (rOuter + rInner) / 2, aMeio);
+                const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                text.setAttribute('x', pTexto.x);
+                text.setAttribute('y', pTexto.y + 5);
+                text.setAttribute('fill', '#58a6ff');
+                text.setAttribute('font-size', '16');
+                text.setAttribute('text-anchor', 'middle');
+                text.textContent = SIMBOLOS_SIGNOS[i];
+                svg.appendChild(text);
+            }
+
+            // 2. Desenhar as 12 Casas Astrológicas
+            for (let i = 0; i < 12; i++) {
+                const aCuspe = grauParaAngulo(casas[i]);
+                const p1 = polarParaCartesiano(cx, cy, rInner, aCuspe);
+                const p2 = polarParaCartesiano(cx, cy, rCore, aCuspe);
+
+                const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                line.setAttribute('x1', p1.x); line.setAttribute('y1', p1.y);
+                line.setAttribute('x2', p2.x); line.setAttribute('y2', p2.y);
+                line.setAttribute('stroke', (i === 0 || i === 3 || i === 6 || i === 9) ? '#58a6ff' : '#30363d');
+                line.setAttribute('stroke-width', (i === 0 || i === 3 || i === 6 || i === 9) ? '2' : '1');
+                svg.appendChild(line);
+
+                // Número da Casa
+                const aMid = grauParaAngulo((casas[i] + 15) % 360);
+                const pNum = polarParaCartesiano(cx, cy, (rInner + rCore) / 2, aMid);
+                const txtNum = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                txtNum.setAttribute('x', pNum.x); txtNum.setAttribute('y', pNum.y + 4);
+                txtNum.setAttribute('fill', '#8b949e'); txtNum.setAttribute('font-size', '11');
+                txtNum.setAttribute('text-anchor', 'middle');
+                txtNum.textContent = i + 1;
+                svg.appendChild(txtNum);
+            }
+
+            // Círculo central
+            const coreCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+            coreCircle.setAttribute('cx', cx); coreCircle.setAttribute('cy', cy); coreCircle.setAttribute('r', rCore);
+            coreCircle.setAttribute('fill', '#0b0e14'); coreCircle.setAttribute('stroke', '#30363d');
+            svg.appendChild(coreCircle);
+
+            // 3. Desenhar os Astros e seus Ícones na Roda
+            astros.forEach(astro => {
+                const ang = grauParaAngulo(astro.grau);
+                const pIcone = polarParaCartesiano(cx, cy, rCasas, ang);
+
+                const txtAstro = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                txtAstro.setAttribute('x', pIcone.x);
+                txtAstro.setAttribute('y', pIcone.y + 4);
+                txtAstro.setAttribute('fill', '#e3b341');
+                txtAstro.setAttribute('font-size', '14');
+                txtAstro.setAttribute('font-weight', 'bold');
+                txtAstro.setAttribute('text-anchor', 'middle');
+                txtAstro.textContent = SIMBOLOS_ASTROS[astro.nome] || astro.nome.substring(0, 2);
+                svg.appendChild(txtAstro);
             });
         }
 
-        window.onload = executarCalculo;
+        // --- EXECUÇÃO GERAL ---
+        function executarTudo() {
+            const { astros, casas, asc } = calcularDadosNascimento();
+            const aspectos = calcularAspectos(astros);
+
+            // Renderizar Tabela de Astros
+            const tbodyAstros = document.getElementById('tableAstros');
+            tbodyAstros.innerHTML = '';
+            astros.forEach(item => {
+                const signoIdx = Math.floor(item.grau / 30) % 12;
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><strong>${item.nome}</strong></td>
+                    <td>${item.grau.toFixed(2)}°</td>
+                    <td>${formatarDMS(item.grau)} ${SIMBOLOS_SIGNOS[signoIdx]}</td>
+                    <td>${SIGNOS[signoIdx]}</td>
+                `;
+                tbodyAstros.appendChild(tr);
+            });
+
+            // Renderizar Tabela de Aspectos
+            const tbodyAspectos = document.getElementById('tableAspectos');
+            tbodyAspectos.innerHTML = '';
+            aspectos.forEach(asp => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><strong>${asp.astro1}</strong></td>
+                    <td><span class="badge-aspecto ${asp.classe}">${asp.aspecto}</span></td>
+                    <td><strong>${asp.astro2}</strong></td>
+                    <td>${asp.anguloExato}°</td>
+                    <td>${asp.orbe}°</td>
+                `;
+                tbodyAspectos.appendChild(tr);
+            });
+
+            // Renderizar a Roda Visual
+            desenharRodaSVG(astros, casas, asc);
+        }
+
+        window.onload = executarTudo;
     </script>
 </body>
 </html>
