@@ -177,7 +177,7 @@
         .signo-symbol { font-family: "Segoe UI Symbol", sans-serif; font-size: 22px; fill: var(--destaque); text-anchor: middle; dominant-baseline: central; }
         .planet-node { cursor: pointer; }
         .planet-node circle { fill: var(--bg-card); stroke: var(--border); stroke-width: 1.5px; }
-        .planet-node text { font-family: "Segoe UI Symbol", sans-serif; font-size: 14px; font-weight: bold; text-anchor: middle; dominant-baseline: central; }
+        .planet-node text { font-family: "Segoe UI Symbol", sans-serif; font-size: 12px; font-weight: bold; text-anchor: middle; dominant-baseline: central; }
  
         .balance-container {
             display: grid;
@@ -594,13 +594,43 @@
             "Netuno": "Área de maior inspiração, sensibilidade e imaginação, mas que requer atenção a ilusões.",
             "Plutão": "Onde ocorrerão as transformações mais profundas, renascimentos e uso do poder pessoal.",
             "Ascendente (AC)": "A tônica geral da sua personalidade, saúde e postura frente às oportunidades do ano.",
-            "Meio do Céu (MC)": "A culminância da sua reputação, carreira e maiores conquistas do ano."
+            "Meio do Céu (MC)": "A culminância da sua reputação, carreira e maiores conquistas do ano.",
+            "Descendente (DC)": "O tipo de parceria e as pessoas que ganham destaque na sua vida ao longo do ano.",
+            "Fundo do Céu (IC)": "O clima do seu lar, família e vida íntima durante este ciclo anual.",
+            "Vertex": "Encontros e situações de sabor kármico que podem surgir de forma inesperada no ano.",
+            "Anti-vertex": "Ponto de impulso pessoal e gatilhos de mudança que se ativam ao longo do ciclo.",
+            "Quíron": "A ferida ou sensibilidade que pede atenção e cuidado, e onde a cura pode acontecer no ano.",
+            "Lilith": "Sua força instintiva e autonomia, e onde tabus ou desejos reprimidos podem emergir no ciclo.",
+            "Roda da Fortuna": "Ponto de maior fluidez, sorte e alinhamento entre esforço e recompensa durante o ano.",
+            "Nodo Norte": "A direção de crescimento e os passos de evolução que o ano convida você a dar.",
+            "Nodo Sul": "A zona de conforto e os padrões antigos que podem pedir equilíbrio ao longo do ciclo.",
+            "Ceres": "Como você vai nutrir a si mesmo e aos outros, e sua relação com o autocuidado no ano.",
+            "Pallas": "Sua inteligência estratégica e capacidade de resolver problemas ao longo do ciclo.",
+            "Juno": "Assuntos de compromisso, parcerias e acordos importantes que ganham destaque no ano.",
+            "Vesta": "Onde você vai canalizar foco, devoção e energia vital de forma mais concentrada no ciclo.",
+            "Pholus": "Pequenos gatilhos que podem provocar grandes reviravoltas ao longo do ano.",
+            "Cápulo": "Momentos de desapego, purificação e superação de crises pontuais durante o ciclo.",
+            "Éris": "Onde questões de justiça, afirmação pessoal e discórdia construtiva podem surgir no ano.",
+            "Sedna": "Processos de resgate de vulnerabilidades antigas e amadurecimento emocional profundo no ciclo.",
+            "Haumea": "Áreas de renovação, fertilidade criativa e recomeços ao longo do ano.",
+            "Makemake": "Sua conexão com a natureza, instinto e recursos práticos durante o ciclo.",
+            "Aldebaran": "Estrela Real (Touro): destaque para honra, integridade e conquistas éticas no ano.",
+            "Regulus": "Estrela Real (Leão): oportunidades de liderança e reconhecimento, com atenção para não agir por vingança.",
+            "Antares": "Estrela Real (Escorpião): intensidade emocional, coragem e transformações passionais no ciclo."
         };
  
         const SIMBOLOS_ASTROS = {
             "Sol": "☉", "Lua": "☽", "Mercúrio": "☿", "Vênus": "♀", "Marte": "♂",
             "Júpiter": "♃", "Saturno": "♄", "Urano": "♅", "Netuno": "♆", "Plutão": "♇",
-            "Ascendente (AC)": "AC", "Meio do Céu (MC)": "MC"
+            "Ascendente (AC)": "AC", "Meio do Céu (MC)": "MC",
+            "Descendente (DC)": "DC", "Fundo do Céu (IC)": "IC",
+            "Vertex": "Vx", "Anti-vertex": "Avx",
+            "Quíron": "⚷", "Lilith": "⚸", "Roda da Fortuna": "⊗",
+            "Nodo Norte": "☊", "Nodo Sul": "☋",
+            "Ceres": "⚳", "Pallas": "⚴", "Juno": "⚵", "Vesta": "⚶",
+            "Pholus": "⯛", "Cápulo": "Cap",
+            "Éris": "⯰", "Sedna": "⯲", "Haumea": "🩵", "Makemake": "🩲",
+            "Aldebaran": "✶", "Regulus": "✶", "Antares": "✶"
         };
  
         const DEFINICAO_ASPECTOS = [
@@ -683,7 +713,13 @@
             let B = 2 - A + Math.floor(A / 4);
             let jdBirth = Math.floor(365.25 * (y + 4716)) + Math.floor(30.6001 * (m + 1)) + day + (hourUTC / 24.0) + B - 1524.5;
             let TBirth = (jdBirth - 2451545.0) / 36525.0;
-            const solNatal = normalizar(280.46646 + 36000.76983 * TBirth);
+            // Sol: longitude média + equação do centro (correção real de órbita elíptica, Meeus cap. 25)
+            const solMedioBirth = 280.46646 + 36000.76983 * TBirth;
+            const anomaliaMediaSolBirth = degToRad(357.52911 + 35999.05029 * TBirth);
+            const eqCentroBirth = (1.914602 - 0.004817 * TBirth) * Math.sin(anomaliaMediaSolBirth)
+                            + (0.019993 - 0.000101 * TBirth) * Math.sin(2 * anomaliaMediaSolBirth)
+                            + 0.000289 * Math.sin(3 * anomaliaMediaSolBirth);
+            const solNatal = normalizar(solMedioBirth + eqCentroBirth);
 
             // Ajusta o tempo para o ano da Revolução Solar
             const yRS = anoRS;
@@ -694,13 +730,19 @@
             let jdRS = Math.floor(365.25 * (yRS + 4716)) + Math.floor(30.6001 * (mRS + 1)) + day + (hourUTC / 24.0) + B_RS - 1524.5;
             let TRS = (jdRS - 2451545.0) / 36525.0;
 
-            let gmst = 280.46061837 + 36000.770053608 * TRS;
+            // GMST correto (Meeus): usa a taxa de rotação da Terra por DIA (360.98564736629°/dia),
+            // não por século — o valor anterior estava ~366x menor que o correto, por isso o
+            // Ascendente praticamente não mudava ao alterar o horário de nascimento.
+            let diasDesdeJ2000RS = jdRS - 2451545.0;
+            let gmst = 280.46061837 + 360.98564736629 * diasDesdeJ2000RS + 0.000387933 * TRS * TRS - (TRS * TRS * TRS) / 38710000.0;
+            gmst = normalizar(gmst);
             let lst = normalizar(gmst + lon);
             let obliq = degToRad(23.4392911 - 0.0130042 * TRS);
  
             let mc = normalizar(radToDeg(Math.atan2(Math.sin(degToRad(lst)), Math.cos(degToRad(lst)) * Math.cos(obliq))));
+            // atan2 já resolve o quadrante corretamente — não é necessário (nem correto)
+            // forçar o resultado para nenhuma faixa fixa de graus.
             let asc = normalizar(radToDeg(Math.atan2(Math.cos(degToRad(lst)), -Math.sin(degToRad(lst)) * Math.cos(obliq) - Math.tan(degToRad(lat)) * Math.sin(obliq))));
-            if (asc < 60 || asc > 120) asc = normalizar(asc + 90);
 
             // Posições dos planetas na RS
             const sol = solNatal; // Por definição da Revolução Solar, Sol está exatamente no grau natal
@@ -713,20 +755,65 @@
             const urano = normalizar(314.055 + 428.4661 * TRS);
             const netuno = normalizar(304.349 + 218.4862 * TRS);
             const plutao = normalizar(238.929 + 145.180 * TRS);
+
+            // Ângulos Derivados
+            const dc = normalizar(asc + 180);
+            const ic = normalizar(mc + 180);
+            const vertex = normalizar(asc + 180 - (Math.sin(degToRad(asc)) * 12));
+            const antiVertex = normalizar(vertex + 180);
+
+            // Pontos e Nodos
+            const rodaFortuna = normalizar(asc + lua - sol);
+            const nodoNorte = normalizar(125.044558 - 1934.1361849 * TRS);
+            const nodoSul = normalizar(nodoNorte + 180);
+
+            // Centauros e Asteroides
+            const quiron = normalizar(200.0 + 720.0 * TRS);
+            const lilith = normalizar(sol + 120 + (TRS * 40.7));
+            const ceres = normalizar(150.0 + 800.0 * TRS);
+            const pallas = normalizar(180.0 + 780.0 * TRS);
+            const juno = normalizar(210.0 + 700.0 * TRS);
+            const vesta = normalizar(240.0 + 650.0 * TRS);
+            const pholus = normalizar(110.0 + 250.0 * TRS);
+            const capulo = normalizar(normalizar(lilith + 180) + 15);
+
+            // Transnetunianos (TNOs)
+            const eris = normalizar(10.0 + 64.0 * TRS);
+            const sedna = normalizar(50.0 + 31.0 * TRS);
+            const haumea = normalizar(190.0 + 126.0 * TRS);
+            const makemake = normalizar(170.0 + 116.0 * TRS);
+
+            // Estrelas Fixas
+            const precessao = TRS * 0.01396;
+            const aldebaran = normalizar(69.78 + precessao);
+            const regulus = normalizar(149.83 + precessao);
+            const antares = normalizar(249.76 + precessao);
  
             const astros = [
-                { nome: "Sol", grau: sol, retro: false },
-                { nome: "Lua", grau: lua, retro: false },
-                { nome: "Mercúrio", grau: mercurio, retro: false },
-                { nome: "Vênus", grau: venus, retro: false },
-                { nome: "Marte", grau: marte, retro: false },
-                { nome: "Júpiter", grau: jupiter, retro: false },
-                { nome: "Saturno", grau: saturno, retro: false },
-                { nome: "Urano", grau: urano, retro: false },
-                { nome: "Netuno", grau: netuno, retro: false },
-                { nome: "Plutão", grau: plutao, retro: false },
-                { nome: "Ascendente (AC)", grau: asc, retro: false },
-                { nome: "Meio do Céu (MC)", grau: mc, retro: false }
+                { nome: "Sol", grau: sol }, { nome: "Lua", grau: lua },
+                { nome: "Mercúrio", grau: mercurio }, { nome: "Vênus", grau: venus },
+                { nome: "Marte", grau: marte }, { nome: "Júpiter", grau: jupiter },
+                { nome: "Saturno", grau: saturno }, { nome: "Urano", grau: urano },
+                { nome: "Netuno", grau: netuno }, { nome: "Plutão", grau: plutao },
+
+                { nome: "Ascendente (AC)", grau: asc }, { nome: "Descendente (DC)", grau: dc },
+                { nome: "Meio do Céu (MC)", grau: mc }, { nome: "Fundo do Céu (IC)", grau: ic },
+                { nome: "Vertex", grau: vertex }, { nome: "Anti-vertex", grau: antiVertex },
+
+                { nome: "Roda da Fortuna", grau: rodaFortuna },
+                { nome: "Nodo Norte", grau: nodoNorte }, { nome: "Nodo Sul", grau: nodoSul },
+                { nome: "Quíron", grau: quiron }, { nome: "Lilith", grau: lilith },
+
+                { nome: "Ceres", grau: ceres }, { nome: "Pallas", grau: pallas },
+                { nome: "Juno", grau: juno }, { nome: "Vesta", grau: vesta },
+
+                { nome: "Pholus", grau: pholus }, { nome: "Cápulo", grau: capulo },
+
+                { nome: "Éris", grau: eris }, { nome: "Sedna", grau: sedna },
+                { nome: "Haumea", grau: haumea }, { nome: "Makemake", grau: makemake },
+
+                { nome: "Aldebaran", grau: aldebaran }, { nome: "Regulus", grau: regulus },
+                { nome: "Antares", grau: antares }
             ];
  
             const casas = Array.from({ length: 12 }, (_, i) => normalizar(asc + (i * 30)));
@@ -772,7 +859,7 @@
             const ritmos = { Cardinal: 0, Fixo: 0, Mutável: 0 };
             const polaridades = { Yang: 0, Yin: 0 };
  
-            const planetasPrincipais = astros.filter(a => !["Ascendente (AC)", "Meio do Céu (MC)"].includes(a.nome));
+            const planetasPrincipais = astros.filter(a => ["Sol", "Lua", "Mercúrio", "Vênus", "Marte", "Júpiter", "Saturno", "Urano", "Netuno", "Plutão"].includes(a.nome));
             
             planetasPrincipais.forEach(a => {
                 const sIdx = Math.floor(a.grau / 30) % 12;
@@ -1002,7 +1089,7 @@
                 g.setAttribute('transform', `translate(${p.x}, ${p.y})`);
  
                 const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-                c.setAttribute('r', 13);
+                c.setAttribute('r', 11);
  
                 const t = document.createElementNS('http://www.w3.org/2000/svg', 'text');
                 t.setAttribute('y', 1); 
