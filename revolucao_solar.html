@@ -722,7 +722,7 @@
             const solNatal = normalizar(solMedioBirth + eqCentroBirth);
 
             // Ajusta o tempo para o ano da Revolução Solar
-            const yRS = anoRS;
+            let yRS = anoRS;
             let mRS = month;
             if (mRS <= 2) { yRS -= 1; mRS += 12; }
             let A_RS = Math.floor(yRS / 100);
