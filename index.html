@@ -147,6 +147,22 @@
             border-radius: 12px;
             padding: 14px;
         }
+
+        .ia-clickable {
+            cursor: pointer;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .ia-clickable:hover {
+            border-color: var(--ia-color);
+            box-shadow: 0 0 0 1px var(--ia-color);
+        }
+        .ia-hint {
+            font-size: 0.7rem;
+            color: var(--ia-color);
+            font-weight: 600;
+            display: block;
+            margin-top: 2px;
+        }
         .balance-card h3 { color: var(--destaque); font-size: 0.95rem; margin-bottom: 12px; border-bottom: 1px solid var(--border); padding-bottom: 6px; }
 
         .progress-item { margin-bottom: 10px; }
@@ -404,22 +420,22 @@
         </form>
 
         <div class="dashboard-grid">
-            <div class="chart-card">
-                <h2>Roda Astrológica</h2>
+            <div class="chart-card ia-clickable" onclick="dispararAnaliseMapaCompleto()">
+                <h2>Roda Astrológica<span class="ia-hint">✦ Clique para Análise Completa do Mapa</span></h2>
                 <svg id="chartSvg" viewBox="0 0 600 600"></svg>
             </div>
 
             <div class="balance-container">
-                <div class="balance-card">
-                    <h3>Elementos</h3>
+                <div class="balance-card ia-clickable" onclick="dispararAnaliseBalanco('elementos')">
+                    <h3>Elementos<span class="ia-hint">✦ Clique para Análise</span></h3>
                     <div id="elementosBars"></div>
                 </div>
-                <div class="balance-card">
-                    <h3>Modalidades / Ritmos</h3>
+                <div class="balance-card ia-clickable" onclick="dispararAnaliseBalanco('ritmos')">
+                    <h3>Modalidades / Ritmos<span class="ia-hint">✦ Clique para Análise</span></h3>
                     <div id="ritmosBars"></div>
                 </div>
-                <div class="balance-card">
-                    <h3>Polaridades</h3>
+                <div class="balance-card ia-clickable" onclick="dispararAnaliseBalanco('polaridades')">
+                    <h3>Polaridades<span class="ia-hint">✦ Clique para Análise</span></h3>
                     <div id="polaridadesBars"></div>
                 </div>
             </div>
@@ -430,8 +446,8 @@
             <div id="astrosExpandList" class="expand-list"></div>
         </div>
 
-        <div class="card-table">
-            <h3>Matriz de Aspectos</h3>
+        <div class="card-table ia-clickable" onclick="dispararAnaliseAspectosCompleta()">
+            <h3>Matriz de Aspectos<span class="ia-hint">✦ Clique para Análise Integrada de Todos os Aspectos</span></h3>
             <div class="matrix-desktop-container">
                 <table id="matrixAspectos" class="aspect-matrix"></table>
             </div>
@@ -486,6 +502,13 @@
             { nome: "Trígono", angulo: 120, orbe: 8, classe: "trig", simbolo: "△", iconClass: "icon-trig" },
             { nome: "Oposição", angulo: 180, orbe: 8, classe: "opp", simbolo: "☍", iconClass: "icon-opp" }
         ];
+
+        // Guarda os dados do último mapa calculado, para uso nas análises de IA
+        let ULTIMO_ASTROS = [];
+        let ULTIMO_CASAS = [];
+        let ULTIMO_ASC = 0;
+        let ULTIMO_ASPECTOS = [];
+        let ULTIMO_BALANCO = { elementos: {}, ritmos: {}, polaridades: {} };
 
         function degToRad(deg) { return deg * Math.PI / 180; }
         function radToDeg(rad) { return rad * 180 / Math.PI; }
@@ -604,6 +627,7 @@
             });
 
             const total = planetasPrincipais.length;
+            ULTIMO_BALANCO = { elementos, ritmos, polaridades };
             const coresElementos = { Fogo: "var(--fogo)", Terra: "var(--terra)", Ar: "var(--ar)", Água: "var(--agua)" };
 
             document.getElementById('elementosBars').innerHTML = Object.keys(elementos).map(k => {
@@ -815,17 +839,21 @@
         // INTEGRAÇÃO COM A IA (MODAL + WORKER)
         // ==========================================
 
-        function dispararAnaliseIA(combinacao) {
-            // 1. Abre o modal com o estado de Carregando
-            document.getElementById('modalTitle').textContent = `✦ Análise: ${combinacao}`;
+        // Abre o modal em estado de carregamento e dispara a chamada à IA.
+        // Reutilizado por todos os gatilhos de análise (posição individual, aspecto,
+        // balanços, mapa completo e matriz de aspectos).
+        function iniciarAnaliseIA(titulo, promptText) {
+            document.getElementById('modalTitle').textContent = `✦ ${titulo}`;
             document.getElementById('modalBody').innerHTML = `
                 <div class="loading-spinner">
                     <div class="spinner"></div>
                     <p>Consultando a IA...</p>
                 </div>`;
             document.getElementById('aiModal').classList.add('active');
+            gerarAnaliseIA(promptText);
+        }
 
-            // 2. Monta o prompt
+        function dispararAnaliseIA(combinacao) {
             const promptText = `Atue como um astrólogo experiente e analítico. Faça uma análise detalhada e perspicaz da seguinte posição astrológica: "${combinacao}". 
             Siga estas diretrizes de resposta:
             - Escreva de 3 a 4 parágrafos curtos.
@@ -833,8 +861,95 @@
             - Use formatação HTML básica com parágrafos <p> e destaques em <strong> para facilitar a leitura.
             - Mantenha um tom profissional, acolhedor e profundo.`;
 
-            // 3. Executa a requisição
-            gerarAnaliseIA(promptText);
+            iniciarAnaliseIA(`Análise: ${combinacao}`, promptText);
+        }
+
+        // Análise de síntese para os blocos de Elementos, Modalidades/Ritmos e Polaridades
+        function dispararAnaliseBalanco(tipo) {
+            if (!ULTIMO_ASTROS.length) return;
+
+            let titulo, rotulo, dados;
+            if (tipo === 'elementos') {
+                titulo = 'Análise dos Elementos';
+                rotulo = 'elementos (Fogo, Terra, Ar, Água)';
+                dados = ULTIMO_BALANCO.elementos;
+            } else if (tipo === 'ritmos') {
+                titulo = 'Análise das Modalidades / Ritmos';
+                rotulo = 'modalidades (Cardinal, Fixo, Mutável)';
+                dados = ULTIMO_BALANCO.ritmos;
+            } else {
+                titulo = 'Análise das Polaridades';
+                rotulo = 'polaridades (Yang/Masculino, Yin/Feminino)';
+                dados = ULTIMO_BALANCO.polaridades;
+            }
+
+            const dadosTexto = Object.entries(dados).map(([k, v]) => `${k}: ${v}`).join(', ');
+
+            const promptText = `Atue como um astrólogo experiente. Faça uma síntese analítica sobre a seguinte distribuição de ${rotulo} no mapa astral desta pessoa (contagem entre os 10 planetas principais, sem contar Ascendente e Meio do Céu): ${dadosTexto}.
+            Siga estas diretrizes:
+            - Escreva de 3 a 4 parágrafos curtos.
+            - Explique o que esse equilíbrio ou desequilíbrio revela sobre a personalidade, o comportamento e os desafios da pessoa.
+            - Use formatação HTML básica com parágrafos <p> e destaques em <strong>.
+            - Tom profissional, acolhedor e profundo.`;
+
+            iniciarAnaliseIA(titulo, promptText);
+        }
+
+        // Análise completa e integrada de todo o mapa astral (clique na roda)
+        function dispararAnaliseMapaCompleto() {
+            if (!ULTIMO_ASTROS.length) return;
+
+            const listaPosicoes = ULTIMO_ASTROS.map(a => {
+                const sIdx = Math.floor(a.grau / 30) % 12;
+                const signo = SIGNOS_DADOS[sIdx];
+                return `${a.nome} em ${signo.nome} na Casa ${a.casa}`;
+            }).join('; ');
+
+            const listaAspectosResumo = ULTIMO_ASPECTOS
+                .map(asp => `${asp.astro1} em ${asp.aspecto} com ${asp.astro2}`)
+                .join('; ');
+
+            const promptText = `Atue como um astrólogo experiente e analítico. Faça uma leitura completa e integrada do seguinte mapa astral:
+
+            Posições planetárias: ${listaPosicoes}.
+            Aspectos entre os astros: ${listaAspectosResumo || 'nenhum aspecto relevante encontrado'}.
+
+            Siga estas diretrizes de resposta:
+            - Escreva de 5 a 7 parágrafos.
+            - Comece com uma visão geral da personalidade central, integrando Sol, Lua e Ascendente.
+            - Em seguida, explique como os demais planetas e seus aspectos reforçam, tensionam ou complementam essa base.
+            - Aponte os principais desafios e potenciais de crescimento revelados pelo conjunto do mapa.
+            - Use formatação HTML básica com parágrafos <p> e destaques em <strong>.
+            - Tom profissional, acolhedor e profundo, como uma leitura completa de mapa astral.`;
+
+            iniciarAnaliseIA('Análise Completa do Mapa Astral', promptText);
+        }
+
+        // Análise integrada de todos os aspectos (clique na Matriz de Aspectos)
+        function dispararAnaliseAspectosCompleta() {
+            if (!ULTIMO_ASPECTOS.length) {
+                document.getElementById('modalTitle').textContent = '✦ Análise Integrada dos Aspectos';
+                document.getElementById('modalBody').innerHTML = '<p>Nenhum aspecto relevante foi encontrado neste mapa para gerar uma análise integrada.</p>';
+                document.getElementById('aiModal').classList.add('active');
+                return;
+            }
+
+            const lista = ULTIMO_ASPECTOS
+                .map(asp => `${asp.astro1} em ${asp.aspecto} com ${asp.astro2} (orbe ${asp.orbe}°)`)
+                .join('; ');
+
+            const promptText = `Atue como um astrólogo experiente. Faça uma análise integrada de todos os aspectos planetários a seguir, explicando como eles se conectam e interagem entre si no mapa astral como um todo:
+
+            ${lista}
+
+            Siga estas diretrizes:
+            - Escreva de 4 a 6 parágrafos.
+            - Não analise cada aspecto isoladamente; busque conexões e padrões entre eles (ex: tensões que se repetem, harmonias que se reforçam, planetas muito aspectados que funcionam como "nós" do mapa).
+            - Explique como essa rede de aspectos molda a dinâmica psicológica geral da pessoa.
+            - Use formatação HTML básica com parágrafos <p> e destaques em <strong>.
+            - Tom profissional, acolhedor e profundo.`;
+
+            iniciarAnaliseIA('Análise Integrada dos Aspectos', promptText);
         }
 
         async function gerarAnaliseIA(promptText) {
@@ -877,6 +992,11 @@
         function executarTudo() {
             const { astros, casas, asc } = calcularDadosNascimento();
             const aspectos = calcularAspectos(astros);
+
+            ULTIMO_ASTROS = astros;
+            ULTIMO_CASAS = casas;
+            ULTIMO_ASC = asc;
+            ULTIMO_ASPECTOS = aspectos;
 
             renderizarBalanço(astros);
             renderizarAstrosExpansivel(astros);
