@@ -813,25 +813,34 @@
         }
 
         // FUNÇÃO DE INTEGRAÇÃO COM GEMINI API
-       // FUNÇÃO DE INTEGRAÇÃO COM GEMINI API
-async function gerarAnaliseIA(combinacao) {
-    const modal = document.getElementById('aiModal');
-    const modalTitle = document.getElementById('modalTitle');
-    const modalBody = document.getElementById('modalBody');
+// Substitua o bloco antigo por este:
+async function gerarAnaliseIA(promptText) {
+  try {
+    const response = await fetch('https://astro-gns-proxy.genesisgns.workers.dev/', {
+      method: 'POST',
+      cache: 'no-store',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt: promptText })
+    });
 
-    modalTitle.textContent = `✦ Análise: ${combinacao}`;
-    modalBody.innerHTML = `
-        <div class="loading-spinner">
-            <div class="spinner"></div>
-            <p>Consultando as estrelas com Gemini IA...</p>
-        </div>
-    `;
-    modal.classList.add('active');
+    const data = await response.json();
+
+    if (response.ok && data.resposta) {
+      // Exibe a resposta recebida na interface
+      exibirResultadoIA(data.resposta);
+    } else {
+      alert("Erro na IA: " + (data.error || "Erro desconhecido"));
+    }
+  } catch (err) {
+    console.error(err);
+    alert("Falha na comunicação com o servidor de IA.");
+  }
+}
 
     const promptText = `Atue como um astrólogo experiente e analítico. Faça uma análise detalhada e perspicaz da seguinte posição astrológica: "${combinacao}". 
     
     Siga estas diretrizes de resposta:
-    - Escreva de 2 a 3 parágrafos curtos.
+    - Escreva de 4 a 4 parágrafos curtos.
     - Explique o significado psicológico, os desafios e os pontos fortes dessa combinação.
     - Use formatação HTML básica com parágrafos <p> e destaques em <strong> para facilitar a leitura.
     - Mantenha um tom profissional, acolhedor e profundo.`;
