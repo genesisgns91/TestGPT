@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="theme-color" content="#0d1117">
-    <title>Astro</title>
+    <title>Astro-Bot</title>
     
     <style>
         :root {
@@ -126,7 +126,14 @@
             align-items: center;
             width: 100%;
         }
-        .chart-card h2 { color: var(--destaque); font-size: 1rem; margin-bottom: 10px; text-align: center; }
+        .chart-card-header {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .chart-card h2 { color: var(--destaque); font-size: 1rem; text-align: left; }
         #chartSvg { width: 100%; max-width: 460px; height: auto; border-radius: 50%; background: #0b0e14; }
  
         .signo-symbol { font-family: "Segoe UI Symbol", sans-serif; font-size: 22px; fill: var(--destaque); text-anchor: middle; dominant-baseline: central; }
@@ -146,7 +153,19 @@
             border: 1px solid var(--border);
             border-radius: 12px;
             padding: 14px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
         }
+        .balance-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 6px;
+        }
+        .balance-card h3 { color: var(--destaque); font-size: 0.95rem; }
  
         .ia-clickable {
             cursor: pointer;
@@ -156,14 +175,6 @@
             border-color: var(--ia-color);
             box-shadow: 0 0 0 1px var(--ia-color);
         }
-        .ia-hint {
-            font-size: 0.7rem;
-            color: var(--ia-color);
-            font-weight: 600;
-            display: block;
-            margin-top: 2px;
-        }
-        .balance-card h3 { color: var(--destaque); font-size: 0.95rem; margin-bottom: 12px; border-bottom: 1px solid var(--border); padding-bottom: 6px; }
  
         .progress-item { margin-bottom: 10px; }
         .progress-info { display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 4px; }
@@ -214,33 +225,40 @@
             background: var(--bg-principal);
             border-top: 1px solid var(--border);
             font-size: 0.83rem;
-            line-height: 1.4;
+            line-height: 1.5;
             color: #8b949e;
         }
         .expand-card.open .expand-content { display: block; }
         .expand-card.open .arrow-icon { transform: rotate(180deg); }
         .arrow-icon { transition: transform 0.2s; font-size: 0.8rem; color: #8b949e; }
  
-        /* Botão para Gerar IA */
+        /* Botões para Gerar IA */
         .btn-ia {
-            margin-top: 12px;
             background: linear-gradient(135deg, #8957e5, #3fb950);
             color: white;
             border: none;
-            padding: 8px 14px;
+            padding: 6px 10px;
             border-radius: 6px;
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             font-weight: bold;
             cursor: pointer;
             display: inline-flex;
             align-items: center;
-            gap: 6px;
+            gap: 4px;
             transition: opacity 0.2s;
+            white-space: nowrap;
         }
         .btn-ia:hover { opacity: 0.9; }
+        .btn-ia-inline { margin-top: 12px; font-size: 0.8rem; padding: 8px 14px; }
  
         .card-table { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 12px; width: 100%; }
-        .card-table h3 { color: var(--destaque); margin-bottom: 10px; font-size: 0.95rem; }
+        .card-table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .card-table h3 { color: var(--destaque); font-size: 0.95rem; }
  
         /* Container Único para Matriz Triangular */
         .matrix-desktop-container {
@@ -271,7 +289,7 @@
         .aspect-matrix td.empty-cell { background: transparent; border: none; }
         .aspect-matrix td.cell-aspect { background: var(--bg-principal); font-weight: bold; }
  
-        /* Ajustes específicos para manter o triângulo compacto e perfeito em telas menores */
+        /* Ajustes para manter o triângulo compacto no mobile */
         @media (max-width: 600px) {
             .aspect-matrix {
                 width: auto;
@@ -415,33 +433,54 @@
  
         <div class="dashboard-grid">
             <div class="chart-card ia-clickable" onclick="dispararAnaliseMapaCompleto()">
-                <h2>Roda Astrológica<span class="ia-hint">✦ Clique para Análise Completa do Mapa</span></h2>
+                <div class="chart-card-header">
+                    <h2>Roda Astrológica</h2>
+                    <button class="btn-ia" onclick="event.stopPropagation(); dispararAnaliseMapaCompleto()">✦ Análise IA</button>
+                </div>
                 <svg id="chartSvg" viewBox="0 0 600 600"></svg>
             </div>
  
             <div class="balance-container">
                 <div class="balance-card ia-clickable" onclick="dispararAnaliseBalanco('elementos')">
-                    <h3>Elementos<span class="ia-hint">✦ Clique para Análise</span></h3>
-                    <div id="elementosBars"></div>
+                    <div>
+                        <div class="balance-card-header">
+                            <h3>Elementos</h3>
+                            <button class="btn-ia" onclick="event.stopPropagation(); dispararAnaliseBalanco('elementos')">✦ Análise IA</button>
+                        </div>
+                        <div id="elementosBars"></div>
+                    </div>
                 </div>
                 <div class="balance-card ia-clickable" onclick="dispararAnaliseBalanco('ritmos')">
-                    <h3>Modalidades / Ritmos<span class="ia-hint">✦ Clique para Análise</span></h3>
-                    <div id="ritmosBars"></div>
+                    <div>
+                        <div class="balance-card-header">
+                            <h3>Modalidades / Ritmos</h3>
+                            <button class="btn-ia" onclick="event.stopPropagation(); dispararAnaliseBalanco('ritmos')">✦ Análise IA</button>
+                        </div>
+                        <div id="ritmosBars"></div>
+                    </div>
                 </div>
                 <div class="balance-card ia-clickable" onclick="dispararAnaliseBalanco('polaridades')">
-                    <h3>Polaridades<span class="ia-hint">✦ Clique para Análise</span></h3>
-                    <div id="polaridadesBars"></div>
+                    <div>
+                        <div class="balance-card-header">
+                            <h3>Polaridades</h3>
+                            <button class="btn-ia" onclick="event.stopPropagation(); dispararAnaliseBalanco('polaridades')">✦ Análise IA</button>
+                        </div>
+                        <div id="polaridadesBars"></div>
+                    </div>
                 </div>
             </div>
         </div>
  
         <div class="card-table">
             <h3>Posições Astrológicas Detalhadas (Clique para Expandir)</h3>
-            <div id="astrosExpandList" class="expand-list"></div>
+            <div id="astrosExpandList" class="expand-list" style="margin-top: 10px;"></div>
         </div>
  
         <div class="card-table ia-clickable" onclick="dispararAnaliseAspectosCompleta()">
-            <h3>Matriz de Aspectos<span class="ia-hint">✦ Clique para Análise Integrada de Todos os Aspectos</span></h3>
+            <div class="card-table-header">
+                <h3>Matriz de Aspectos</h3>
+                <button class="btn-ia" onclick="event.stopPropagation(); dispararAnaliseAspectosCompleta()">✦ Análise IA</button>
+            </div>
             <div class="matrix-desktop-container">
                 <table id="matrixAspectos" class="aspect-matrix"></table>
             </div>
@@ -449,7 +488,7 @@
  
         <div class="card-table">
             <h3>Interpretação dos Aspectos (Clique para Expandir)</h3>
-            <div id="aspectosExpandList" class="expand-list"></div>
+            <div id="aspectosExpandList" class="expand-list" style="margin-top: 10px;"></div>
         </div>
     </div>
  
@@ -481,6 +520,21 @@
             { nome: "Aquário", simbolo: "♒︎", elemento: "Ar", ritmo: "Fixo", polaridade: "Yang" },
             { nome: "Peixes", simbolo: "♓︎", elemento: "Água", ritmo: "Mutável", polaridade: "Yin" }
         ];
+
+        const DEFINICAO_ASTROS = {
+            "Sol": "O Sol representa a sua essência vital, a sua identidade fundamental, o ego consciente e o propósito de vida.",
+            "Lua": "A Lua representa as suas emoções profundas, instintos primários, memórias de infância e como você busca segurança e nutrição psíquica.",
+            "Mercúrio": "Mercúrio representa o seu estilo de raciocínio, aprendizado, comunicação, lógica e processamento diário de informações.",
+            "Vênus": "Vênus representa a sua forma de amar, seus valores estéticos, o que lhe dá prazer, seus relacionamentos e atração.",
+            "Marte": "Marte representa a sua força de ação, impulso sexual, determinação, forma de afirmar sua vontade e lidar com conflitos.",
+            "Júpiter": "Júpiter representa a expansão, a busca por significado filosófico, a sorte, a generosidade e a visão de futuro.",
+            "Saturno": "Saturno representa a disciplina, os limites, a maturidade, a estrutura, as responsabilidades e os aprendizados cármicos.",
+            "Urano": "Urano representa a sua individualidade autêntica, a intuição de ruptura, o desejo de liberdade e a inovação.",
+            "Netuno": "Netuno representa a imaginação, a espiritualidade, a sensibilidade artística, os ideais abstratos e a compaixão.",
+            "Plutão": "Plutão representa as transformações profundas, o poder pessoal oculto, os processos de regeneração e o desapego.",
+            "Ascendente (AC)": "O Ascendente representa a sua máscara social, a primeira impressão que causa no mundo e como você inicia projetos e experiências.",
+            "Meio do Céu (MC)": "O Meio do Céu representa a sua vocação pública, metas profissionais, ambições de vida e o legado que deseja construir."
+        };
  
         const SIMBOLOS_ASTROS = {
             "Sol": "☉", "Lua": "☽", "Mercúrio": "☿", "Vênus": "♀", "Marte": "♂",
@@ -496,7 +550,7 @@
             { nome: "Oposição", angulo: 180, orbe: 8, classe: "opp", simbolo: "☍", iconClass: "icon-opp" }
         ];
  
-        // Guarda os dados do último mapa calculated, para uso nas análises de IA
+        // Guarda os dados do último mapa calculado
         let ULTIMO_ASTROS = [];
         let ULTIMO_CASAS = [];
         let ULTIMO_ASC = 0;
@@ -662,7 +716,8 @@
                 const signo = SIGNOS_DADOS[sIdx];
                 const simAstro = SIMBOLOS_ASTROS[a.nome] || '';
                 const combinacao = `${a.nome} em ${signo.nome} na Casa ${a.casa}`;
- 
+                const explicacaoAstro = DEFINICAO_ASTROS[a.nome] || "";
+
                 return `
                     <div class="expand-card">
                         <div class="expand-header" onclick="this.parentElement.classList.toggle('open')">
@@ -676,11 +731,11 @@
                             </div>
                         </div>
                         <div class="expand-content">
-                            <p><strong>Posição Exata:</strong> ${formatarDMS(a.grau)} (${a.grau.toFixed(2)}° bruto)</p>
-                            <p><strong>Elemento/Ritmo:</strong> ${signo.elemento} • ${signo.ritmo} • ${signo.polaridade}</p>
-                            <br>
-                            <p>O ${a.nome} expressa sua energia fundamental através das qualidades de ${signo.nome} na Casa ${a.casa}.</p>
-                            <button class="btn-ia" onclick="event.stopPropagation(); dispararAnaliseIA('${combinacao}')">
+                            <p style="margin-bottom: 8px;"><strong>Significado do Astro:</strong> ${explicacaoAstro}</p>
+                            <p style="margin-bottom: 8px;"><strong>Atuação do Mapa:</strong> No seu mapa natal, essa energia se expressa através da postura de <strong>${signo.nome}</strong> (${signo.elemento}, ${signo.ritmo}) e ganha foco de atuação na <strong>Casa ${a.casa}</strong>.</p>
+                            <p style="margin-bottom: 6px;"><strong>Posição Exata:</strong> ${formatarDMS(a.grau)}</p>
+                            
+                            <button class="btn-ia btn-ia-inline" onclick="event.stopPropagation(); dispararAnaliseIA('${combinacao}')">
                                 ✦ Gerar Análise Profunda com IA
                             </button>
                         </div>
@@ -695,7 +750,7 @@
                 const sim1 = SIMBOLOS_ASTROS[asp.astro1] || '';
                 const sim2 = SIMBOLOS_ASTROS[asp.astro2] || '';
                 const combinacao = `${asp.astro1} em ${asp.aspecto} com ${asp.astro2}`;
- 
+
                 return `
                     <div class="expand-card">
                         <div class="expand-header" onclick="this.parentElement.classList.toggle('open')">
@@ -708,10 +763,10 @@
                             </div>
                         </div>
                         <div class="expand-content">
-                            <p><strong>Orbe de Precisão:</strong> ${asp.orbe}° de desvio</p>
-                            <br>
-                            <p>Interação em ${asp.aspecto} entre ${asp.astro1} e ${asp.astro2}.</p>
-                            <button class="btn-ia" onclick="event.stopPropagation(); dispararAnaliseIA('${combinacao}')">
+                            <p style="margin-bottom: 8px;"><strong>Interação Dinâmica:</strong> Conexão em <strong>${asp.aspecto}</strong> entre as energias de <strong>${asp.astro1}</strong> e <strong>${asp.astro2}</strong>.</p>
+                            <p style="margin-bottom: 6px;"><strong>Orbe de Precisão:</strong> ${asp.orbe}° de desvio angular</p>
+                            
+                            <button class="btn-ia btn-ia-inline" onclick="event.stopPropagation(); dispararAnaliseIA('${combinacao}')">
                                 ✦ Gerar Análise Profunda com IA
                             </button>
                         </div>
@@ -834,6 +889,7 @@
         function dispararAnaliseIA(combinacao) {
             const promptText = `Atue como um astrólogo experiente e analítico. Faça uma análise detalhada e perspicaz da seguinte posição astrológica: "${combinacao}". 
             Siga estas diretrizes de resposta:
+            - Leve em consideração o papel fundamental do Astro/Planeta, a expressão do Signo e a área de vida representada pela Casa.
             - Escreva de 3 a 4 parágrafos curtos.
             - Explique o significado psicológico, os desafios e os pontos fortes dessa combinação.
             - Use formatação HTML básica com parágrafos <p> e destaques em <strong> para facilitar a leitura.
