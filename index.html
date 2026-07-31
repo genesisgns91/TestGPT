@@ -896,13 +896,30 @@ try {
             desenharRodaSVG(astros, casas, asc);
         }
 
-        window.onload = () => {
-            const agora = new Date();
-            document.getElementById('date').value = agora.toISOString().split('T')[0];
-            document.getElementById('time').value = agora.toTimeString().split(' ')[0].substring(0, 5);
+// CÓDIGO NOVO (COLOQUE ESTE NO LUGAR)
+window.onload = () => {
+    const agora = new Date();
+    
+    // Formatação local correta (YYYY-MM-DD e HH:MM) sem bug de fuso UTC
+    const ano = agora.getFullYear();
+    const mes = String(agora.getMonth() + 1).padStart(2, '0');
+    const dia = String(agora.getDate()).padStart(2, '0');
+    const horas = String(agora.getHours()).padStart(2, '0');
+    const minutos = String(agora.getMinutes()).padStart(2, '0');
 
-            executarTudo();
-        };
+    document.getElementById('date').value = `${ano}-${mes}-${dia}`;
+    document.getElementById('time').value = `${horas}:${minutos}`;
+
+    // Adiciona o gatilho para recalcular AUTOMATICAMENTE ao mudar qualquer campo
+    const inputs = document.querySelectorAll('#astrologyForm input');
+    inputs.forEach(input => {
+        input.addEventListener('change', executarTudo);
+        input.addEventListener('input', executarTudo);
+    });
+
+    // Executa a primeira vez ao carregar
+    executarTudo();
+};
     </script>
 </body>
 </html>
