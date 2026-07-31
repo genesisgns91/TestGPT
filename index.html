@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="theme-color" content="#0d1117">
-    <title>Astro GNS</title>
+    <title>Astro!!</title>
     
     <style>
         :root {
@@ -205,7 +205,6 @@
         .expand-card.open .arrow-icon { transform: rotate(180deg); }
         .arrow-icon { transition: transform 0.2s; font-size: 0.8rem; color: #8b949e; }
 
-        /* Botão para Gerar IA */
         .btn-ia {
             margin-top: 12px;
             background: linear-gradient(135deg, #8957e5, #3fb950);
@@ -288,7 +287,6 @@
         .icon-quad { color: #d29922; }
         .icon-sext { color: #a371f7; }
 
-        /* Estilos do Modal/Overlay de Análise IA */
         .modal-overlay {
             position: fixed;
             top: 0;
@@ -370,12 +368,12 @@
         @keyframes spin { to { transform: rotate(360deg); } }
     </style>
 
-    <!-- Firebase SDKs -->
+    <!-- Firebase App & Vertex AI SDKs (v10+) -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
         import { getVertexAI, getGenerativeModel } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-vertexai.js";
 
-        // Substitua pelas credenciais copiadas do seu Firebase Console
+        // Insira aqui as credenciais públicas geradas no seu Firebase Console
         const firebaseConfig = {
             apiKey: "SUA_FIREBASE_API_KEY",
             authDomain: "seu-projeto.firebaseapp.com",
@@ -388,6 +386,7 @@
         const app = initializeApp(firebaseConfig);
         const vertexAI = getVertexAI(app);
         
+        // Instancia o modelo Gemini no escopo global para acesso seguro no front-end
         window.modelIA = getGenerativeModel(vertexAI, { model: "gemini-1.5-flash" });
     </script>
 </head>
@@ -465,7 +464,7 @@
         </div>
     </div>
 
-    <!-- Modal Flutuante para IA -->
+    <!-- Modal Flutuante da IA -->
     <div id="aiModal" class="modal-overlay" onclick="fecharModalOuter(event)">
         <div class="modal-card">
             <div class="modal-header">
@@ -523,6 +522,8 @@
             const fuso = parseFloat(document.getElementById('fuso').value);
             const lat = parseFloat(document.getElementById('lat').value);
             const lon = parseFloat(document.getElementById('lon').value);
+
+            if (!dateVal || !timeVal) return { astros: [], casas: [], asc: 0 };
 
             const [year, month, day] = dateVal.split('-').map(Number);
             const [hours, minutes] = timeVal.split(':').map(Number);
@@ -613,6 +614,7 @@
             const polaridades = { Yang: 0, Yin: 0 };
 
             const planetasPrincipais = astros.filter(a => !["Ascendente (AC)", "Meio do Céu (MC)"].includes(a.nome));
+            if (!planetasPrincipais.length) return;
             
             planetasPrincipais.forEach(a => {
                 const sIdx = Math.floor(a.grau / 30) % 12;
@@ -763,6 +765,8 @@
         function desenharRodaSVG(astros, casas, asc) {
             const svg = document.getElementById('chartSvg');
             svg.innerHTML = '';
+            if (!astros.length) return;
+
             const cx = 300, cy = 300, rOuter = 285, rInner = 230, rCasas = 160, rCore = 80;
 
             const grauParaAngulo = (g) => (180 + (g - asc)) % 360;
@@ -830,7 +834,7 @@
             });
         }
 
-        // FUNÇÃO DE INTEGRAÇÃO COM FIREBASE AI LOGIC
+        // INTEGRAÇÃO DE ANÁLISE VIA FIREBASE AI LOGIC
         async function gerarAnaliseIA(combinacao) {
             const modal = document.getElementById('aiModal');
             const modalTitle = document.getElementById('modalTitle');
@@ -855,9 +859,10 @@
 
             try {
                 if (!window.modelIA) {
-                    throw new Error("SDK do Firebase AI Logic ainda não foi carregado.");
+                    throw new Error("SDK do Firebase AI Logic ainda não foi inicializado. Verifique se o módulo no <head> foi executado.");
                 }
 
+                // Executa a requisição pelo SDK oficial do Firebase Vertex AI
                 const result = await window.modelIA.generateContent(promptText);
                 const responseText = result.response.text();
 
@@ -865,8 +870,8 @@
                 modalBody.innerHTML = textResult;
 
             } catch (err) {
-                console.error(err);
-                modalBody.innerHTML = `<p style="color:var(--fogo);"><strong>Erro ao chamar o Firebase AI:</strong> ${err.message}</p>`;
+                console.error("Erro Firebase AI:", err);
+                modalBody.innerHTML = `<p style="color:var(--fogo);"><strong>Erro no Firebase AI:</strong> ${err.message}</p>`;
             }
         }
 
@@ -880,6 +885,8 @@
 
         function executarTudo() {
             const { astros, casas, asc } = calcularDadosNascimento();
+            if (!astros.length) return;
+
             const aspectos = calcularAspectos(astros);
 
             renderizarBalanço(astros);
