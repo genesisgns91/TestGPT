@@ -667,16 +667,28 @@
             let jdBirth = Math.floor(365.25 * (y + 4716)) + Math.floor(30.6001 * (m + 1)) + day + (hourUTC / 24.0) + B - 1524.5;
             let TRS = (jdBirth - 2451545.0) / 36525.0;
 
-            let gmst = 280.46061837 + 36000.770053608 * TRS;
+            // GMST correto (Meeus): usa a taxa de rotação da Terra por DIA (360.98564736629°/dia),
+            // não por século — o valor anterior estava ~366x menor que o correto, por isso o
+            // Ascendente praticamente não mudava ao alterar o horário de nascimento.
+            let diasDesdeJ2000 = jdBirth - 2451545.0;
+            let gmst = 280.46061837 + 360.98564736629 * diasDesdeJ2000 + 0.000387933 * TRS * TRS - (TRS * TRS * TRS) / 38710000.0;
+            gmst = normalizar(gmst);
             let lst = normalizar(gmst + lon);
             let obliq = degToRad(23.4392911 - 0.0130042 * TRS);
  
             let mc = normalizar(radToDeg(Math.atan2(Math.sin(degToRad(lst)), Math.cos(degToRad(lst)) * Math.cos(obliq))));
+            // atan2 já resolve o quadrante corretamente — não é necessário (nem correto)
+            // forçar o resultado para nenhuma faixa fixa de graus.
             let asc = normalizar(radToDeg(Math.atan2(Math.cos(degToRad(lst)), -Math.sin(degToRad(lst)) * Math.cos(obliq) - Math.tan(degToRad(lat)) * Math.sin(obliq))));
-            if (asc < 60 || asc > 120) asc = normalizar(asc + 90);
 
             // Planetas Principais
-            const sol = normalizar(280.46646 + 36000.76983 * TRS);
+            // Sol: longitude média + equação do centro (correção real de órbita elíptica, Meeus cap. 25)
+            const solMedio = 280.46646 + 36000.76983 * TRS;
+            const anomaliaMediaSol = degToRad(357.52911 + 35999.05029 * TRS);
+            const eqCentro = (1.914602 - 0.004817 * TRS) * Math.sin(anomaliaMediaSol)
+                            + (0.019993 - 0.000101 * TRS) * Math.sin(2 * anomaliaMediaSol)
+                            + 0.000289 * Math.sin(3 * anomaliaMediaSol);
+            const sol = normalizar(solMedio + eqCentro);
             const lua = normalizar(sol + (TRS * 130.5)); 
             const mercurio = normalizar(sol + 12 * Math.sin(degToRad(360 * TRS * 4.15)));
             const venus = normalizar(sol + 25 * Math.sin(degToRad(360 * TRS * 1.62)));
