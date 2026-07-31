@@ -4,13 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="theme-color" content="#0d1117">
-    
-    <!-- Configurações PWA (Web App) -->
-    <link rel="manifest" href="manifest.json">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Astro">
-
     <title>Astro</title>
     
     <style>
@@ -212,6 +205,7 @@
         .expand-card.open .arrow-icon { transform: rotate(180deg); }
         .arrow-icon { transition: transform 0.2s; font-size: 0.8rem; color: #8b949e; }
 
+        /* Botão para Gerar IA */
         .btn-ia {
             margin-top: 12px;
             background: linear-gradient(135deg, #8957e5, #3fb950);
@@ -294,6 +288,7 @@
         .icon-quad { color: #d29922; }
         .icon-sext { color: #a371f7; }
 
+        /* Estilos do Modal/Overlay de Análise IA */
         .modal-overlay {
             position: fixed;
             top: 0;
@@ -462,24 +457,8 @@
         </div>
     </div>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
-        import { getAI, getGenerativeModel, GoogleAIBackend } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-ai.js";
-
-        // CONFIGURAÇÕES DO SEU PROJETO FIREBASE
-        const firebaseConfig = {
-            apiKey: "SUA_API_KEY_AQUI",
-            authDomain: "testegpt-7f69d.firebaseapp.com",
-            projectId: "testegpt-7f69d",
-            storageBucket: "testegpt-7f69d.firebasestorage.app",
-            messagingSenderId: "123456789",
-            appId: "1:123456789:web:abcdef123456"
-        };
-
-        // Inicialização do SDK do Firebase AI Logic
-        const firebaseApp = initializeApp(firebaseConfig);
-        const ai = getAI(firebaseApp, { backend: new GoogleAIBackend() });
-        const model = getGenerativeModel(ai, { model: "gemini-2.5-flash" });
+    <script>
+const GEMINI_API_KEY = "AQ.Ab8RN6ItHAfAqX9w7qynZV3pupmXp4p1D3q0kL0nc83g4XQX0w";
 
         const SIGNOS_DADOS = [
             { nome: "Áries", simbolo: "♈︎", elemento: "Fogo", ritmo: "Cardinal", polaridade: "Yang" },
@@ -834,41 +813,70 @@
             });
         }
 
-        // FUNÇÃO DE INTEGRAÇÃO COM FIREBASE AI LOGIC
-        async function gerarAnaliseIA(combinacao) {
-            const modal = document.getElementById('aiModal');
-            const modalTitle = document.getElementById('modalTitle');
-            const modalBody = document.getElementById('modalBody');
+        // FUNÇÃO DE INTEGRAÇÃO COM GEMINI API
+       // FUNÇÃO DE INTEGRAÇÃO COM GEMINI API
+async function gerarAnaliseIA(combinacao) {
+    const modal = document.getElementById('aiModal');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalBody = document.getElementById('modalBody');
 
-            modalTitle.textContent = `✦ Análise: ${combinacao}`;
-            modalBody.innerHTML = `
-                <div class="loading-spinner">
-                    <div class="spinner"></div>
-                    <p>Consultando as estrelas com Gemini IA...</p>
-                </div>
-            `;
-            modal.classList.add('active');
+    modalTitle.textContent = `✦ Análise: ${combinacao}`;
+    modalBody.innerHTML = `
+        <div class="loading-spinner">
+            <div class="spinner"></div>
+            <p>Consultando as estrelas com Gemini IA...</p>
+        </div>
+    `;
+    modal.classList.add('active');
 
-            const promptText = `Atue como um astrólogo experiente e analítico. Faça uma análise detalhada e perspicaz da seguinte posição astrológica: "${combinacao}". 
-            
-            Siga estas diretrizes de resposta:
-            - Escreva de 2 a 3 parágrafos curtos.
-            - Explique o significado psicológico, os desafios e os pontos fortes dessa combinação.
-            - Use formatação HTML básica com parágrafos <p> e destaques em <strong> para facilitar a leitura.
-            - Mantenha um tom profissional, acolhedor e profundo.`;
+    const promptText = `Atue como um astrólogo experiente e analítico. Faça uma análise detalhada e perspicaz da seguinte posição astrológica: "${combinacao}". 
+    
+    Siga estas diretrizes de resposta:
+    - Escreva de 2 a 3 parágrafos curtos.
+    - Explique o significado psicológico, os desafios e os pontos fortes dessa combinação.
+    - Use formatação HTML básica com parágrafos <p> e destaques em <strong> para facilitar a leitura.
+    - Mantenha um tom profissional, acolhedor e profundo.`;
 
-            try {
-                const result = await model.generateContent(promptText);
-                let textResult = result.response.text();
+// SUBSTITUA A LINHA DO ENDPOINT E DO FETCH POR ESTA:
 
-                textResult = textResult.replace(/```html/g, '').replace(/```/g, '');
-                modalBody.innerHTML = textResult;
-            } catch (err) {
-                console.error("Erro no Firebase AI:", err);
-                modalBody.innerHTML = `<p style="color:var(--fogo);"><strong>Erro ao gerar análise:</strong> ${err.message}</p>`;
-            }
+const cleanKey = GEMINI_API_KEY.trim();
+// Endpoint sem a chave na URL
+const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent`;
+
+try {
+    const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 
+            'Content-Type': 'application/json',
+            'x-goog-api-key': cleanKey // <--- Passando a chave no Header do Google
+        },
+        body: JSON.stringify({
+            contents: [{ parts: [{ text: promptText }] }]
+        })
+    });
+
+    const data = await response.json();
+  
+
+        if (!response.ok) {
+            // Mostra o motivo exato se for 401, 403, etc.
+            const apiError = data.error?.message || "Erro de autorização.";
+            modalBody.innerHTML = `<p style="color:var(--fogo);"><strong>Erro (${response.status}):</strong> ${apiError}</p>`;
+            return;
         }
 
+        if (data.candidates && data.candidates[0]?.content?.parts[0]?.text) {
+            let textResult = data.candidates[0].content.parts[0].text;
+            textResult = textResult.replace(/```html/g, '').replace(/```/g, '');
+            modalBody.innerHTML = textResult;
+        } else {
+            modalBody.innerHTML = `<p style="color:var(--fogo);">Não foi possível obter a resposta da IA.</p>`;
+        }
+    } catch (err) {
+        console.error(err);
+        modalBody.innerHTML = `<p style="color:var(--fogo);">Erro ao conectar com a API da Gemini: ${err.message}</p>`;
+    }
+}
         function fecharModal() {
             document.getElementById('aiModal').classList.remove('active');
         }
@@ -888,19 +896,13 @@
             desenharRodaSVG(astros, casas, asc);
         }
 
-        // Anexando funções ao escopo do window para chamadas HTML externas
-        window.gerarAnaliseIA = gerarAnaliseIA;
-        window.fecharModal = fecharModal;
-        window.fecharModalOuter = fecharModalOuter;
-        window.executarTudo = executarTudo;
-
-        window.addEventListener('DOMContentLoaded', () => {
+        window.onload = () => {
             const agora = new Date();
             document.getElementById('date').value = agora.toISOString().split('T')[0];
             document.getElementById('time').value = agora.toTimeString().split(' ')[0].substring(0, 5);
 
             executarTudo();
-        });
+        };
     </script>
 </body>
 </html>
