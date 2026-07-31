@@ -1,0 +1,1206 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#0d1117">
+    <title>Astro - Revolução Solar</title>
+    
+    <style>
+        :root {
+            --bg-principal: #0d1117;
+            --bg-card: #161b22;
+            --border: #30363d;
+            --texto: #c9d1d9;
+            --destaque: #58a6ff;
+            --sol: #e3b341;
+            --fogo: #f85149;
+            --terra: #7ee787;
+            --ar: #79c0ff;
+            --agua: #d2a8ff;
+            --ia-color: #a371f7;
+        }
+ 
+        * { 
+            box-sizing: border-box; 
+            margin: 0; 
+            padding: 0; 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+            -webkit-tap-highlight-color: transparent; 
+        }
+        
+        html, body {
+            width: 100%;
+            max-width: 100vw;
+            overflow-x: hidden;
+            background-color: var(--bg-principal); 
+            color: var(--texto); 
+        }
+ 
+        body {
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            min-height: 100vh;
+            padding: 10px;
+        }
+ 
+        header {
+            width: 100%;
+            padding: 12px;
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border);
+            text-align: center;
+            border-radius: 10px;
+            margin-bottom: 12px;
+        }
+        header h1 { font-size: 1.2rem; color: var(--sol); font-weight: 700; letter-spacing: 1.5px; }
+        header p { font-size: 0.8rem; color: #8b949e; margin-top: 2px; }
+ 
+        .app-layout {
+            width: 100%;
+            max-width: 1400px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+ 
+        .controls {
+            background: var(--bg-card); 
+            padding: 14px; 
+            border-radius: 12px; 
+            border: 1px solid var(--border);
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); 
+            gap: 10px;
+            width: 100%;
+        }
+        .input-group { display: flex; flex-direction: column; gap: 4px; position: relative; }
+        .input-group.full { grid-column: 1 / -1; }
+        .input-group.span-2 { grid-column: span 2; }
+        .input-group.highlight {
+            background: rgba(227, 179, 65, 0.05);
+            padding: 6px;
+            border-radius: 8px;
+            border: 1px dashed var(--sol);
+        }
+        
+        @media (max-width: 600px) {
+            .input-group.span-2 { grid-column: 1 / -1; }
+        }
+
+        label { font-size: 0.75rem; color: #8b949e; font-weight: 600; }
+        input { 
+            background: var(--bg-principal); 
+            border: 1px solid var(--border); 
+            color: #fff; 
+            padding: 10px; 
+            border-radius: 8px; 
+            outline: none; 
+            font-size: 0.9rem;
+            width: 100%;
+        }
+        input:focus { border-color: var(--destaque); }
+        
+        .geo-search-container {
+            display: flex;
+            gap: 6px;
+        }
+        .btn-search-geo {
+            background: var(--border);
+            color: #fff;
+            border: none;
+            padding: 0 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 600;
+            white-space: nowrap;
+            transition: background 0.2s;
+        }
+        .btn-search-geo:hover { background: #444c56; }
+
+        .geo-status {
+            font-size: 0.7rem;
+            color: var(--terra);
+            margin-top: 2px;
+            display: none;
+        }
+
+        .btn-primary {
+            background-color: #238636; 
+            color: white; 
+            border: none; 
+            padding: 12px;
+            border-radius: 8px; 
+            font-weight: bold; 
+            width: 100%; 
+            font-size: 0.95rem; 
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .btn-primary:active { background-color: #2ea043; }
+ 
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 16px;
+            width: 100%;
+        }
+ 
+        @media (min-width: 900px) {
+            .dashboard-grid {
+                grid-template-columns: 480px 1fr;
+            }
+        }
+ 
+        .chart-card {
+            background: var(--bg-card); 
+            border: 1px solid var(--border); 
+            border-radius: 12px; 
+            padding: 12px;
+            display: flex; 
+            flex-direction: column; 
+            align-items: center;
+            width: 100%;
+        }
+        .chart-card-header {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .chart-card h2 { color: var(--destaque); font-size: 1rem; text-align: left; }
+        #chartSvg { width: 100%; max-width: 460px; height: auto; border-radius: 50%; background: #0b0e14; }
+ 
+        .signo-symbol { font-family: "Segoe UI Symbol", sans-serif; font-size: 22px; fill: var(--destaque); text-anchor: middle; dominant-baseline: central; }
+        .planet-node { cursor: pointer; }
+        .planet-node circle { fill: var(--bg-card); stroke: var(--border); stroke-width: 1.5px; }
+        .planet-node text { font-family: "Segoe UI Symbol", sans-serif; font-size: 14px; font-weight: bold; text-anchor: middle; dominant-baseline: central; }
+ 
+        .balance-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 12px;
+            width: 100%;
+        }
+ 
+        .balance-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 14px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .balance-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 6px;
+        }
+        .balance-card h3 { color: var(--destaque); font-size: 0.95rem; }
+ 
+        .progress-item { margin-bottom: 10px; }
+        .progress-info { display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 4px; }
+        .bar-bg { background: var(--bg-principal); height: 8px; border-radius: 4px; overflow: hidden; }
+        .bar-fill { height: 100%; border-radius: 4px; transition: width 0.4s ease; }
+ 
+        .expand-list { display: flex; flex-direction: column; gap: 8px; width: 100%; }
+        
+        .expand-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            overflow: hidden;
+            transition: border-color 0.2s;
+        }
+        .expand-card:hover { border-color: var(--destaque); }
+ 
+        .expand-header {
+            padding: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            user-select: none;
+            background: rgba(255,255,255,0.01);
+        }
+ 
+        .expand-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.88rem;
+            font-weight: 600;
+        }
+ 
+        .expand-badge {
+            font-size: 0.75rem;
+            color: #8b949e;
+            background: var(--bg-principal);
+            padding: 3px 8px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+        }
+ 
+        .expand-content {
+            display: none;
+            padding: 12px;
+            background: var(--bg-principal);
+            border-top: 1px solid var(--border);
+            font-size: 0.83rem;
+            line-height: 1.5;
+            color: #8b949e;
+        }
+        .expand-card.open .expand-content { display: block; }
+        .expand-card.open .arrow-icon { transform: rotate(180deg); }
+        .arrow-icon { transition: transform 0.2s; font-size: 0.8rem; color: #8b949e; }
+ 
+        .btn-ia {
+            background: linear-gradient(135deg, #8957e5, #3fb950);
+            color: white;
+            border: none;
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            transition: opacity 0.2s;
+            white-space: nowrap;
+        }
+        .btn-ia:hover { opacity: 0.9; }
+        .btn-ia-inline { margin-top: 12px; font-size: 0.8rem; padding: 8px 14px; }
+ 
+        .card-table { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 12px; width: 100%; }
+        .card-table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .card-table h3 { color: var(--destaque); font-size: 0.95rem; }
+ 
+        .matrix-desktop-container {
+            display: block;
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+ 
+        .aspect-matrix { 
+            border-collapse: collapse; 
+            margin: 0 auto;
+            width: 100%;
+            max-width: 900px;
+        }
+        
+        .aspect-matrix th, .aspect-matrix td {
+            width: 8.33%;
+            height: 42px;
+            min-width: 38px;
+            padding: 0; 
+            text-align: center; 
+            vertical-align: middle; 
+            border: 1px solid var(--border); 
+            font-size: 1rem;
+        }
+        .aspect-matrix th.header-astro { background: var(--bg-principal); color: var(--sol); font-weight: bold; }
+        .aspect-matrix td.empty-cell { background: transparent; border: none; }
+        .aspect-matrix td.cell-aspect { background: var(--bg-principal); font-weight: bold; }
+ 
+        @media (max-width: 600px) {
+            .aspect-matrix {
+                width: auto;
+                min-width: 320px;
+            }
+            .aspect-matrix th, .aspect-matrix td {
+                width: 26px;
+                height: 26px;
+                min-width: 26px;
+                font-size: 0.72rem;
+            }
+        }
+ 
+        .badge-aspecto { padding: 3px 6px; border-radius: 4px; font-weight: bold; font-size: 0.75rem; color: #fff; }
+        .conj { background: #238636; }
+        .opp { background: #da3633; }
+        .trig { background: #1f6beb; }
+        .quad { background: #d29922; color: #000; }
+        .sext { background: #8957e5; }
+ 
+        .icon-conj { color: #2ea043; }
+        .icon-opp  { color: #f85149; }
+        .icon-trig { color: #3fb950; }
+        .icon-quad { color: #d29922; }
+        .icon-sext { color: #a371f7; }
+ 
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(4px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            padding: 16px;
+        }
+        .modal-overlay.active { display: flex; }
+ 
+        .modal-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            width: 100%;
+            max-width: 650px;
+            max-height: 85vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            overflow: hidden;
+            animation: fadeIn 0.2s ease-out;
+        }
+ 
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+ 
+        .modal-header {
+            padding: 14px 18px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--bg-principal);
+        }
+        .modal-header h3 { font-size: 1rem; color: var(--sol); display: flex; align-items: center; gap: 8px; }
+        .modal-close {
+            background: transparent;
+            border: none;
+            color: #8b949e;
+            font-size: 1.4rem;
+            cursor: pointer;
+            line-height: 1;
+        }
+        .modal-close:hover { color: #fff; }
+ 
+        .modal-body {
+            padding: 18px;
+            overflow-y: auto;
+            font-size: 0.9rem;
+            line-height: 1.6;
+            color: var(--texto);
+        }
+ 
+        .loading-spinner {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            padding: 30px 0;
+            color: #8b949e;
+        }
+        .spinner {
+            width: 32px;
+            height: 32px;
+            border: 3px solid var(--border);
+            border-top-color: var(--ia-color);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+ 
+    <header>
+        <h1>REVOLUÇÃO SOLAR</h1>
+        <p>Análise de Previsão Anual (Ano Pessoal)</p>
+    </header>
+ 
+    <div class="app-layout">
+        <form id="astrologyForm" class="controls" onsubmit="event.preventDefault(); executarTudo();">
+            <div class="input-group highlight">
+                <label for="anoRevolucao" style="color:var(--sol);">Ano da Revolução Solar</label>
+                <input type="number" id="anoRevolucao" min="1900" max="2100" required>
+            </div>
+            
+            <div class="input-group">
+                <label for="date">Data de Nascimento</label>
+                <input type="date" id="date" required>
+            </div>
+            <div class="input-group">
+                <label for="time">Hora de Nascimento</label>
+                <input type="time" id="time" required>
+            </div>
+            <div class="input-group">
+                <label for="fuso">Fuso Natal (UTC)</label>
+                <input type="number" id="fuso" value="-3" step="0.5" required>
+            </div>
+
+            <div class="input-group span-2">
+                <label for="cidadeInput">Localização Atual / Aniversário</label>
+                <div class="geo-search-container">
+                    <input type="text" id="cidadeInput" placeholder="Ex: Curitiba, PR ou São Paulo, Brasil" value="Curitiba, PR">
+                    <button type="button" class="btn-search-geo" onclick="buscarCoordenadas()">🔍 Buscar</button>
+                </div>
+                <div id="geoStatus" class="geo-status">✓ Local encontrado e coordenadas preenchidas</div>
+            </div>
+
+            <div class="input-group">
+                <label for="lat">Latitude</label>
+                <input type="number" id="lat" value="-25.4284" step="0.0001" required>
+            </div>
+            <div class="input-group">
+                <label for="lon">Longitude</label>
+                <input type="number" id="lon" value="-49.2733" step="0.0001" required>
+            </div>
+            <div class="input-group full">
+                <button type="submit" class="btn-primary">Calcular Revolução Solar</button>
+            </div>
+        </form>
+ 
+        <div class="dashboard-grid">
+            <div class="chart-card">
+                <div class="chart-card-header">
+                    <h2>Roda da Revolução Solar</h2>
+                    <button class="btn-ia" onclick="dispararAnaliseMapaCompleto()">✦ Análise Anual IA</button>
+                </div>
+                <svg id="chartSvg" viewBox="0 0 600 600"></svg>
+            </div>
+ 
+            <div class="balance-container">
+                <div class="balance-card">
+                    <div>
+                        <div class="balance-card-header">
+                            <h3>Elementos do Ano</h3>
+                            <button class="btn-ia" onclick="dispararAnaliseBalanco('elementos')">✦ Análise IA</button>
+                        </div>
+                        <div id="elementosBars"></div>
+                    </div>
+                </div>
+                <div class="balance-card">
+                    <div>
+                        <div class="balance-card-header">
+                            <h3>Modalidades / Ritmos</h3>
+                            <button class="btn-ia" onclick="dispararAnaliseBalanco('ritmos')">✦ Análise IA</button>
+                        </div>
+                        <div id="ritmosBars"></div>
+                    </div>
+                </div>
+                <div class="balance-card">
+                    <div>
+                        <div class="balance-card-header">
+                            <h3>Polaridades do Ano</h3>
+                            <button class="btn-ia" onclick="dispararAnaliseBalanco('polaridades')">✦ Análise IA</button>
+                        </div>
+                        <div id="polaridadesBars"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+ 
+        <div class="card-table">
+            <h3>Posições Planetárias da RS (Clique para Expandir)</h3>
+            <div id="astrosExpandList" class="expand-list" style="margin-top: 10px;"></div>
+        </div>
+
+        <div class="card-table">
+            <h3>Casas Astrológicas do Ano (Clique para Expandir)</h3>
+            <div id="casasExpandList" class="expand-list" style="margin-top: 10px;"></div>
+        </div>
+ 
+        <div class="card-table">
+            <div class="card-table-header">
+                <h3>Matriz de Aspectos do Ano</h3>
+                <button class="btn-ia" onclick="dispararAnaliseAspectosCompleta()">✦ Análise IA</button>
+            </div>
+            <div class="matrix-desktop-container">
+                <table id="matrixAspectos" class="aspect-matrix"></table>
+            </div>
+        </div>
+ 
+        <div class="card-table">
+            <h3>Interpretação dos Aspectos Anuais (Clique para Expandir)</h3>
+            <div id="aspectosExpandList" class="expand-list" style="margin-top: 10px;"></div>
+        </div>
+    </div>
+ 
+    <!-- Modal Flutuante para IA -->
+    <div id="aiModal" class="modal-overlay" onclick="fecharModalOuter(event)">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3 id="modalTitle">✦ Análise da Revolução Solar (IA)</h3>
+                <button class="modal-close" onclick="fecharModal()">&times;</button>
+            </div>
+            <div id="modalBody" class="modal-body">
+                <!-- Conteúdo gerado pela IA -->
+            </div>
+        </div>
+    </div>
+ 
+    <script>
+        const SIGNOS_DADOS = [
+            { nome: "Áries", simbolo: "♈︎", elemento: "Fogo", ritmo: "Cardinal", polaridade: "Yang" },
+            { nome: "Touro", simbolo: "♉︎", elemento: "Terra", ritmo: "Fixo", polaridade: "Yin" },
+            { nome: "Gêmeos", simbolo: "♊︎", elemento: "Ar", ritmo: "Mutável", polaridade: "Yang" },
+            { nome: "Câncer", simbolo: "♋︎", elemento: "Água", ritmo: "Cardinal", polaridade: "Yin" },
+            { nome: "Leão", simbolo: "♌︎", elemento: "Fogo", ritmo: "Fixo", polaridade: "Yang" },
+            { nome: "Virgem", simbolo: "♍︎", elemento: "Terra", ritmo: "Mutável", polaridade: "Yin" },
+            { nome: "Libras", simbolo: "♎︎", elemento: "Ar", ritmo: "Cardinal", polaridade: "Yang" },
+            { nome: "Escorpião", simbolo: "♏︎", elemento: "Água", ritmo: "Fixo", polaridade: "Yin" },
+            { nome: "Sagitário", simbolo: "♐︎", elemento: "Fogo", ritmo: "Mutável", polaridade: "Yang" },
+            { nome: "Capricórnio", simbolo: "♑︎", elemento: "Terra", ritmo: "Cardinal", polaridade: "Yin" },
+            { nome: "Aquário", simbolo: "♒︎", elemento: "Ar", ritmo: "Fixo", polaridade: "Yang" },
+            { nome: "Peixes", simbolo: "♓︎", elemento: "Água", ritmo: "Mutável", polaridade: "Yin" }
+        ];
+
+        const DEFINICAO_CASAS = {
+            1: "O Ascendente da RS indica a atitude geral do ano, como você se apresentará ao mundo e sua energia vital diária.",
+            2: "Foco financeiro do ano, ganhos materiais, gestão de recursos e valorização dos seus talentos.",
+            3: "Estudos no ano, comunicação, pequenas viagens, novos aprendizados e relação com irmãos/vizinhos.",
+            4: "Ambiente familiar, mudanças de casa, assuntos imobiliários, vida íntima e raízes psicológicas do ano.",
+            5: "Projetos criativos, romances, momentos de lazer, filhos e autoexpressão durante este ciclo anual.",
+            6: "Rotina de trabalho, saúde do corpo, hábitos, produtividade diária e organização pessoal no ano.",
+            7: "Parcerias de negócios, casamento, contratos importantes e como os relacionamentos evoluem no ano.",
+            8: "Grandes transformações, encerramento de ciclos, investimentos financeiros conjuntos e regeneração profunda.",
+            9: "Viagens internacionais, expansão acadêmica, desenvolvimento espiritual e mudanças na sua visão de mundo.",
+            10: "Carreira, imagem pública, grandes metas profissionais e reconhecimento alcançado no ano.",
+            11: "Rede de contatos, projetos sociais, amizades em destaque e metas de futuro para o novo ciclo.",
+            12: "Processos internos, recolhimento, encerramentos, vida espiritual e cuidados com a mente e saúde invisível."
+        };
+
+        const DEFINICAO_ASTROS = {
+            "Sol": "Sua luz e foco principal de consciência e energia durante este ano pessoal.",
+            "Lua": "Suas necessidades emocionais, oscilações de humor e campo de segurança psíquica no ano.",
+            "Mercúrio": "Onde sua mente estará mais ativa, estilo de comunicação e decisões intelectuais do ano.",
+            "Vênus": "Onde o afeto, a harmonia, os valores e as oportunidades financeiras se concentram no ciclo.",
+            "Marte": "Sua força de impulso, onde você aplicará mais energia, iniciativa ou enfrentará desafios.",
+            "Júpiter": "Sua principal fonte de crescimento, sorte, expansão e novos horizontes no ano.",
+            "Saturno": "A área que exigirá mais disciplina, responsabilidade, paciência e estruturação ao longo do ano.",
+            "Urano": "Onde ocorrerão mudanças inesperadas, imprevistos e buscas por inovação e liberdade.",
+            "Netuno": "Área de maior inspiração, sensibilidade e imaginação, mas que requer atenção a ilusões.",
+            "Plutão": "Onde ocorrerão as transformações mais profundas, renascimentos e uso do poder pessoal.",
+            "Ascendente (AC)": "A tônica geral da sua personalidade, saúde e postura frente às oportunidades do ano.",
+            "Meio do Céu (MC)": "A culminância da sua reputação, carreira e maiores conquistas do ano."
+        };
+ 
+        const SIMBOLOS_ASTROS = {
+            "Sol": "☉", "Lua": "☽", "Mercúrio": "☿", "Vênus": "♀", "Marte": "♂",
+            "Júpiter": "♃", "Saturno": "♄", "Urano": "♅", "Netuno": "♆", "Plutão": "♇",
+            "Ascendente (AC)": "AC", "Meio do Céu (MC)": "MC"
+        };
+ 
+        const DEFINICAO_ASPECTOS = [
+            { nome: "Conjunção", angulo: 0, orbe: 8, classe: "conj", simbolo: "☌", iconClass: "icon-conj" },
+            { nome: "Sextil", angulo: 60, orbe: 6, classe: "sext", simbolo: "✶", iconClass: "icon-sext" },
+            { nome: "Quadratura", angulo: 90, orbe: 7, classe: "quad", simbolo: "□", iconClass: "icon-quad" },
+            { nome: "Trígono", angulo: 120, orbe: 8, classe: "trig", simbolo: "△", iconClass: "icon-trig" },
+            { nome: "Oposição", angulo: 180, orbe: 8, classe: "opp", simbolo: "☍", iconClass: "icon-opp" }
+        ];
+ 
+        let ULTIMO_ASTROS = [];
+        let ULTIMO_CASAS = [];
+        let ULTIMO_ASC = 0;
+        let ULTIMO_ASPECTOS = [];
+        let ULTIMO_BALANCO = { elementos: {}, ritmos: {}, polaridades: {} };
+        let ANO_SELECIONADO = new Date().getFullYear();
+ 
+        function degToRad(deg) { return deg * Math.PI / 180; }
+        function radToDeg(rad) { return rad * 180 / Math.PI; }
+        function normalizar(graus) { return (graus % 360 + 360) % 360; }
+ 
+        function formatarDMS(grausDecimal) {
+            const gAbs = grausDecimal % 30;
+            const g = Math.floor(gAbs);
+            const m = Math.floor((gAbs - g) * 60);
+            return `${g}°${m.toString().padStart(2, '0')}'`;
+        }
+
+        async function buscarCoordenadas() {
+            const cidadeStr = document.getElementById('cidadeInput').value.trim();
+            const statusDiv = document.getElementById('geoStatus');
+            if (!cidadeStr) return;
+
+            statusDiv.style.display = 'block';
+            statusDiv.style.color = '#8b949e';
+            statusDiv.textContent = 'Buscando coordenadas...';
+
+            try {
+                const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(cidadeStr)}&limit=1`);
+                const data = await response.json();
+
+                if (data && data.length > 0) {
+                    const lat = parseFloat(data[0].lat).toFixed(4);
+                    const lon = parseFloat(data[0].lon).toFixed(4);
+                    
+                    document.getElementById('lat').value = lat;
+                    document.getElementById('lon').value = lon;
+                    
+                    statusDiv.style.color = 'var(--terra)';
+                    statusDiv.textContent = `✓ Local encontrado: Lat ${lat}, Lon ${lon}`;
+                } else {
+                    statusDiv.style.color = 'var(--fogo)';
+                    statusDiv.textContent = 'Local não encontrado. Insira a Lat/Lon manualmente.';
+                }
+            } catch (err) {
+                console.error(err);
+                statusDiv.style.color = 'var(--fogo)';
+                statusDiv.textContent = 'Erro ao buscar cidade. Insira a Lat/Lon manualmente.';
+            }
+        }
+ 
+        function calcularRevolucaoSolar() {
+            const anoRS = parseInt(document.getElementById('anoRevolucao').value, 10);
+            ANO_SELECIONADO = anoRS;
+
+            const dateVal = document.getElementById('date').value;
+            const timeVal = document.getElementById('time').value;
+            const fuso = parseFloat(document.getElementById('fuso').value);
+            const lat = parseFloat(document.getElementById('lat').value);
+            const lon = parseFloat(document.getElementById('lon').value);
+ 
+            const [year, month, day] = dateVal.split('-').map(Number);
+            const [hours, minutes] = timeVal.split(':').map(Number);
+            
+            // Cálculo simplificado do Juliano para determinar Sol Natal
+            const hourUTC = hours + (minutes / 60) - fuso;
+            let m = month, y = year;
+            if (m <= 2) { y -= 1; m += 12; }
+            let A = Math.floor(y / 100);
+            let B = 2 - A + Math.floor(A / 4);
+            let jdBirth = Math.floor(365.25 * (y + 4716)) + Math.floor(30.6001 * (m + 1)) + day + (hourUTC / 24.0) + B - 1524.5;
+            let TBirth = (jdBirth - 2451545.0) / 36525.0;
+            const solNatal = normalizar(280.46646 + 36000.76983 * TBirth);
+
+            // Ajusta o tempo para o ano da Revolução Solar
+            const yRS = anoRS;
+            let mRS = month;
+            if (mRS <= 2) { yRS -= 1; mRS += 12; }
+            let A_RS = Math.floor(yRS / 100);
+            let B_RS = 2 - A_RS + Math.floor(A_RS / 4);
+            let jdRS = Math.floor(365.25 * (yRS + 4716)) + Math.floor(30.6001 * (mRS + 1)) + day + (hourUTC / 24.0) + B_RS - 1524.5;
+            let TRS = (jdRS - 2451545.0) / 36525.0;
+
+            let gmst = 280.46061837 + 36000.770053608 * TRS;
+            let lst = normalizar(gmst + lon);
+            let obliq = degToRad(23.4392911 - 0.0130042 * TRS);
+ 
+            let mc = normalizar(radToDeg(Math.atan2(Math.sin(degToRad(lst)), Math.cos(degToRad(lst)) * Math.cos(obliq))));
+            let asc = normalizar(radToDeg(Math.atan2(Math.cos(degToRad(lst)), -Math.sin(degToRad(lst)) * Math.cos(obliq) - Math.tan(degToRad(lat)) * Math.sin(obliq))));
+            if (asc < 60 || asc > 120) asc = normalizar(asc + 90);
+
+            // Posições dos planetas na RS
+            const sol = solNatal; // Por definição da Revolução Solar, Sol está exatamente no grau natal
+            const lua = normalizar(sol + (TRS * 130.5)); 
+            const mercurio = normalizar(sol + 12 * Math.sin(degToRad(360 * TRS * 4.15)));
+            const venus = normalizar(sol + 25 * Math.sin(degToRad(360 * TRS * 1.62)));
+            const marte = normalizar(sol + 55 * Math.sin(degToRad(360 * TRS * 0.53)));
+            const jupiter = normalizar(34.404 + 3034.9057 * TRS);
+            const saturno = normalizar(50.077 + 1222.1138 * TRS);
+            const urano = normalizar(314.055 + 428.4661 * TRS);
+            const netuno = normalizar(304.349 + 218.4862 * TRS);
+            const plutao = normalizar(238.929 + 145.180 * TRS);
+ 
+            const astros = [
+                { nome: "Sol", grau: sol, retro: false },
+                { nome: "Lua", grau: lua, retro: false },
+                { nome: "Mercúrio", grau: mercurio, retro: false },
+                { nome: "Vênus", grau: venus, retro: false },
+                { nome: "Marte", grau: marte, retro: false },
+                { nome: "Júpiter", grau: jupiter, retro: false },
+                { nome: "Saturno", grau: saturno, retro: false },
+                { nome: "Urano", grau: urano, retro: false },
+                { nome: "Netuno", grau: netuno, retro: false },
+                { nome: "Plutão", grau: plutao, retro: false },
+                { nome: "Ascendente (AC)", grau: asc, retro: false },
+                { nome: "Meio do Céu (MC)", grau: mc, retro: false }
+            ];
+ 
+            const casas = Array.from({ length: 12 }, (_, i) => normalizar(asc + (i * 30)));
+ 
+            astros.forEach(a => {
+                let casaEncontrada = 12;
+                for (let i = 0; i < 11; i++) {
+                    if (a.grau >= casas[i] && a.grau < casas[i+1]) {
+                        casaEncontrada = i + 1;
+                        break;
+                    }
+                }
+                a.casa = casaEncontrada;
+            });
+ 
+            return { astros, casas, asc };
+        }
+ 
+        function calcularAspectos(astros) {
+            const aspectos = [];
+            for (let i = 0; i < astros.length; i++) {
+                for (let j = i + 1; j < astros.length; j++) {
+                    const a1 = astros[i], a2 = astros[j];
+                    let diff = Math.abs(a1.grau - a2.grau);
+                    if (diff > 180) diff = 360 - diff;
+ 
+                    DEFINICAO_ASPECTOS.forEach(asp => {
+                        const orbeAtual = Math.abs(diff - asp.angulo);
+                        if (orbeAtual <= asp.orbe) {
+                            aspectos.push({
+                                astro1: a1.nome, astro2: a2.nome, aspecto: asp.nome,
+                                classe: asp.classe, simbolo: asp.simbolo, iconClass: asp.iconClass, orbe: orbeAtual.toFixed(1)
+                            });
+                        }
+                    });
+                }
+            }
+            return aspectos;
+        }
+ 
+        function renderizarBalanço(astros) {
+            const elementos = { Fogo: 0, Terra: 0, Ar: 0, Água: 0 };
+            const ritmos = { Cardinal: 0, Fixo: 0, Mutável: 0 };
+            const polaridades = { Yang: 0, Yin: 0 };
+ 
+            const planetasPrincipais = astros.filter(a => !["Ascendente (AC)", "Meio do Céu (MC)"].includes(a.nome));
+            
+            planetasPrincipais.forEach(a => {
+                const sIdx = Math.floor(a.grau / 30) % 12;
+                const signo = SIGNOS_DADOS[sIdx];
+                elementos[signo.elemento]++;
+                ritmos[signo.ritmo]++;
+                polaridades[signo.polaridade]++;
+            });
+ 
+            const total = planetasPrincipais.length;
+            ULTIMO_BALANCO = { elementos, ritmos, polaridades };
+            const coresElementos = { Fogo: "var(--fogo)", Terra: "var(--terra)", Ar: "var(--ar)", Água: "var(--agua)" };
+ 
+            document.getElementById('elementosBars').innerHTML = Object.keys(elementos).map(k => {
+                const pct = Math.round((elementos[k] / total) * 100);
+                return `
+                    <div class="progress-item">
+                        <div class="progress-info"><span>${k} (${elementos[k]})</span><span>${pct}%</span></div>
+                        <div class="bar-bg"><div class="bar-fill" style="width:${pct}%; background:${coresElementos[k]}"></div></div>
+                    </div>
+                `;
+            }).join('');
+ 
+            document.getElementById('ritmosBars').innerHTML = Object.keys(ritmos).map(k => {
+                const pct = Math.round((ritmos[k] / total) * 100);
+                return `
+                    <div class="progress-item">
+                        <div class="progress-info"><span>${k} (${ritmos[k]})</span><span>${pct}%</span></div>
+                        <div class="bar-bg"><div class="bar-fill" style="width:${pct}%; background:var(--destaque)"></div></div>
+                    </div>
+                `;
+            }).join('');
+ 
+            document.getElementById('polaridadesBars').innerHTML = Object.keys(polaridades).map(k => {
+                const pct = Math.round((polaridades[k] / total) * 100);
+                const label = k === "Yang" ? "Yang (Masculino/Ativo)" : "Yin (Feminino/Receptivo)";
+                return `
+                    <div class="progress-item">
+                        <div class="progress-info"><span>${label}</span><span>${pct}%</span></div>
+                        <div class="bar-bg"><div class="bar-fill" style="width:${pct}%; background:var(--sol)"></div></div>
+                    </div>
+                `;
+            }).join('');
+        }
+ 
+        function renderizarAstrosExpansivel(astros) {
+            const container = document.getElementById('astrosExpandList');
+            container.innerHTML = astros.map(a => {
+                const sIdx = Math.floor(a.grau / 30) % 12;
+                const signo = SIGNOS_DADOS[sIdx];
+                const simAstro = SIMBOLOS_ASTROS[a.nome] || '';
+                const combinacao = `${a.nome} em ${signo.nome} na Casa ${a.casa} da Revolução Solar de ${ANO_SELECIONADO}`;
+                const explicacaoAstro = DEFINICAO_ASTROS[a.nome] || "";
+
+                return `
+                    <div class="expand-card">
+                        <div class="expand-header" onclick="this.parentElement.classList.toggle('open')">
+                            <div class="expand-title">
+                                <span style="color:var(--sol); font-size:1.1rem;">${simAstro}</span>
+                                <span>${a.nome} em ${signo.nome} ${signo.simbolo}</span>
+                            </div>
+                            <div style="display:flex; align-items:center; gap:8px;">
+                                <span class="expand-badge">Casa ${a.casa}</span>
+                                <span class="arrow-icon">▼</span>
+                            </div>
+                        </div>
+                        <div class="expand-content">
+                            <p style="margin-bottom: 8px;"><strong>Efeito Anual:</strong> ${explicacaoAstro}</p>
+                            <p style="margin-bottom: 8px;"><strong>Foco no Ano (${ANO_SELECIONADO}):</strong> Esta energia atua com a atitude de <strong>${signo.nome}</strong> e concentrará eventos e aprendizados na <strong>Casa ${a.casa}</strong> ao longo do ano.</p>
+                            <p style="margin-bottom: 6px;"><strong>Posição Exata:</strong> ${formatarDMS(a.grau)}</p>
+                            
+                            <button class="btn-ia btn-ia-inline" onclick="event.stopPropagation(); dispararAnaliseIA('${combinacao}')">
+                                ✦ Previsão Anual da IA
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderizarCasasExpansivel(casas, astros) {
+            const container = document.getElementById('casasExpandList');
+            container.innerHTML = casas.map((grauCasa, index) => {
+                const numCasa = index + 1;
+                const sIdx = Math.floor(grauCasa / 30) % 12;
+                const signoCuspide = SIGNOS_DADOS[sIdx];
+                
+                const astrosNaCasa = astros.filter(a => a.casa === numCasa);
+                const nomesAstros = astrosNaCasa.length > 0 
+                    ? astrosNaCasa.map(a => `${SIMBOLOS_ASTROS[a.nome] || ''} ${a.nome}`).join(', ')
+                    : 'Nenhum planeta presente (Casa Vazia)';
+
+                const contextoAnalise = `Casa ${numCasa} da Revolução Solar de ${ANO_SELECIONADO} em ${signoCuspide.nome} contendo: ${astrosNaCasa.map(a => a.nome).join(', ') || 'Sem planetas'}`;
+
+                return `
+                    <div class="expand-card">
+                        <div class="expand-header" onclick="this.parentElement.classList.toggle('open')">
+                            <div class="expand-title">
+                                <span style="color:var(--destaque); font-weight:bold;">Casa ${numCasa}</span>
+                                <span>em ${signoCuspide.nome} ${signoCuspide.simbolo}</span>
+                            </div>
+                            <div style="display:flex; align-items:center; gap:8px;">
+                                <span class="expand-badge">${astrosNaCasa.length} astro(s)</span>
+                                <span class="arrow-icon">▼</span>
+                            </div>
+                        </div>
+                        <div class="expand-content">
+                            <p style="margin-bottom: 8px;"><strong>Área de Foco no Ano:</strong> ${DEFINICAO_CASAS[numCasa]}</p>
+                            <p style="margin-bottom: 8px;"><strong>Cúspide do Ano:</strong> ${signoCuspide.nome} (${formatarDMS(grauCasa)})</p>
+                            <p style="margin-bottom: 6px;"><strong>Ocupantes Anuais:</strong> ${nomesAstros}</p>
+                            
+                            <button class="btn-ia btn-ia-inline" onclick="event.stopPropagation(); dispararAnaliseCasaIA('${contextoAnalise}')">
+                                ✦ Análise da Casa no Ano com IA
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+ 
+        function renderizarAspectosExpansivel(aspectos) {
+            const container = document.getElementById('aspectosExpandList');
+            container.innerHTML = aspectos.map(asp => {
+                const sim1 = SIMBOLOS_ASTROS[asp.astro1] || '';
+                const sim2 = SIMBOLOS_ASTROS[asp.astro2] || '';
+                const combinacao = `${asp.astro1} em ${asp.aspecto} com ${asp.astro2} na Revolução Solar de ${ANO_SELECIONADO}`;
+
+                return `
+                    <div class="expand-card">
+                        <div class="expand-header" onclick="this.parentElement.classList.toggle('open')">
+                            <div class="expand-title">
+                                <span>${sim1} ${asp.astro1} ${asp.simbolo} ${asp.astro2} ${sim2}</span>
+                            </div>
+                            <div style="display:flex; align-items:center; gap:8px;">
+                                <span class="badge-aspecto ${asp.classe}">${asp.aspecto}</span>
+                                <span class="arrow-icon">▼</span>
+                            </div>
+                        </div>
+                        <div class="expand-content">
+                            <p style="margin-bottom: 8px;"><strong>Dinâmica do Ano:</strong> Conexão em <strong>${asp.aspecto}</strong> impactando os eventos e clima do ano de ${ANO_SELECIONADO}.</p>
+                            <p style="margin-bottom: 6px;"><strong>Orbe de Precisão:</strong> ${asp.orbe}°</p>
+                            
+                            <button class="btn-ia btn-ia-inline" onclick="event.stopPropagation(); dispararAnaliseIA('${combinacao}')">
+                                ✦ Interpretar Dinâmica Anual com IA
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+ 
+        function gerarMatrizHtml(astros, aspectos) {
+            let html = "";
+            const total = astros.length;
+ 
+            for (let i = 0; i < total; i++) {
+                html += "<tr>";
+                for (let j = 0; j < total; j++) {
+                    if (i === j) {
+                        html += `<th class="header-astro" title="${astros[i].nome}">${SIMBOLOS_ASTROS[astros[i].nome]}</th>`;
+                    } else if (i > j) {
+                        const asp = aspectos.find(a => (a.astro1 === astros[i].nome && a.astro2 === astros[j].nome) || (a.astro2 === astros[i].nome && a.astro1 === astros[j].nome));
+                        if (asp) {
+                            html += `<td class="cell-aspect ${asp.iconClass}" title="${asp.aspecto}">${asp.simbolo}</td>`;
+                        } else {
+                            html += `<td class="cell-aspect"></td>`;
+                        }
+                    } else {
+                        html += `<td class="empty-cell"></td>`;
+                    }
+                }
+                html += "</tr>";
+            }
+ 
+            document.getElementById('matrixAspectos').innerHTML = html;
+        }
+ 
+        function desenharRodaSVG(astros, casas, asc) {
+            const svg = document.getElementById('chartSvg');
+            svg.innerHTML = '';
+            const cx = 300, cy = 300, rOuter = 285, rInner = 230, rCasas = 160, rCore = 80;
+ 
+            const grauParaAngulo = (g) => (180 + (g - asc)) % 360;
+            const polarToCart = (r, a) => {
+                const rad = (a - 180) * Math.PI / 180;
+                return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
+            };
+ 
+            for (let i = 0; i < 12; i++) {
+                const aIn = grauParaAngulo(i * 30), aFim = grauParaAngulo((i + 1) * 30);
+                const p1 = polarToCart(rOuter, aIn), p2 = polarToCart(rOuter, aFim);
+                const p3 = polarToCart(rInner, aFim), p4 = polarToCart(rInner, aIn);
+ 
+                const d = `M ${p1.x} ${p1.y} A ${rOuter} ${rOuter} 0 0 1 ${p2.x} ${p2.y} L ${p3.x} ${p3.y} A ${rInner} ${rInner} 0 0 0 ${p4.x} ${p4.y} Z`;
+                const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                path.setAttribute('d', d);
+                path.setAttribute('fill', i % 2 === 0 ? '#161b22' : '#0d1117');
+                path.setAttribute('stroke', '#30363d');
+                svg.appendChild(path);
+ 
+                const pTxt = polarToCart((rOuter + rInner) / 2, grauParaAngulo(i * 30 + 15));
+                const txt = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                txt.setAttribute('x', pTxt.x); txt.setAttribute('y', pTxt.y);
+                txt.setAttribute('class', 'signo-symbol');
+                txt.textContent = SIGNOS_DADOS[i].simbolo;
+                svg.appendChild(txt);
+            }
+ 
+            casas.forEach((c, i) => {
+                const p1 = polarToCart(rInner, grauParaAngulo(c)), p2 = polarToCart(rCore, grauParaAngulo(c));
+                const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                line.setAttribute('x1', p1.x); line.setAttribute('y1', p1.y);
+                line.setAttribute('x2', p2.x); line.setAttribute('y2', p2.y);
+                line.setAttribute('stroke', (i % 3 === 0) ? '#58a6ff' : '#30363d');
+                svg.appendChild(line);
+            });
+ 
+            const coreCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+            coreCircle.setAttribute('cx', cx); coreCircle.setAttribute('cy', cy); coreCircle.setAttribute('r', rCore);
+            coreCircle.setAttribute('fill', '#0b0e14'); coreCircle.setAttribute('stroke', '#30363d');
+            svg.appendChild(coreCircle);
+ 
+            astros.forEach(a => {
+                const p = polarToCart(rCasas, grauParaAngulo(a.grau));
+                const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                g.setAttribute('class', 'planet-node');
+                g.setAttribute('transform', `translate(${p.x}, ${p.y})`);
+ 
+                const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                c.setAttribute('r', 13);
+ 
+                const t = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                t.setAttribute('y', 1); 
+                t.setAttribute('fill', a.nome === "Sol" ? 'var(--sol)' : 'var(--destaque)');
+                t.textContent = SIMBOLOS_ASTROS[a.nome] || a.nome[0];
+ 
+                g.appendChild(c); 
+                g.appendChild(t);
+                
+                const title = document.createElementNS('http://www.w3.org/2000/svg', 'title');
+                title.textContent = `${a.nome}: ${formatarDMS(a.grau)}`;
+                g.appendChild(title);
+ 
+                svg.appendChild(g);
+            });
+        }
+ 
+        // ==========================================
+        // INTEGRAÇÃO COM A IA
+        // ==========================================
+ 
+        function iniciarAnaliseIA(titulo, promptText) {
+            document.getElementById('modalTitle').textContent = `✦ ${titulo}`;
+            document.getElementById('modalBody').innerHTML = `
+                <div class="loading-spinner">
+                    <div class="spinner"></div>
+                    <p>Calculando previsão com a IA...</p>
+                </div>`;
+            document.getElementById('aiModal').classList.add('active');
+            gerarAnaliseIA(promptText);
+        }
+ 
+        function dispararAnaliseIA(combinacao) {
+            const promptText = `Atue como um astrólogo especialista em previsões e Revolução Solar. Faça uma análise detalhada e prática do seguinte elemento na Revolução Solar do ano ${ANO_SELECIONADO}: "${combinacao}". 
+            Siga estas diretrizes:
+            - Aborde esta posição como uma tendência, oportunidade ou desafio específico para este ano pessoal de ${ANO_SELECIONADO}.
+            - Escreva de 3 a 4 parágrafos curtos com conselhos práticos e psicológicos.
+            - Use formatação HTML básica com parágrafos <p> e destaques em <strong>.
+            - Mantenha um tom profissional, orientador e encorajador.`;
+ 
+            iniciarAnaliseIA(`Previsão: ${combinacao}`, promptText);
+        }
+
+        function dispararAnaliseCasaIA(contextoCasa) {
+            const promptText = `Atue como um astrólogo especialista em Revolução Solar. Faça uma análise focada na seguinte área de vida para o ano de ${ANO_SELECIONADO}: "${contextoCasa}".
+            Siga estas diretrizes:
+            - Explique quais os principais acontecimentos, aprendizagens e temas que essa Casa ativará durante o ciclo anual de ${ANO_SELECIONADO}.
+            - Escreva de 3 a 4 parágrafos curtos.
+            - Use formatação HTML básica com parágrafos <p> e destaques em <strong>.
+            - Tom focado em orientação e planejamento pessoal.`;
+
+            iniciarAnaliseIA(`Análise de Casa na Revolução Solar`, promptText);
+        }
+ 
+        function dispararAnaliseBalanco(tipo) {
+            if (!ULTIMO_ASTROS.length) return;
+ 
+            let titulo, rotulo, dados;
+            if (tipo === 'elementos') {
+                titulo = `Elementos do Ano ${ANO_SELECIONADO}`;
+                rotulo = 'elementos';
+                dados = ULTIMO_BALANCO.elementos;
+            } else if (tipo === 'ritmos') {
+                titulo = `Modalidades do Ano ${ANO_SELECIONADO}`;
+                rotulo = 'modalidades';
+                dados = ULTIMO_BALANCO.ritmos;
+            } else {
+                titulo = `Polaridades do Ano ${ANO_SELECIONADO}`;
+                rotulo = 'polaridades';
+                dados = ULTIMO_BALANCO.polaridades;
+            }
+ 
+            const dadosTexto = Object.entries(dados).map(([k, v]) => `${k}: ${v}`).join(', ');
+ 
+            const promptText = `Atue como um astrólogo preditivo. Faça uma análise sobre o peso e temperamento do ano pessoal de ${ANO_SELECIONADO} com base nesta distribuição de ${rotulo} na Revolução Solar: ${dadosTexto}.
+            Siga estas diretrizes:
+            - Escreva de 3 a 4 parágrafos.
+            - Explique o ritmo e energia predominante que a pessoa sentirá no dia a dia durante esse ano de ${ANO_SELECIONADO}.
+            - Use formatação HTML básica com parágrafos <p> e destaques em <strong>.`;
+ 
+            iniciarAnaliseIA(titulo, promptText);
+        }
+ 
+        function dispararAnaliseMapaCompleto() {
+            if (!ULTIMO_ASTROS.length) return;
+ 
+            const listaPosicoes = ULTIMO_ASTROS.map(a => {
+                const sIdx = Math.floor(a.grau / 30) % 12;
+                const signo = SIGNOS_DADOS[sIdx];
+                return `${a.nome} em ${signo.nome} na Casa ${a.casa}`;
+            }).join('; ');
+ 
+            const listaAspectosResumo = ULTIMO_ASPECTOS
+                .map(asp => `${asp.astro1} em ${asp.aspecto} com ${asp.astro2}`)
+                .join('; ');
+ 
+            const promptText = `Atue como um astrólogo especialista em Revolução Solar. Elabore um relatório de Previsão Anual completo para o ano de ${ANO_SELECIONADO} baseado nas posições a seguir:
+ 
+            Posições anuais: ${listaPosicoes}.
+            Aspectos anuais: ${listaAspectosResumo || 'sem aspectos maiores'}.
+ 
+            Siga estas diretrizes de resposta:
+            - Escreva de 5 a 7 parágrafos.
+            - Destaque o Ascendente da Revolução Solar e onde o Sol do ano está localizado (foco central do ano).
+            - Analise onde estarão as maiores oportunidades e os maiores desafios práticos/emocionais ao longo do ciclo de ${ANO_SELECIONADO}.
+            - Conclua com um conselho síntese para o ano.
+            - Use formatação HTML básica com parágrafos <p> e destaques em <strong>.`;
+ 
+            iniciarAnaliseIA(`Relatório de Previsão Anual - ${ANO_SELECIONADO}`, promptText);
+        }
+ 
+        function dispararAnaliseAspectosCompleta() {
+            if (!ULTIMO_ASPECTOS.length) return;
+ 
+            const lista = ULTIMO_ASPECTOS
+                .map(asp => `${asp.astro1} em ${asp.aspecto} com ${asp.astro2}`)
+                .join('; ');
+ 
+            const promptText = `Atue como um astrólogo preditivo. Faça uma análise dos aspectos atuantes na Revolução Solar do ano de ${ANO_SELECIONADO}:
+ 
+            ${lista}
+ 
+            Siga estas diretrizes:
+            - Escreva de 4 a 5 parágrafos.
+            - Conecte as tensões e fluidez para explicar os altos e baixos previsíveis do ano.
+            - Use formatação HTML básica com parágrafos <p> e destaques em <strong>.`;
+ 
+            iniciarAnaliseIA(`Aspectos e Tensões do Ano ${ANO_SELECIONADO}`, promptText);
+        }
+ 
+        async function gerarAnaliseIA(promptText) {
+            const modalBody = document.getElementById('modalBody');
+            try {
+                const response = await fetch('https://astro-gns-proxy.genesisgns.workers.dev/', {
+                    method: 'POST',
+                    cache: 'no-store',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt: promptText })
+                });
+ 
+                const data = await response.json();
+ 
+                if (response.ok && data.resposta) {
+                    exibirResultadoIA(data.resposta);
+                } else {
+                    modalBody.innerHTML = `<p style="color:var(--fogo);"><strong>Erro:</strong> ${data.error || "Não foi possível obter a resposta da IA."}</p>`;
+                }
+            } catch (err) {
+                console.error(err);
+                modalBody.innerHTML = `<p style="color:var(--fogo);"><strong>Erro de Conexão:</strong> ${err.message}</p>`;
+            }
+        }
+ 
+        function exibirResultadoIA(texto) {
+            let htmlFormatado = texto.replace(/```html/g, '').replace(/```/g, '');
+            document.getElementById('modalBody').innerHTML = htmlFormatado;
+        }
+ 
+        function fecharModal() {
+            document.getElementById('aiModal').classList.remove('active');
+        }
+ 
+        function fecharModalOuter(e) {
+            if (e.target.id === 'aiModal') fecharModal();
+        }
+ 
+        function executarTudo() {
+            const { astros, casas, asc } = calcularRevolucaoSolar();
+            const aspectos = calcularAspectos(astros);
+ 
+            ULTIMO_ASTROS = astros;
+            ULTIMO_CASAS = casas;
+            ULTIMO_ASC = asc;
+            ULTIMO_ASPECTOS = aspectos;
+ 
+            renderizarBalanço(astros);
+            renderizarAstrosExpansivel(astros);
+            renderizarCasasExpansivel(casas, astros);
+            renderizarAspectosExpansivel(aspectos);
+            gerarMatrizHtml(astros, aspectos);
+            desenharRodaSVG(astros, casas, asc);
+        }
+ 
+        window.onload = () => {
+            const agora = new Date();
+            document.getElementById('anoRevolucao').value = agora.getFullYear();
+            document.getElementById('date').value = agora.toISOString().split('T')[0];
+            document.getElementById('time').value = agora.toTimeString().split(' ')[0].substring(0, 5);
+
+            document.getElementById('cidadeInput').addEventListener('keypress', function (e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    buscarCoordenadas();
+                }
+            });
+ 
+            executarTudo();
+        };
+    </script>
+</body>
+</html>
