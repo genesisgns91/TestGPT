@@ -938,16 +938,35 @@
                 .map(asp => `${asp.astro1} em ${asp.aspecto} com ${asp.astro2} (orbe ${asp.orbe}°)`)
                 .join('; ');
 
-            const promptText = `Atue como um astrólogo experiente. Faça uma análise integrada de todos os aspectos planetários a seguir, explicando como eles se conectam e interagem entre si no mapa astral como um todo:
+            const promptText = `Atue como um astrólogo experiente, com abordagem hermética, gnóstica, esotérica e psicológica. Interprete o mapa astral de forma integrada, analisando como planetas, signos, casas e aspectos interagem entre si para revelar tendências da personalidade, conflitos internos, potenciais de desenvolvimento e caminhos de autoconhecimento. Considere o mapa como uma linguagem simbólica da consciência, evitando determinismos, generalizações e interpretações isoladas dos posicionamentos:
 
             ${lista}
 
             Siga estas diretrizes:
-            - Escreva de 4 a 6 parágrafos.
-            - Não analise cada aspecto isoladamente; busque conexões e padrões entre eles (ex: tensões que se repetem, harmonias que se reforçam, planetas muito aspectados que funcionam como "nós" do mapa).
-            - Explique como essa rede de aspectos molda a dinâmica psicológica geral da pessoa.
-            - Use formatação HTML básica com parágrafos <p> e destaques em <strong>.
-            - Tom profissional, acolhedor e profundo.`;
+- Escreva entre 6 e 8 parágrafos.
+- Não faça introduções nem conclusões genéricas. Inicie imediatamente pela interpretação do mapa.
+- Considere a astrologia como uma linguagem simbólica de autoconhecimento. Nunca trate o mapa como destino imutável ou verdade absoluta, mas como um conjunto de tendências, predisposições e potenciais de desenvolvimento da consciência.
+- Adote uma abordagem inspirada nas tradições gnóstica, hermética, esotérica e ocultista clássica, interpretando os símbolos astrológicos como representações de processos internos da psique e da evolução espiritual.
+- Integre conceitos da psicologia profunda (especialmente arquétipos, sombra, persona, individuação, conflitos internos e mecanismos inconscientes), sem transformar a análise em um texto técnico de psicologia.
+- No primeiro parágrafo, sintetize a essência da personalidade integrando Sol, Lua e Ascendente como uma única estrutura, em vez de descrevê-los separadamente.
+- Nos parágrafos seguintes, interprete Mercúrio, Vênus, Marte, Júpiter, Saturno, Urano, Netuno, Plutão, Quíron, Nodo Norte e demais pontos relevantes apenas quando contribuírem significativamente para a compreensão do conjunto.
+- Analise aspectos, dignidades, casas e repetições de padrões, explicando como reforçam, tensionam ou transformam os temas centrais do mapa.
+- Priorize a interpretação do conjunto em vez de listar significados isolados de cada posicionamento.
+- Aponte conflitos internos, potenciais latentes, talentos naturais, padrões repetitivos, mecanismos de autossabotagem e caminhos de amadurecimento.
+- Quando houver aspectos desafiadores, interprete-os como oportunidades de transformação e integração da consciência, evitando qualquer tom fatalista.
+- Sempre relacione os símbolos astrológicos com comportamentos, emoções, formas de perceber a realidade, relacionamentos, propósito e desenvolvimento pessoal.
+- Utilize uma linguagem profunda, contemplativa e objetiva, evitando misticismo superficial, frases motivacionais ou promessas espirituais.
+- Evite qualquer tipo de ranking ou exagero, como:
+  - "Este é o posicionamento mais forte..."
+  - "Esta é a característica mais importante..."
+  - "O maior desafio..."
+  - "O melhor aspecto..."
+- Não utilize listas ou tópicos. Toda a resposta deve ser composta por parágrafos bem conectados.
+- Evite repetir o significado de um mesmo planeta ou signo ao longo do texto.
+- Não utilize frases genéricas que poderiam servir para qualquer pessoa. Cada afirmação deve estar fundamentada na combinação específica dos posicionamentos e aspectos presentes no mapa.
+- Escreva como um astrólogo experiente com sólida formação hermética, filosófica e psicológica, tratando o mapa como um instrumento de investigação da consciência, não de adivinhação.
+- Use formatação HTML simples, empregando apenas <p> para parágrafos e <strong> para destacar conceitos importantes.
+- Mantenha um tom sério, respeitoso, profundo e analítico, sem excesso de linguagem poética.';
 
             iniciarAnaliseIA('Análise Integrada dos Aspectos', promptText);
         }
