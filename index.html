@@ -369,29 +369,27 @@
         }
         @keyframes spin { to { transform: rotate(360deg); } }
     </style>
-<!-- Firebase SDKs -->
-<script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getVertexAI, getGenerativeModel } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-vertexai.js";
 
-    // Suas configurações públicas do Firebase (essas PODE ir no frontend com App Check)
-    const firebaseConfig = {
-        apiKey: "SUA_FIREBASE_API_KEY", // Chave do projeto do Firebase (pública por design)
-        authDomain: "seu-projeto.firebaseapp.com",
-        projectId: "seu-projeto-id",
-        storageBucket: "seu-projeto.appspot.com",
-        messagingSenderId: "123456789",
-        appId: "1:123456789:web:abcdef"
-    };
+    <!-- Firebase SDKs -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+        import { getVertexAI, getGenerativeModel } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-vertexai.js";
 
-    // Inicializa o Firebase e o Vertex AI no Firebase
-    const app = initializeApp(firebaseConfig);
-    const vertexAI = getVertexAI(app);
-    
-    // Deixa o modelo acessível globalmente para a função do seu script
-    window.modelIA = getGenerativeModel(vertexAI, { model: "gemini-1.5-flash" });
-</script>
-    
+        // Substitua pelas credenciais copiadas do seu Firebase Console
+        const firebaseConfig = {
+            apiKey: "SUA_FIREBASE_API_KEY",
+            authDomain: "seu-projeto.firebaseapp.com",
+            projectId: "seu-projeto-id",
+            storageBucket: "seu-projeto.appspot.com",
+            messagingSenderId: "123456789",
+            appId: "1:123456789:web:abcdef"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const vertexAI = getVertexAI(app);
+        
+        window.modelIA = getGenerativeModel(vertexAI, { model: "gemini-1.5-flash" });
+    </script>
 </head>
 <body>
 
@@ -474,15 +472,11 @@
                 <h3 id="modalTitle">✦ Análise do Gemini IA</h3>
                 <button class="modal-close" onclick="fecharModal()">&times;</button>
             </div>
-            <div id="modalBody" class="modal-body">
-                <!-- Conteúdo gerado pela IA vai aqui -->
-            </div>
+            <div id="modalBody" class="modal-body"></div>
         </div>
     </div>
 
     <script>
-const GEMINI_API_KEY = "AQ.Ab8RN6ItHAfAqX9w7qynZV3pupmXp4p1D3q0kL0nc83g4XQX0w";
-
         const SIGNOS_DADOS = [
             { nome: "Áries", simbolo: "♈︎", elemento: "Fogo", ritmo: "Cardinal", polaridade: "Yang" },
             { nome: "Touro", simbolo: "♉︎", elemento: "Terra", ritmo: "Fixo", polaridade: "Yin" },
@@ -836,91 +830,46 @@ const GEMINI_API_KEY = "AQ.Ab8RN6ItHAfAqX9w7qynZV3pupmXp4p1D3q0kL0nc83g4XQX0w";
             });
         }
 
-        // FUNÇÃO DE INTEGRAÇÃO COM GEMINI API
-       // FUNÇÃO DE INTEGRAÇÃO COM GEMINI API
-async function gerarAnaliseIA(combinacao) {
-    const modal = document.getElementById('aiModal');
-    const modalTitle = document.getElementById('modalTitle');
-    const modalBody = document.getElementById('modalBody');
+        // FUNÇÃO DE INTEGRAÇÃO COM FIREBASE AI LOGIC
+        async function gerarAnaliseIA(combinacao) {
+            const modal = document.getElementById('aiModal');
+            const modalTitle = document.getElementById('modalTitle');
+            const modalBody = document.getElementById('modalBody');
 
-    modalTitle.textContent = `✦ Análise: ${combinacao}`;
-    modalBody.innerHTML = `
-        <div class="loading-spinner">
-            <div class="spinner"></div>
-            <p>Consultando as estrelas com Gemini IA...</p>
-        </div>
-    `;
-    modal.classList.add('active');
+            modalTitle.textContent = `✦ Análise: ${combinacao}`;
+            modalBody.innerHTML = `
+                <div class="loading-spinner">
+                    <div class="spinner"></div>
+                    <p>Consultando as estrelas via Firebase AI...</p>
+                </div>
+            `;
+            modal.classList.add('active');
 
-    const promptText = `Atue como um astrólogo experiente e analítico. Faça uma análise detalhada e perspicaz da seguinte posição astrológica: "${combinacao}". 
-    
-    Siga estas diretrizes de resposta:
-    - Escreva de 2 a 3 parágrafos curtos.
-    - Explique o significado psicológico, os desafios e os pontos fortes dessa combinação.
-    - Use formatação HTML básica com parágrafos <p> e destaques em <strong> para facilitar a leitura.
-    - Mantenha um tom profissional, acolhedor e profundo.`;
+            const promptText = `Atue como um astrólogo experiente e analítico. Faça uma análise detalhada e perspicaz da seguinte posição astrológica: "${combinacao}". 
+            
+            Siga estas diretrizes de resposta:
+            - Escreva de 2 a 3 parágrafos curtos.
+            - Explique o significado psicológico, os desafios e os pontos fortes dessa combinação.
+            - Use formatação HTML básica com parágrafos <p> e destaques em <strong> para facilitar a leitura.
+            - Mantenha um tom profissional, acolhedor e profundo.`;
 
-async function gerarAnaliseIA(combinacao) {
-    const modal = document.getElementById('aiModal');
-    const modalTitle = document.getElementById('modalTitle');
-    const modalBody = document.getElementById('modalBody');
+            try {
+                if (!window.modelIA) {
+                    throw new Error("SDK do Firebase AI Logic ainda não foi carregado.");
+                }
 
-    modalTitle.textContent = `✦ Análise: ${combinacao}`;
-    modalBody.innerHTML = `
-        <div class="loading-spinner">
-            <div class="spinner"></div>
-            <p>Consultando as estrelas via Firebase AI...</p>
-        </div>
-    `;
-    modal.classList.add('active');
+                const result = await window.modelIA.generateContent(promptText);
+                const responseText = result.response.text();
 
-    const promptText = `Atue como um astrólogo experiente e analítico. Faça uma análise detalhada e perspicaz da seguinte posição astrológica: "${combinacao}". 
-    
-    Siga estas diretrizes de resposta:
-    - Escreva de 2 a 3 parágrafos curtos.
-    - Explique o significado psicológico, os desafios e os pontos fortes dessa combinação.
-    - Use formatação HTML básica com parágrafos <p> e destaques em <strong> para facilitar a leitura.
-    - Mantenha um tom profissional, acolhedor e profundo.`;
+                let textResult = responseText.replace(/```html/g, '').replace(/```/g, '');
+                modalBody.innerHTML = textResult;
 
-    try {
-        if (!window.modelIA) {
-            throw new Error("SDK do Firebase AI Logic ainda não foi carregado.");
+            } catch (err) {
+                console.error(err);
+                modalBody.innerHTML = `<p style="color:var(--fogo);"><strong>Erro ao chamar o Firebase AI:</strong> ${err.message}</p>`;
+            }
         }
 
-        // Chama a IA diretamente via SDK do Firebase Vertex AI
-        const result = await window.modelIA.generateContent(promptText);
-        const responseText = result.response.text();
-
-        let textResult = responseText.replace(/```html/g, '').replace(/```/g, '');
-        modalBody.innerHTML = textResult;
-
-    } catch (err) {
-        console.error(err);
-        modalBody.innerHTML = `<p style="color:var(--fogo);"><strong>Erro ao chamar o Firebase AI:</strong> ${err.message}</p>`;
-    }
-}
-    const data = await response.json();
-  
-
-        if (!response.ok) {
-            // Mostra o motivo exato se for 401, 403, etc.
-            const apiError = data.error?.message || "Erro de autorização.";
-            modalBody.innerHTML = `<p style="color:var(--fogo);"><strong>Erro (${response.status}):</strong> ${apiError}</p>`;
-            return;
-        }
-
-        if (data.candidates && data.candidates[0]?.content?.parts[0]?.text) {
-            let textResult = data.candidates[0].content.parts[0].text;
-            textResult = textResult.replace(/```html/g, '').replace(/```/g, '');
-            modalBody.innerHTML = textResult;
-        } else {
-            modalBody.innerHTML = `<p style="color:var(--fogo);">Não foi possível obter a resposta da IA.</p>`;
-        }
-    } catch (err) {
-        console.error(err);
-        modalBody.innerHTML = `<p style="color:var(--fogo);">Erro ao conectar com a API da Gemini: ${err.message}</p>`;
-    }
-}
         function fecharModal() {
             document.getElementById('aiModal').classList.remove('active');
         }
@@ -940,30 +889,26 @@ async function gerarAnaliseIA(combinacao) {
             desenharRodaSVG(astros, casas, asc);
         }
 
-// CÓDIGO NOVO (COLOQUE ESTE NO LUGAR)
-window.onload = () => {
-    const agora = new Date();
-    
-    // Formatação local correta (YYYY-MM-DD e HH:MM) sem bug de fuso UTC
-    const ano = agora.getFullYear();
-    const mes = String(agora.getMonth() + 1).padStart(2, '0');
-    const dia = String(agora.getDate()).padStart(2, '0');
-    const horas = String(agora.getHours()).padStart(2, '0');
-    const minutos = String(agora.getMinutes()).padStart(2, '0');
+        window.onload = () => {
+            const agora = new Date();
+            
+            const ano = agora.getFullYear();
+            const mes = String(agora.getMonth() + 1).padStart(2, '0');
+            const dia = String(agora.getDate()).padStart(2, '0');
+            const horas = String(agora.getHours()).padStart(2, '0');
+            const minutos = String(agora.getMinutes()).padStart(2, '0');
 
-    document.getElementById('date').value = `${ano}-${mes}-${dia}`;
-    document.getElementById('time').value = `${horas}:${minutos}`;
+            document.getElementById('date').value = `${ano}-${mes}-${dia}`;
+            document.getElementById('time').value = `${horas}:${minutos}`;
 
-    // Adiciona o gatilho para recalcular AUTOMATICAMENTE ao mudar qualquer campo
-    const inputs = document.querySelectorAll('#astrologyForm input');
-    inputs.forEach(input => {
-        input.addEventListener('change', executarTudo);
-        input.addEventListener('input', executarTudo);
-    });
+            const inputs = document.querySelectorAll('#astrologyForm input');
+            inputs.forEach(input => {
+                input.addEventListener('change', executarTudo);
+                input.addEventListener('input', executarTudo);
+            });
 
-    // Executa a primeira vez ao carregar
-    executarTudo();
-};
+            executarTudo();
+        };
     </script>
 </body>
 </html>
