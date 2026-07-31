@@ -369,6 +369,29 @@
         }
         @keyframes spin { to { transform: rotate(360deg); } }
     </style>
+<!-- Firebase SDKs -->
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getVertexAI, getGenerativeModel } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-vertexai.js";
+
+    // Suas configurações públicas do Firebase (essas PODE ir no frontend com App Check)
+    const firebaseConfig = {
+        apiKey: "SUA_FIREBASE_API_KEY", // Chave do projeto do Firebase (pública por design)
+        authDomain: "seu-projeto.firebaseapp.com",
+        projectId: "seu-projeto-id",
+        storageBucket: "seu-projeto.appspot.com",
+        messagingSenderId: "123456789",
+        appId: "1:123456789:web:abcdef"
+    };
+
+    // Inicializa o Firebase e o Vertex AI no Firebase
+    const app = initializeApp(firebaseConfig);
+    const vertexAI = getVertexAI(app);
+    
+    // Deixa o modelo acessível globalmente para a função do seu script
+    window.modelIA = getGenerativeModel(vertexAI, { model: "gemini-1.5-flash" });
+</script>
+    
 </head>
 <body>
 
@@ -837,24 +860,45 @@ async function gerarAnaliseIA(combinacao) {
     - Use formatação HTML básica com parágrafos <p> e destaques em <strong> para facilitar a leitura.
     - Mantenha um tom profissional, acolhedor e profundo.`;
 
-// SUBSTITUA A LINHA DO ENDPOINT E DO FETCH POR ESTA:
+async function gerarAnaliseIA(combinacao) {
+    const modal = document.getElementById('aiModal');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalBody = document.getElementById('modalBody');
 
-const cleanKey = GEMINI_API_KEY.trim();
-// Endpoint sem a chave na URL
-const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent`;
+    modalTitle.textContent = `✦ Análise: ${combinacao}`;
+    modalBody.innerHTML = `
+        <div class="loading-spinner">
+            <div class="spinner"></div>
+            <p>Consultando as estrelas via Firebase AI...</p>
+        </div>
+    `;
+    modal.classList.add('active');
 
-try {
-    const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: { 
-            'Content-Type': 'application/json',
-            'x-goog-api-key': cleanKey // <--- Passando a chave no Header do Google
-        },
-        body: JSON.stringify({
-            contents: [{ parts: [{ text: promptText }] }]
-        })
-    });
+    const promptText = `Atue como um astrólogo experiente e analítico. Faça uma análise detalhada e perspicaz da seguinte posição astrológica: "${combinacao}". 
+    
+    Siga estas diretrizes de resposta:
+    - Escreva de 2 a 3 parágrafos curtos.
+    - Explique o significado psicológico, os desafios e os pontos fortes dessa combinação.
+    - Use formatação HTML básica com parágrafos <p> e destaques em <strong> para facilitar a leitura.
+    - Mantenha um tom profissional, acolhedor e profundo.`;
 
+    try {
+        if (!window.modelIA) {
+            throw new Error("SDK do Firebase AI Logic ainda não foi carregado.");
+        }
+
+        // Chama a IA diretamente via SDK do Firebase Vertex AI
+        const result = await window.modelIA.generateContent(promptText);
+        const responseText = result.response.text();
+
+        let textResult = responseText.replace(/```html/g, '').replace(/```/g, '');
+        modalBody.innerHTML = textResult;
+
+    } catch (err) {
+        console.error(err);
+        modalBody.innerHTML = `<p style="color:var(--fogo);"><strong>Erro ao chamar o Firebase AI:</strong> ${err.message}</p>`;
+    }
+}
     const data = await response.json();
   
 
