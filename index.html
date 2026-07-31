@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="theme-color" content="#0d1117">
-    <title>Astro-Bot</title>
+    <title>Astro</title>
     
     <style>
         :root {
@@ -166,15 +166,6 @@
             padding-bottom: 6px;
         }
         .balance-card h3 { color: var(--destaque); font-size: 0.95rem; }
- 
-        .ia-clickable {
-            cursor: pointer;
-            transition: border-color 0.2s, box-shadow 0.2s;
-        }
-        .ia-clickable:hover {
-            border-color: var(--ia-color);
-            box-shadow: 0 0 0 1px var(--ia-color);
-        }
  
         .progress-item { margin-bottom: 10px; }
         .progress-info { display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 4px; }
@@ -432,38 +423,38 @@
         </form>
  
         <div class="dashboard-grid">
-            <div class="chart-card ia-clickable" onclick="dispararAnaliseMapaCompleto()">
+            <div class="chart-card">
                 <div class="chart-card-header">
                     <h2>Roda Astrológica</h2>
-                    <button class="btn-ia" onclick="event.stopPropagation(); dispararAnaliseMapaCompleto()">✦ Análise IA</button>
+                    <button class="btn-ia" onclick="dispararAnaliseMapaCompleto()">✦ Análise IA</button>
                 </div>
                 <svg id="chartSvg" viewBox="0 0 600 600"></svg>
             </div>
  
             <div class="balance-container">
-                <div class="balance-card ia-clickable" onclick="dispararAnaliseBalanco('elementos')">
+                <div class="balance-card">
                     <div>
                         <div class="balance-card-header">
                             <h3>Elementos</h3>
-                            <button class="btn-ia" onclick="event.stopPropagation(); dispararAnaliseBalanco('elementos')">✦ Análise IA</button>
+                            <button class="btn-ia" onclick="dispararAnaliseBalanco('elementos')">✦ Análise IA</button>
                         </div>
                         <div id="elementosBars"></div>
                     </div>
                 </div>
-                <div class="balance-card ia-clickable" onclick="dispararAnaliseBalanco('ritmos')">
+                <div class="balance-card">
                     <div>
                         <div class="balance-card-header">
                             <h3>Modalidades / Ritmos</h3>
-                            <button class="btn-ia" onclick="event.stopPropagation(); dispararAnaliseBalanco('ritmos')">✦ Análise IA</button>
+                            <button class="btn-ia" onclick="dispararAnaliseBalanco('ritmos')">✦ Análise IA</button>
                         </div>
                         <div id="ritmosBars"></div>
                     </div>
                 </div>
-                <div class="balance-card ia-clickable" onclick="dispararAnaliseBalanco('polaridades')">
+                <div class="balance-card">
                     <div>
                         <div class="balance-card-header">
                             <h3>Polaridades</h3>
-                            <button class="btn-ia" onclick="event.stopPropagation(); dispararAnaliseBalanco('polaridades')">✦ Análise IA</button>
+                            <button class="btn-ia" onclick="dispararAnaliseBalanco('polaridades')">✦ Análise IA</button>
                         </div>
                         <div id="polaridadesBars"></div>
                     </div>
@@ -475,11 +466,16 @@
             <h3>Posições Astrológicas Detalhadas (Clique para Expandir)</h3>
             <div id="astrosExpandList" class="expand-list" style="margin-top: 10px;"></div>
         </div>
+
+        <div class="card-table">
+            <h3>Casas Astrológicas Detalhadas (Clique para Expandir)</h3>
+            <div id="casasExpandList" class="expand-list" style="margin-top: 10px;"></div>
+        </div>
  
-        <div class="card-table ia-clickable" onclick="dispararAnaliseAspectosCompleta()">
+        <div class="card-table">
             <div class="card-table-header">
                 <h3>Matriz de Aspectos</h3>
-                <button class="btn-ia" onclick="event.stopPropagation(); dispararAnaliseAspectosCompleta()">✦ Análise IA</button>
+                <button class="btn-ia" onclick="dispararAnaliseAspectosCompleta()">✦ Análise IA</button>
             </div>
             <div class="matrix-desktop-container">
                 <table id="matrixAspectos" class="aspect-matrix"></table>
@@ -520,6 +516,21 @@
             { nome: "Aquário", simbolo: "♒︎", elemento: "Ar", ritmo: "Fixo", polaridade: "Yang" },
             { nome: "Peixes", simbolo: "♓︎", elemento: "Água", ritmo: "Mutável", polaridade: "Yin" }
         ];
+
+        const DEFINICAO_CASAS = {
+            1: "Identity, aparência física, vitalidade, comportamento inicial e a 'máscara social' (Ascendente).",
+            2: "Recursos financeiros, valores pessoais, talentos práticos, autoestima e segurança material.",
+            3: "Comunicação, mente concreta, aprendizado prático, relação com irmãos e viagens curtas.",
+            4: "Lar, origens, família, raízes psíquicas, ancestralidade e o sentimento de segurança íntima.",
+            5: "Criatividade, autoexpressão, romances, filhos, prazeres, jogos e projetos autorais.",
+            6: "Rotina de trabalho, saúde, hábitos diários, organização, disciplina e prestação de serviço.",
+            7: "Parcerias de longo prazo, casamento, sociedade de negócios, acordos formais e o 'outro'.",
+            8: "Transformação profunda, recursos compartilhados, heranças, intimidade sexual e regeneração.",
+            9: "Filosofia de vida, ensino superior, viagens longas, expansão da consciência e crenças.",
+            10: "Carreira, imagem pública, reputação, autoridade, vocação e grandes conquistas (Meio do Céu).",
+            11: "Grupos, amizades, projetos coletivos, causas sociais, esperanças e sonhos para o futuro.",
+            12: "Subconsciente, espiritualidade, recolhimento, encerramento de ciclos e cura interna."
+        };
 
         const DEFINICAO_ASTROS = {
             "Sol": "O Sol representa a sua essência vital, a sua identidade fundamental, o ego consciente e o propósito de vida.",
@@ -743,6 +754,47 @@
                 `;
             }).join('');
         }
+
+        function renderizarCasasExpansivel(casas, astros) {
+            const container = document.getElementById('casasExpandList');
+            container.innerHTML = casas.map((grauCasa, index) => {
+                const numCasa = index + 1;
+                const sIdx = Math.floor(grauCasa / 30) % 12;
+                const signoCuspide = SIGNOS_DADOS[sIdx];
+                
+                // Astros presentes nesta casa
+                const astrosNaCasa = astros.filter(a => a.casa === numCasa);
+                const nomesAstros = astrosNaCasa.length > 0 
+                    ? astrosNaCasa.map(a => `${SIMBOLOS_ASTROS[a.nome] || ''} ${a.nome}`).join(', ')
+                    : 'Nenhum planeta presente (Casa Vazia)';
+
+                const contextoAnalise = `Casa ${numCasa} em ${signoCuspide.nome} com os astros: ${astrosNaCasa.map(a => a.nome).join(', ') || 'Sem planetas'}`;
+
+                return `
+                    <div class="expand-card">
+                        <div class="expand-header" onclick="this.parentElement.classList.toggle('open')">
+                            <div class="expand-title">
+                                <span style="color:var(--destaque); font-weight:bold;">Casa ${numCasa}</span>
+                                <span>em ${signoCuspide.nome} ${signoCuspide.simbolo}</span>
+                            </div>
+                            <div style="display:flex; align-items:center; gap:8px;">
+                                <span class="expand-badge">${astrosNaCasa.length} astro(s)</span>
+                                <span class="arrow-icon">▼</span>
+                            </div>
+                        </div>
+                        <div class="expand-content">
+                            <p style="margin-bottom: 8px;"><strong>Área da Vida (Rege):</strong> ${DEFINICAO_CASAS[numCasa]}</p>
+                            <p style="margin-bottom: 8px;"><strong>Cúspide (Início):</strong> ${signoCuspide.nome} (${formatarDMS(grauCasa)})</p>
+                            <p style="margin-bottom: 6px;"><strong>Ocupantes:</strong> ${nomesAstros}</p>
+                            
+                            <button class="btn-ia btn-ia-inline" onclick="event.stopPropagation(); dispararAnaliseCasaIA('${contextoAnalise}')">
+                                ✦ Gerar Análise Profunda da Casa com IA
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
  
         function renderizarAspectosExpansivel(aspectos) {
             const container = document.getElementById('aspectosExpandList');
@@ -897,6 +949,18 @@
  
             iniciarAnaliseIA(`Análise: ${combinacao}`, promptText);
         }
+
+        function dispararAnaliseCasaIA(contextoCasa) {
+            const promptText = `Atue como um astrólogo experiente. Faça uma análise focada na seguinte Casa Astrológica: "${contextoCasa}".
+            Siga estas diretrizes:
+            - Explique o que a área da vida desta casa representa para a pessoa de acordo com o signo em sua cúspide.
+            - Se houver planetas/astros presentes na casa, detalhe como a presença deles energiza, intensifica ou traz desafios para este campo da vida. Caso a casa esteja vazia, explique como a regência do signo orienta essa área.
+            - Escreva de 3 a 4 parágrafos curtos.
+            - Use formatação HTML básica com parágrafos <p> e destaques em <strong>.
+            - Tom profissional, acolhedor e profundo.`;
+
+            iniciarAnaliseIA(`Análise de Casa Astrológica`, promptText);
+        }
  
         function dispararAnaliseBalanco(tipo) {
             if (!ULTIMO_ASTROS.length) return;
@@ -1030,6 +1094,7 @@
  
             renderizarBalanço(astros);
             renderizarAstrosExpansivel(astros);
+            renderizarCasasExpansivel(casas, astros);
             renderizarAspectosExpansivel(aspectos);
             gerarMatrizHtml(astros, aspectos);
             desenharRodaSVG(astros, casas, asc);
