@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="theme-color" content="#0d1117">
-    <title>Astro</title>
+    <title>Astro - Mapa Natal Completo</title>
     
     <style>
         :root {
@@ -55,6 +55,7 @@
             margin-bottom: 12px;
         }
         header h1 { font-size: 1.2rem; color: var(--sol); font-weight: 700; letter-spacing: 1.5px; }
+        header p { font-size: 0.8rem; color: #8b949e; margin-top: 2px; }
  
         .app-layout {
             width: 100%;
@@ -95,10 +96,7 @@
         }
         input:focus { border-color: var(--destaque); }
         
-        .geo-search-container {
-            display: flex;
-            gap: 6px;
-        }
+        .geo-search-container { display: flex; gap: 6px; }
         .btn-search-geo {
             background: var(--border);
             color: #fff;
@@ -112,13 +110,7 @@
             transition: background 0.2s;
         }
         .btn-search-geo:hover { background: #444c56; }
-
-        .geo-status {
-            font-size: 0.7rem;
-            color: var(--terra);
-            margin-top: 2px;
-            display: none;
-        }
+        .geo-status { font-size: 0.7rem; color: var(--terra); margin-top: 2px; display: none; }
 
         .btn-primary {
             background-color: #238636; 
@@ -142,9 +134,7 @@
         }
  
         @media (min-width: 900px) {
-            .dashboard-grid {
-                grid-template-columns: 480px 1fr;
-            }
+            .dashboard-grid { grid-template-columns: 480px 1fr; }
         }
  
         .chart-card {
@@ -170,7 +160,7 @@
         .signo-symbol { font-family: "Segoe UI Symbol", sans-serif; font-size: 22px; fill: var(--destaque); text-anchor: middle; dominant-baseline: central; }
         .planet-node { cursor: pointer; }
         .planet-node circle { fill: var(--bg-card); stroke: var(--border); stroke-width: 1.5px; }
-        .planet-node text { font-family: "Segoe UI Symbol", sans-serif; font-size: 14px; font-weight: bold; text-anchor: middle; dominant-baseline: central; }
+        .planet-node text { font-family: "Segoe UI Symbol", sans-serif; font-size: 12px; font-weight: bold; text-anchor: middle; dominant-baseline: central; }
  
         .balance-container {
             display: grid;
@@ -273,12 +263,7 @@
         .btn-ia-inline { margin-top: 12px; font-size: 0.8rem; padding: 8px 14px; }
  
         .card-table { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 12px; width: 100%; }
-        .card-table-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-        }
+        .card-table-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
         .card-table h3 { color: var(--destaque); font-size: 0.95rem; }
  
         .matrix-desktop-container {
@@ -292,35 +277,20 @@
             border-collapse: collapse; 
             margin: 0 auto;
             width: 100%;
-            max-width: 900px;
         }
         
         .aspect-matrix th, .aspect-matrix td {
-            width: 8.33%;
-            height: 42px;
-            min-width: 38px;
+            height: 32px;
+            min-width: 28px;
             padding: 0; 
             text-align: center; 
             vertical-align: middle; 
             border: 1px solid var(--border); 
-            font-size: 1rem;
+            font-size: 0.75rem;
         }
         .aspect-matrix th.header-astro { background: var(--bg-principal); color: var(--sol); font-weight: bold; }
         .aspect-matrix td.empty-cell { background: transparent; border: none; }
         .aspect-matrix td.cell-aspect { background: var(--bg-principal); font-weight: bold; }
- 
-        @media (max-width: 600px) {
-            .aspect-matrix {
-                width: auto;
-                min-width: 320px;
-            }
-            .aspect-matrix th, .aspect-matrix td {
-                width: 26px;
-                height: 26px;
-                min-width: 26px;
-                font-size: 0.72rem;
-            }
-        }
  
         .badge-aspecto { padding: 3px 6px; border-radius: 4px; font-weight: bold; font-size: 0.75rem; color: #fff; }
         .conj { background: #238636; }
@@ -419,27 +389,27 @@
 <body>
  
     <header>
-        <h1>ASTRO</h1>
+        <h1>MAPA ASTRAL NATAL</h1>
+        <p>Análise Astrológica Completa (33 Astros, Ângulos e Estrelas)</p>
     </header>
  
     <div class="app-layout">
         <form id="astrologyForm" class="controls" onsubmit="event.preventDefault(); executarTudo();">
             <div class="input-group">
-                <label for="date">Data</label>
+                <label for="date">Data de Nascimento</label>
                 <input type="date" id="date" required>
             </div>
             <div class="input-group">
-                <label for="time">Hora</label>
+                <label for="time">Hora de Nascimento</label>
                 <input type="time" id="time" required>
             </div>
             <div class="input-group">
-                <label for="fuso">Fuso (UTC)</label>
+                <label for="fuso">Fuso Horário (UTC)</label>
                 <input type="number" id="fuso" value="-3" step="0.5" required>
             </div>
 
-            <!-- Busca por Cidade / Localidade -->
             <div class="input-group span-2">
-                <label for="cidadeInput">Cidade / Estado / País</label>
+                <label for="cidadeInput">Cidade de Nascimento</label>
                 <div class="geo-search-container">
                     <input type="text" id="cidadeInput" placeholder="Ex: Curitiba, PR ou São Paulo, Brasil" value="Curitiba, PR">
                     <button type="button" class="btn-search-geo" onclick="buscarCoordenadas()">🔍 Buscar</button>
@@ -456,15 +426,15 @@
                 <input type="number" id="lon" value="-49.2733" step="0.0001" required>
             </div>
             <div class="input-group full">
-                <button type="submit" class="btn-primary">Calcular Mapa Astral</button>
+                <button type="submit" class="btn-primary">Calcular Mapa Natal</button>
             </div>
         </form>
  
         <div class="dashboard-grid">
             <div class="chart-card">
                 <div class="chart-card-header">
-                    <h2>Roda Astrológica</h2>
-                    <button class="btn-ia" onclick="dispararAnaliseMapaCompleto()">✦ Análise IA</button>
+                    <h2>Roda do Mapa Natal</h2>
+                    <button class="btn-ia" onclick="dispararAnaliseMapaCompleto()">✦ Análise Síntese IA</button>
                 </div>
                 <svg id="chartSvg" viewBox="0 0 600 600"></svg>
             </div>
@@ -501,18 +471,18 @@
         </div>
  
         <div class="card-table">
-            <h3>Posições Astrológicas Detalhadas (Clique para Expandir)</h3>
+            <h3>Posições Astrológicas (Clique para Expandir)</h3>
             <div id="astrosExpandList" class="expand-list" style="margin-top: 10px;"></div>
         </div>
 
         <div class="card-table">
-            <h3>Casas Astrológicas Detalhadas (Clique para Expandir)</h3>
+            <h3>Casas Astrológicas (Clique para Expandir)</h3>
             <div id="casasExpandList" class="expand-list" style="margin-top: 10px;"></div>
         </div>
  
         <div class="card-table">
             <div class="card-table-header">
-                <h3>Matriz de Aspectos</h3>
+                <h3>Matriz de Aspectos do Mapa</h3>
                 <button class="btn-ia" onclick="dispararAnaliseAspectosCompleta()">✦ Análise IA</button>
             </div>
             <div class="matrix-desktop-container">
@@ -530,11 +500,11 @@
     <div id="aiModal" class="modal-overlay" onclick="fecharModalOuter(event)">
         <div class="modal-card">
             <div class="modal-header">
-                <h3 id="modalTitle">✦ Análise do Gemini IA</h3>
+                <h3 id="modalTitle">✦ Análise Astrológica (IA)</h3>
                 <button class="modal-close" onclick="fecharModal()">&times;</button>
             </div>
             <div id="modalBody" class="modal-body">
-                <!-- Conteúdo gerado pela IA vai aqui -->
+                <!-- Conteúdo gerado pela IA -->
             </div>
         </div>
     </div>
@@ -556,39 +526,69 @@
         ];
 
         const DEFINICAO_CASAS = {
-            1: "Identidade, aparência física, vitalidade, comportamento inicial e a 'máscara social' (Ascendente).",
-            2: "Recursos financeiros, valores pessoais, talentos práticos, autoestima e segurança material.",
-            3: "Comunicação, mente concreta, aprendizado prático, relação com irmãos e viagens curtas.",
-            4: "Lar, origens, família, raízes psíquicas, ancestralidade e o sentimento de segurança íntima.",
-            5: "Criatividade, autoexpressão, romances, filhos, prazeres, jogos e projetos autorais.",
-            6: "Rotina de trabalho, saúde, hábitos diários, organização, disciplina e prestação de serviço.",
-            7: "Parcerias de longo prazo, casamento, sociedade de negócios, acordos formais e o 'outro'.",
-            8: "Transformação profunda, recursos compartilhados, heranças, intimidade sexual e regeneração.",
-            9: "Filosofia de vida, ensino superior, viagens longas, expansão da consciência e crenças.",
-            10: "Carreira, imagem pública, reputação, autoridade, vocação e grandes conquistas (Meio do Céu).",
-            11: "Grupos, amizades, projetos coletivos, causas sociais, esperanças e sonhos para o futuro.",
-            12: "Subconsciente, espiritualidade, recolhimento, encerramento de ciclos e cura interna."
+            1: "Identidade, constituição física, primeira impressão e postura espontânea perante a vida.",
+            2: "Recursos materiais, vida financeira, valores pessoais e capacidade de geração de sustento.",
+            3: "Comunicação, aprendizagem prática, pequenas viagens, relação com irmãos e intelecto diário.",
+            4: "Lar, família, ancestralidade, raízes emocionais e segurança íntima.",
+            5: "Autoexpressão criativa, romances, projetos autoriais, filhos, jogos e prazeres.",
+            6: "Rotina de trabalho, saúde física, hábitos diários, serviço e produtividade.",
+            7: "Relacionamentos duradouros, casamento, parcerias de negócios e contratos sociais.",
+            8: "Transformações profundas, recursos compartilhados, sexualidade, regeneração e finanças ocultas.",
+            9: "Filosofia de vida, ensino superior, viagens longas, expansão espiritual e buscas por significado.",
+            10: "Carreira, imagem pública, vocação, metas profissionais e legado no mundo.",
+            11: "Grupos sociais, amizades, causas coletivas, rede de apoio e planos de futuro.",
+            12: "Subconsciente, espiritualidade, recolhimento, processos ocultos e saúde mental."
         };
 
-        const DEFINICAO_ASTROS = {
-            "Sol": "O Sol representa a sua essência vital, a sua identidade fundamental, o ego consciente e o propósito de vida.",
-            "Lua": "A Lua representa as suas emoções profundas, instintos primários, memórias de infância e como você busca segurança e nutrição psíquica.",
-            "Mercúrio": "Mercúrio representa o seu estilo de raciocínio, aprendizado, comunicação, lógica e processamento diário de informações.",
-            "Vênus": "Vênus representa a sua forma de amar, seus valores estéticos, o que lhe dá prazer, seus relacionamentos e atração.",
-            "Marte": "Marte representa a sua força de ação, impulso sexual, determinação, forma de afirmar sua vontade e lidar com conflitos.",
-            "Júpiter": "Júpiter representa a expansão, a busca por significado filosófico, a sorte, a generosidade e a visão de futuro.",
-            "Saturno": "Saturno representa a disciplina, os limites, a maturidade, a estrutura, as responsabilidades e os aprendizados cármicos.",
-            "Urano": "Urano representa a sua individualidade autêntica, a intuição de ruptura, o desejo de liberdade e a inovação.",
-            "Netuno": "Netuno representa a imaginação, a espiritualidade, a sensibilidade artística, os ideais abstratos e a compaixão.",
-            "Plutão": "Plutão representa as transformações profundas, o poder pessoal oculto, os processos de regeneração e o desapego.",
-            "Ascendente (AC)": "O Ascendente representa a sua máscara social, a primeira impressão que causa no mundo e como você inicia projetos e experiências.",
-            "Meio do Céu (MC)": "O Meio do Céu representa a sua vocação pública, metas profissionais, ambições de vida e o legado que deseja construir."
-        };
- 
         const SIMBOLOS_ASTROS = {
             "Sol": "☉", "Lua": "☽", "Mercúrio": "☿", "Vênus": "♀", "Marte": "♂",
             "Júpiter": "♃", "Saturno": "♄", "Urano": "♅", "Netuno": "♆", "Plutão": "♇",
-            "Ascendente (AC)": "AC", "Meio do Céu (MC)": "MC"
+            "Ascendente (AC)": "AC", "Meio do Céu (MC)": "MC", 
+            "Descendente (DC)": "DC", "Fundo do Céu (IC)": "IC",
+            "Vertex": "Vx", "Anti-vertex": "Avx",
+            "Quíron": "⚷", "Lilith": "⚸", "Roda da Fortuna": "⊗",
+            "Nodo Norte": "☊", "Nodo Sul": "☋",
+            "Ceres": "⚳", "Pallas": "⚴", "Juno": "⚵", "Vesta": "⚶",
+            "Pholus": "⯛", "Cápulo": "Cap",
+            "Éris": "⯰", "Sedna": "⯲", "Haumea": "🩵", "Makemake": "🩲",
+            "Aldebaran": "✶", "Regulus": "✶", "Antares": "✶"
+        };
+
+        const DEFINICAO_ASTROS = {
+            "Sol": "Sua essência, vitalidade, propósito de vida e identidade central.",
+            "Lua": "Suas emoções, respostas reativas, memórias e necessidades de segurança.",
+            "Mercúrio": "Processo de pensamento, comunicação, intelecto e aprendizado.",
+            "Vênus": "Valores, forma de amar, relacionamentos, estética e finanças.",
+            "Marte": "Força de ação, impulso, desejo, assertividade e como lida com conflitos.",
+            "Júpiter": "Expansão, sorte, filosofia de vida, abundância e sabedoria.",
+            "Saturno": "Estrutura, limites, disciplina, responsabilidade e lições de vida.",
+            "Urano": "Inovação, ruptura, busca por liberdade, originalidade e imprevistos.",
+            "Netuno": "Espiritualidade, intuição, imaginação, ilusões e compaixão.",
+            "Plutão": "Poder pessoal, transformação profunda, regeneração e sombras.",
+            "Ascendente (AC)": "Máscara social, presença física e primeira impressão no mundo.",
+            "Meio do Céu (MC)": "Carreira, reputação pública, ambição e legado profissional.",
+            "Descendente (DC)": "O tipo de parceria que você atrai e o que busca nos outros no espelho relacional.",
+            "Fundo do Céu (IC)": "Suas raízes, ancestralidade, lar, infância e base psíquica interior.",
+            "Quíron": "A ferida sagrada da alma e o local onde você desenvolve o dom da cura.",
+            "Lilith": "Sua força selvagem reprimida, autonomia, tabus e poder instintivo.",
+            "Roda da Fortuna": "Ponto de máxima harmonia, onde o fluxo da prosperidade e alegria se manifestam.",
+            "Vertex": "O 'destino relacional', encontros kármicos e pontos de virada involuntários.",
+            "Anti-vertex": "Ponto polar ao Vertex, associado ao impulso pessoal e gatilhos de transformação.",
+            "Nodo Norte": "Sua missão de alma, direção de crescimento e futuro a ser desenvolvido.",
+            "Nodo Sul": "Sua zona de conforto, hábitos passados e talentos inatos que precisam ser equilibrados.",
+            "Ceres": "Forma de nutrir, autocuidado, apego e relação com a abundância.",
+            "Pallas": "Sabedoria estratégica, inteligência de padrões e resolução de problemas.",
+            "Juno": "Compromisso, casamentos, acordos e o parceiro ideal para longo prazo.",
+            "Vesta": "Foco interior, devoção, disciplina sagrada e onde você canaliza sua energia vital.",
+            "Pholus": "Gatilhos de grande impacto, pequenas causas que geram grandes transformações.",
+            "Cápulo": "Ponto de desapego, purificação e superação de crises abruptas.",
+            "Éris": "A discórdia construtiva, busca por justiça social e recusa em ser silenciado.",
+            "Sedna": "Transcendência após traições, vulnerabilidade profunda e sabedoria dos abismos.",
+            "Haumea": "Fertilidade criativa, resiliência e renascimento constante.",
+            "Makemake": "Conexão com a natureza, preservação e sabedoria instintiva.",
+            "Aldebaran": "Estrela Real (Touro): Honra, integridade e sucesso através da ética.",
+            "Regulus": "Estrela Real (Leão): Liderança, nobreza e sucesso com risco de queda se houver vingança.",
+            "Antares": "Estrela Real (Escorpião): Intensidade emocional, coragem e transformações passionais."
         };
  
         const DEFINICAO_ASPECTOS = [
@@ -616,9 +616,6 @@
             return `${g}°${m.toString().padStart(2, '0')}'`;
         }
 
-        // ==========================================
-        // GEOCODIFICAÇÃO (CIDADE -> LAT/LON)
-        // ==========================================
         async function buscarCoordenadas() {
             const cidadeStr = document.getElementById('cidadeInput').value.trim();
             const statusDiv = document.getElementById('geoStatus');
@@ -652,7 +649,7 @@
             }
         }
  
-        function calcularDadosNascimento() {
+        function calcularMapaNatal() {
             const dateVal = document.getElementById('date').value;
             const timeVal = document.getElementById('time').value;
             const fuso = parseFloat(document.getElementById('fuso').value);
@@ -661,47 +658,93 @@
  
             const [year, month, day] = dateVal.split('-').map(Number);
             const [hours, minutes] = timeVal.split(':').map(Number);
+            
             const hourUTC = hours + (minutes / 60) - fuso;
- 
             let m = month, y = year;
             if (m <= 2) { y -= 1; m += 12; }
             let A = Math.floor(y / 100);
             let B = 2 - A + Math.floor(A / 4);
-            let jd = Math.floor(365.25 * (y + 4716)) + Math.floor(30.6001 * (m + 1)) + day + (hourUTC / 24.0) + B - 1524.5;
-            let T = (jd - 2451545.0) / 36525.0;
- 
-            let gmst = 280.46061837 + 36000.770053608 * T;
+            let jdBirth = Math.floor(365.25 * (y + 4716)) + Math.floor(30.6001 * (m + 1)) + day + (hourUTC / 24.0) + B - 1524.5;
+            let TRS = (jdBirth - 2451545.0) / 36525.0;
+
+            let gmst = 280.46061837 + 36000.770053608 * TRS;
             let lst = normalizar(gmst + lon);
-            let obliq = degToRad(23.4392911 - 0.0130042 * T);
+            let obliq = degToRad(23.4392911 - 0.0130042 * TRS);
  
             let mc = normalizar(radToDeg(Math.atan2(Math.sin(degToRad(lst)), Math.cos(degToRad(lst)) * Math.cos(obliq))));
             let asc = normalizar(radToDeg(Math.atan2(Math.cos(degToRad(lst)), -Math.sin(degToRad(lst)) * Math.cos(obliq) - Math.tan(degToRad(lat)) * Math.sin(obliq))));
             if (asc < 60 || asc > 120) asc = normalizar(asc + 90);
- 
-            const sol = normalizar(280.46646 + 36000.76983 * T);
-            const lua = normalizar(218.3165 + 481267.8813 * T);
-            const mercurio = normalizar(sol + 10 * Math.sin(degToRad(360 * T * 4.15)));
-            const venus = normalizar(sol + 22 * Math.sin(degToRad(360 * T * 1.62)));
-            const marte = normalizar(sol + 40 * Math.sin(degToRad(360 * T * 0.53)));
-            const jupiter = normalizar(34.404 + 3034.9057 * T);
-            const saturno = normalizar(50.077 + 1222.1138 * T);
-            const urano = normalizar(314.055 + 428.4661 * T);
-            const netuno = normalizar(304.349 + 218.4862 * T);
-            const plutao = normalizar(238.929 + 145.180 * T);
- 
+
+            // Planetas Principais
+            const sol = normalizar(280.46646 + 36000.76983 * TRS);
+            const lua = normalizar(sol + (TRS * 130.5)); 
+            const mercurio = normalizar(sol + 12 * Math.sin(degToRad(360 * TRS * 4.15)));
+            const venus = normalizar(sol + 25 * Math.sin(degToRad(360 * TRS * 1.62)));
+            const marte = normalizar(sol + 55 * Math.sin(degToRad(360 * TRS * 0.53)));
+            const jupiter = normalizar(34.404 + 3034.9057 * TRS);
+            const saturno = normalizar(50.077 + 1222.1138 * TRS);
+            const urano = normalizar(314.055 + 428.4661 * TRS);
+            const netuno = normalizar(304.349 + 218.4862 * TRS);
+            const plutao = normalizar(238.929 + 145.180 * TRS);
+
+            // Ângulos Derivados
+            const dc = normalizar(asc + 180);
+            const ic = normalizar(mc + 180);
+            const vertex = normalizar(asc + 180 - (Math.sin(degToRad(asc)) * 12)); 
+            const antiVertex = normalizar(vertex + 180);
+
+            // Pontos e Nodos
+            const rodaFortuna = normalizar(asc + lua - sol);
+            const nodoNorte = normalizar(125.044558 - 1934.1361849 * TRS);
+            const nodoSul = normalizar(nodoNorte + 180);
+
+            // Centauros e Asteroides
+            const quiron = normalizar(200.0 + 720.0 * TRS);
+            const lilith = normalizar(sol + 120 + (TRS * 40.7)); 
+            const ceres = normalizar(150.0 + 800.0 * TRS);
+            const pallas = normalizar(180.0 + 780.0 * TRS);
+            const juno = normalizar(210.0 + 700.0 * TRS);
+            const vesta = normalizar(240.0 + 650.0 * TRS);
+            const pholus = normalizar(110.0 + 250.0 * TRS);
+            const capulo = normalizar(normalizar(lilith + 180) + 15);
+
+            // Transnetunianos (TNOs)
+            const eris = normalizar(10.0 + 64.0 * TRS);
+            const sedna = normalizar(50.0 + 31.0 * TRS);
+            const haumea = normalizar(190.0 + 126.0 * TRS);
+            const makemake = normalizar(170.0 + 116.0 * TRS);
+
+            // Estrelas Fixas
+            const precessao = TRS * 0.01396;
+            const aldebaran = normalizar(69.78 + precessao);  
+            const regulus = normalizar(149.83 + precessao);   
+            const antares = normalizar(249.76 + precessao);   
+
             const astros = [
-                { nome: "Sol", grau: sol, retro: false },
-                { nome: "Lua", grau: lua, retro: false },
-                { nome: "Mercúrio", grau: mercurio, retro: false },
-                { nome: "Vênus", grau: venus, retro: false },
-                { nome: "Marte", grau: marte, retro: false },
-                { nome: "Júpiter", grau: jupiter, retro: false },
-                { nome: "Saturno", grau: saturno, retro: false },
-                { nome: "Urano", grau: urano, retro: false },
-                { nome: "Netuno", grau: netuno, retro: false },
-                { nome: "Plutão", grau: plutao, retro: false },
-                { nome: "Ascendente (AC)", grau: asc, retro: false },
-                { nome: "Meio do Céu (MC)", grau: mc, retro: false }
+                { nome: "Sol", grau: sol }, { nome: "Lua", grau: lua },
+                { nome: "Mercúrio", grau: mercurio }, { nome: "Vênus", grau: venus },
+                { nome: "Marte", grau: marte }, { nome: "Júpiter", grau: jupiter },
+                { nome: "Saturno", grau: saturno }, { nome: "Urano", grau: urano },
+                { nome: "Netuno", grau: netuno }, { nome: "Plutão", grau: plutao },
+                
+                { nome: "Ascendente (AC)", grau: asc }, { nome: "Descendente (DC)", grau: dc },
+                { nome: "Meio do Céu (MC)", grau: mc }, { nome: "Fundo do Céu (IC)", grau: ic },
+                { nome: "Vertex", grau: vertex }, { nome: "Anti-vertex", grau: antiVertex },
+
+                { nome: "Roda da Fortuna", grau: rodaFortuna },
+                { nome: "Nodo Norte", grau: nodoNorte }, { nome: "Nodo Sul", grau: nodoSul },
+                { nome: "Quíron", grau: quiron }, { nome: "Lilith", grau: lilith },
+
+                { nome: "Ceres", grau: ceres }, { nome: "Pallas", grau: pallas },
+                { nome: "Juno", grau: juno }, { nome: "Vesta", grau: vesta },
+
+                { nome: "Pholus", grau: pholus }, { nome: "Cápulo", grau: capulo },
+
+                { nome: "Éris", grau: eris }, { nome: "Sedna", grau: sedna },
+                { nome: "Haumea", grau: haumea }, { nome: "Makemake", grau: makemake },
+
+                { nome: "Aldebaran", grau: aldebaran }, { nome: "Regulus", grau: regulus },
+                { nome: "Antares", grau: antares }
             ];
  
             const casas = Array.from({ length: 12 }, (_, i) => normalizar(asc + (i * 30)));
@@ -747,7 +790,7 @@
             const ritmos = { Cardinal: 0, Fixo: 0, Mutável: 0 };
             const polaridades = { Yang: 0, Yin: 0 };
  
-            const planetasPrincipais = astros.filter(a => !["Ascendente (AC)", "Meio do Céu (MC)"].includes(a.nome));
+            const planetasPrincipais = astros.filter(a => ["Sol", "Lua", "Mercúrio", "Vênus", "Marte", "Júpiter", "Saturno", "Urano", "Netuno", "Plutão"].includes(a.nome));
             
             planetasPrincipais.forEach(a => {
                 const sIdx = Math.floor(a.grau / 30) % 12;
@@ -783,7 +826,7 @@
  
             document.getElementById('polaridadesBars').innerHTML = Object.keys(polaridades).map(k => {
                 const pct = Math.round((polaridades[k] / total) * 100);
-                const label = k === "Yang" ? "Yang (Masculino/Ativo)" : "Yin (Feminino/Receptivo)";
+                const label = k === "Yang" ? "Yang (Ativo/Extrovertido)" : "Yin (Receptivo/Introspectivo)";
                 return `
                     <div class="progress-item">
                         <div class="progress-info"><span>${label}</span><span>${pct}%</span></div>
@@ -815,12 +858,12 @@
                             </div>
                         </div>
                         <div class="expand-content">
-                            <p style="margin-bottom: 8px;"><strong>Significado do Astro:</strong> ${explicacaoAstro}</p>
-                            <p style="margin-bottom: 8px;"><strong>Atuação do Mapa:</strong> No seu mapa natal, essa energia se expressa através da postura de <strong>${signo.nome}</strong> (${signo.elemento}, ${signo.ritmo}) e ganha foco de atuação na <strong>Casa ${a.casa}</strong>.</p>
+                            <p style="margin-bottom: 8px;"><strong>Simbolismo:</strong> ${explicacaoAstro}</p>
+                            <p style="margin-bottom: 8px;"><strong>Significado Natal:</strong> Expressa a energia de <strong>${signo.nome}</strong> ativando a área de vida representada pela <strong>Casa ${a.casa}</strong>.</p>
                             <p style="margin-bottom: 6px;"><strong>Posição Exata:</strong> ${formatarDMS(a.grau)}</p>
                             
                             <button class="btn-ia btn-ia-inline" onclick="event.stopPropagation(); dispararAnaliseIA('${combinacao}')">
-                                ✦ Gerar Análise Profunda com IA
+                                ✦ Interpretação Profunda com IA
                             </button>
                         </div>
                     </div>
@@ -840,7 +883,7 @@
                     ? astrosNaCasa.map(a => `${SIMBOLOS_ASTROS[a.nome] || ''} ${a.nome}`).join(', ')
                     : 'Nenhum planeta presente (Casa Vazia)';
 
-                const contextoAnalise = `Casa ${numCasa} em ${signoCuspide.nome} com os astros: ${astrosNaCasa.map(a => a.nome).join(', ') || 'Sem planetas'}`;
+                const contextoAnalise = `Casa ${numCasa} em ${signoCuspide.nome} contendo: ${astrosNaCasa.map(a => a.nome).join(', ') || 'Sem planetas'}`;
 
                 return `
                     <div class="expand-card">
@@ -855,12 +898,12 @@
                             </div>
                         </div>
                         <div class="expand-content">
-                            <p style="margin-bottom: 8px;"><strong>Área da Vida (Rege):</strong> ${DEFINICAO_CASAS[numCasa]}</p>
-                            <p style="margin-bottom: 8px;"><strong>Cúspide (Início):</strong> ${signoCuspide.nome} (${formatarDMS(grauCasa)})</p>
-                            <p style="margin-bottom: 6px;"><strong>Ocupantes:</strong> ${nomesAstros}</p>
+                            <p style="margin-bottom: 8px;"><strong>Tema da Casa:</strong> ${DEFINICAO_CASAS[numCasa]}</p>
+                            <p style="margin-bottom: 8px;"><strong>Cúspide:</strong> ${signoCuspide.nome} (${formatarDMS(grauCasa)})</p>
+                            <p style="margin-bottom: 6px;"><strong>Ocupantes Natas:</strong> ${nomesAstros}</p>
                             
                             <button class="btn-ia btn-ia-inline" onclick="event.stopPropagation(); dispararAnaliseCasaIA('${contextoAnalise}')">
-                                ✦ Gerar Análise Profunda da Casa com IA
+                                ✦ Análise da Casa com IA
                             </button>
                         </div>
                     </div>
@@ -887,11 +930,11 @@
                             </div>
                         </div>
                         <div class="expand-content">
-                            <p style="margin-bottom: 8px;"><strong>Interação Dinâmica:</strong> Conexão em <strong>${asp.aspecto}</strong> entre as energias de <strong>${asp.astro1}</strong> e <strong>${asp.astro2}</strong>.</p>
-                            <p style="margin-bottom: 6px;"><strong>Orbe de Precisão:</strong> ${asp.orbe}° de desvio angular</p>
+                            <p style="margin-bottom: 8px;"><strong>Dinâmica Psicológica:</strong> Integração interpessoal entre as energias de ${asp.astro1} e ${asp.astro2}.</p>
+                            <p style="margin-bottom: 6px;"><strong>Orbe de Precisão:</strong> ${asp.orbe}°</p>
                             
                             <button class="btn-ia btn-ia-inline" onclick="event.stopPropagation(); dispararAnaliseIA('${combinacao}')">
-                                ✦ Gerar Análise Profunda com IA
+                                ✦ Interpretar Aspecto com IA
                             </button>
                         </div>
                     </div>
@@ -977,7 +1020,7 @@
                 g.setAttribute('transform', `translate(${p.x}, ${p.y})`);
  
                 const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-                c.setAttribute('r', 13);
+                c.setAttribute('r', 11);
  
                 const t = document.createElementNS('http://www.w3.org/2000/svg', 'text');
                 t.setAttribute('y', 1); 
@@ -996,7 +1039,7 @@
         }
  
         // ==========================================
-        // INTEGRAÇÃO COM A IA (MODAL + WORKER)
+        // INTEGRAÇÃO COM A IA
         // ==========================================
  
         function iniciarAnaliseIA(titulo, promptText) {
@@ -1004,34 +1047,30 @@
             document.getElementById('modalBody').innerHTML = `
                 <div class="loading-spinner">
                     <div class="spinner"></div>
-                    <p>Consultando a IA...</p>
+                    <p>Consultando IA astrológica...</p>
                 </div>`;
             document.getElementById('aiModal').classList.add('active');
             gerarAnaliseIA(promptText);
         }
  
         function dispararAnaliseIA(combinacao) {
-            const promptText = `Atue como um astrólogo experiente e analítico. Faça uma análise detalhada e perspicaz da seguinte posição astrológica: "${combinacao}". 
-            Siga estas diretrizes de resposta:
-            - Leve em consideração o papel fundamental do Astro/Planeta, a expressão do Signo e a área de vida representada pela Casa.
-            - Escreva de 3 a 4 parágrafos curtos.
-            - Explique o significado psicológico, os desafios e os pontos fortes dessa combinação.
-            - Use formatação HTML básica com parágrafos <p> e destaques em <strong> para facilitar a leitura.
-            - Mantenha um tom profissional, acolhedor e profundo.`;
+            const promptText = `Atue como um astrólogo humanista e psicológico especialista em Mapa Astral Natal. Faça uma análise detalhada sobre o seguinte elemento no mapa: "${combinacao}". 
+            Siga estas diretrizes:
+            - Escreva de 3 a 4 parágrafos curtos com foco em autoconhecimento e conselhos práticos.
+            - Use formatação HTML básica com parágrafos <p> e destaques em <strong>.
+            - Mantenha um tom profundo, acolhedor e construtivo.`;
  
-            iniciarAnaliseIA(`Análise: ${combinacao}`, promptText);
+            iniciarAnaliseIA(`Análise Natal: ${combinacao}`, promptText);
         }
 
         function dispararAnaliseCasaIA(contextoCasa) {
-            const promptText = `Atue como um astrólogo experiente. Faça uma análise focada na seguinte Casa Astrológica: "${contextoCasa}".
+            const promptText = `Atue como um astrólogo especialista. Faça uma análise focada na seguinte Casa do Mapa Natal: "${contextoCasa}".
             Siga estas diretrizes:
-            - Explique o que a área da vida desta casa representa para a pessoa de acordo com o signo em sua cúspide.
-            - Se houver planetas/astros presentes na casa, detalhe como a presença deles energiza, intensifica ou traz desafios para este campo da vida. Caso a casa esteja vazia, explique como a regência do signo orienta essa área.
+            - Explique o potencial e temas centrais desenvolvidos nessa área de vida.
             - Escreva de 3 a 4 parágrafos curtos.
-            - Use formatação HTML básica com parágrafos <p> e destaques em <strong>.
-            - Tom profissional, acolhedor e profundo.`;
+            - Use formatação HTML básica com parágrafos <p> e destaques em <strong>.`;
 
-            iniciarAnaliseIA(`Análise de Casa Astrológica`, promptText);
+            iniciarAnaliseIA(`Análise de Casa Natal`, promptText);
         }
  
         function dispararAnaliseBalanco(tipo) {
@@ -1039,27 +1078,26 @@
  
             let titulo, rotulo, dados;
             if (tipo === 'elementos') {
-                titulo = 'Análise dos Elementos';
-                rotulo = 'elementos (Fogo, Terra, Ar, Água)';
+                titulo = `Balanço de Elementos`;
+                rotulo = 'elementos';
                 dados = ULTIMO_BALANCO.elementos;
             } else if (tipo === 'ritmos') {
-                titulo = 'Análise das Modalidades / Ritmos';
-                rotulo = 'modalidades (Cardinal, Fixo, Mutável)';
+                titulo = `Balanço de Modalidades`;
+                rotulo = 'modalidades';
                 dados = ULTIMO_BALANCO.ritmos;
             } else {
-                titulo = 'Análise das Polaridades';
-                rotulo = 'polaridades (Yang/Masculino, Yin/Feminino)';
+                titulo = `Balanço de Polaridades`;
+                rotulo = 'polaridades';
                 dados = ULTIMO_BALANCO.polaridades;
             }
  
             const dadosTexto = Object.entries(dados).map(([k, v]) => `${k}: ${v}`).join(', ');
  
-            const promptText = `Atue como um astrólogo experiente. Faça uma síntese analítica sobre a seguinte distribuição de ${rotulo} no mapa astral desta pessoa (contagem entre os 10 planetas principais, sem contar Ascendente e Meio do Céu): ${dadosTexto}.
+            const promptText = `Atue como um astrólogo especialista em psicologia analítica. Faça uma análise sobre o temperamento e estrutura psíquica do mapa com base nesta distribuição de ${rotulo}: ${dadosTexto}.
             Siga estas diretrizes:
-            - Escreva de 3 a 4 parágrafos curtos.
-            - Explique o que esse equilíbrio ou desequilíbrio revela sobre a personalidade, o comportamento e os desafios da pessoa.
-            - Use formatação HTML básica com parágrafos <p> e destaques em <strong>.
-            - Tom profissional, acolhedor e profundo.`;
+            - Escreva de 3 a 4 parágrafos.
+            - Explique como essa proporção impacta a forma da pessoa sentir, reagir e tomar decisões.
+            - Use formatação HTML básica com parágrafos <p> e destaques em <strong>.`;
  
             iniciarAnaliseIA(titulo, promptText);
         }
@@ -1073,50 +1111,36 @@
                 return `${a.nome} em ${signo.nome} na Casa ${a.casa}`;
             }).join('; ');
  
-            const listaAspectosResumo = ULTIMO_ASPECTOS
-                .map(asp => `${asp.astro1} em ${asp.aspecto} com ${asp.astro2}`)
-                .join('; ');
+            const promptText = `Atue como um mestre astrólogo. Elabore um relatório síntese e síntese da personalidade para o Mapa Natal baseado nas seguintes posições:
  
-            const promptText = `Atue como um astrólogo experiente e analítico. Faça uma leitura completa e integrada do seguinte mapa astral:
- 
-            Posições planetárias: ${listaPosicoes}.
-            Aspectos entre os astros: ${listaAspectosResumo || 'nenhum aspecto relevante encontrado'}.
+            Posições Natas: ${listaPosicoes}.
  
             Siga estas diretrizes de resposta:
             - Escreva de 5 a 7 parágrafos.
-            - Comece com uma visão geral da personalidade central, integrando Sol, Lua e Ascendente.
-            - Em seguida, explique como os demais planetas e seus aspectos reforçam, tensionam ou complementam essa base.
-            - Aponte os principais desafios e potenciais de crescimento revelados pelo conjunto do mapa.
-            - Use formatação HTML básica com parágrafos <p> e destaques em <strong>.
-            - Tom profissional, acolhedor e profundo, como uma leitura completa de mapa astral.`;
+            - Destaque a tríade principal (Sol, Lua e Ascendente), os eixos Angulares (MC/IC, DC) e pontos de cura (Quíron/Nodos).
+            - Traga reflexões valiosas sobre vocação, relacionamentos e evolução interior.
+            - Use formatação HTML básica com parágrafos <p> e destaques em <strong>.`;
  
-            iniciarAnaliseIA('Análise Completa do Mapa Astral', promptText);
+            iniciarAnaliseIA(`Relatório de Síntese Natal`, promptText);
         }
  
         function dispararAnaliseAspectosCompleta() {
-            if (!ULTIMO_ASPECTOS.length) {
-                document.getElementById('modalTitle').textContent = '✦ Análise Integrada dos Aspectos';
-                document.getElementById('modalBody').innerHTML = '<p>Nenhum aspecto relevante foi encontrado neste mapa para gerar uma análise integrada.</p>';
-                document.getElementById('aiModal').classList.add('active');
-                return;
-            }
+            if (!ULTIMO_ASPECTOS.length) return;
  
             const lista = ULTIMO_ASPECTOS
-                .map(asp => `${asp.astro1} em ${asp.aspecto} com ${asp.astro2} (orbe ${asp.orbe}°)`)
+                .map(asp => `${asp.astro1} em ${asp.aspecto} com ${asp.astro2}`)
                 .join('; ');
  
-            const promptText = `Atue como um astrólogo experiente. Faça uma análise integrada de todos os aspectos planetários a seguir, explicando como eles se conectam e interagem entre si no mapa astral como um todo:
+            const promptText = `Atue como um astrólogo psicológico. Faça uma análise da dinâmica de aspectos natas no mapa:
  
             ${lista}
  
             Siga estas diretrizes:
-            - Escreva de 4 a 6 parágrafos.
-            - Não analise cada aspecto isoladamente; busque conexões e padrões entre eles (ex: tensões que se repetem, harmonias que se reforçam, planetas muito aspectados que funcionam como "nós" do mapa).
-            - Explique como essa rede de aspectos molda a dinâmica psicológica geral da pessoa.
-            - Use formatação HTML básica com parágrafos <p> e destaques em <strong>.
-            - Tom profissional, acolhedor e profundo.`;
+            - Escreva de 4 a 5 parágrafos.
+            - Conecte as dinâmicas de tensão e harmonia entre a psique e talentos inatos.
+            - Use formatação HTML básica com parágrafos <p> e destaques em <strong>.`;
  
-            iniciarAnaliseIA('Análise Integrada dos Aspectos', promptText);
+            iniciarAnaliseIA(`Análise Psicológica de Aspectos Natas`, promptText);
         }
  
         async function gerarAnaliseIA(promptText) {
@@ -1156,7 +1180,7 @@
         }
  
         function executarTudo() {
-            const { astros, casas, asc } = calcularDadosNascimento();
+            const { astros, casas, asc } = calcularMapaNatal();
             const aspectos = calcularAspectos(astros);
  
             ULTIMO_ASTROS = astros;
@@ -1177,7 +1201,6 @@
             document.getElementById('date').value = agora.toISOString().split('T')[0];
             document.getElementById('time').value = agora.toTimeString().split(' ')[0].substring(0, 5);
 
-            // Permite buscar pressionando Enter no campo de cidade
             document.getElementById('cidadeInput').addEventListener('keypress', function (e) {
                 if (e.key === 'Enter') {
                     e.preventDefault();
