@@ -841,6 +841,7 @@ async function gerarAnaliseIA(combinacao) {
 try {
     const response = await fetch('https://astro-gns-proxy.genesisgns.workers.dev/', {
         method: 'POST',
+        cache: 'no-store',
         headers: { 
             'Content-Type': 'application/json'
         },
