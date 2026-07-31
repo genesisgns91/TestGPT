@@ -29,11 +29,19 @@ self.addEventListener('activate', (event) => {
 
 // Estratégia Network First com Fallback em Cache
 self.addEventListener('fetch', (event) => {
+  // Ignora requisições que não sejam GET (ex: requisições POST para a IA no Cloudflare)
+  if (event.request.method !== 'GET') {
+    return; // Deixa o navegador realizar a requisição POST diretamente para a rede
+  }
+
   event.respondWith(
     fetch(event.request)
       .then((response) => {
-        const resClone = response.clone();
-        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, resClone));
+        // Clona e salva em cache apenas chamadas GET válidas
+        if (response && response.status === 200) {
+          const resClone = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, resClone));
+        }
         return response;
       })
       .catch(() => caches.match(event.request))
