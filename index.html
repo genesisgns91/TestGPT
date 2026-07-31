@@ -1,140 +1,320 @@
-function calcularMapaNatal() {
-    const dateVal = document.getElementById('date').value;
-    const timeVal = document.getElementById('time').value;
-    const fuso = parseFloat(document.getElementById('fuso').value);
-    const lat = parseFloat(document.getElementById('lat').value);
-    const lon = parseFloat(document.getElementById('lon').value);
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mapa Astral Calibrado</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #121212;
+            color: #ffffff;
+            margin: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
 
-    const [year, month, day] = dateVal.split('-').map(Number);
-    const [hours, minutes] = timeVal.split(':').map(Number);
+        .container {
+            max-width: 900px;
+            width: 100%;
+            background: #1e1e1e;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+        }
+
+        h1, h2 {
+            text-align: center;
+            color: #4da6ff;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            margin-bottom: 5px;
+            font-size: 0.9em;
+            color: #ccc;
+        }
+
+        input, select {
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid #444;
+            background: #2a2a2a;
+            color: #fff;
+        }
+
+        button {
+            grid-column: 1 / -1;
+            padding: 12px;
+            background: #4da6ff;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            background: #0077e6;
+        }
+
+        .results {
+            margin-top: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #333;
+        }
+
+        th {
+            background-color: #2a2a2a;
+            color: #4da6ff;
+        }
+
+        tr:hover {
+            background-color: #252525;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Calculadora de Mapa Astral</h1>
     
-    // 1. Hora Decimal em Universal Time (UT)
-    const ut = hours + (minutes / 60) - fuso;
-    
-    // 2. Cálculo do Dia Juliano (JD) com fração de hora precisa
-    let m = month, y = year;
-    if (m <= 2) { y -= 1; m += 12; }
-    const A = Math.floor(y / 100);
-    const B = 2 - A + Math.floor(A / 4);
-    
-    // JD à meia-noite UT + fração do dia em UT
-    const jdMidnight = Math.floor(365.25 * (y + 4716)) + Math.floor(30.6001 * (m + 1)) + day + B - 1524.5;
-    const jd = jdMidnight + (ut / 24.0);
-    
-    // Século Juliano a partir de J2000.0
-    const T = (jd - 2451545.0) / 36525.0;
-    const TRS = T; // Mantido para compatibilidade das variáveis do projeto
+    <div class="form-grid">
+        <div class="form-group">
+            <label for="date">Data de Nascimento:</label>
+            <input type="date" id="date" value="1990-05-15">
+        </div>
+        <div class="form-group">
+            <label for="time">Hora de Nascimento:</label>
+            <input type="time" id="time" value="08:40">
+        </div>
+        <div class="form-group">
+            <label for="fuso">Fuso Horário (UTC):</label>
+            <input type="number" id="fuso" value="-3" step="0.5">
+        </div>
+        <div class="form-group">
+            <label for="lat">Latitude (Ex: -25.42):</label>
+            <input type="number" id="lat" value="-25.4284" step="0.0001">
+        </div>
+        <div class="form-group">
+            <label for="lon">Longitude (Ex: -49.27):</label>
+            <input type="number" id="lon" value="-49.2733" step="0.0001">
+        </div>
+        <button onclick="gerarMapa()">Calcular Mapa Astral</button>
+    </div>
 
-    // 3. Tempo Sideral Médio de Greenwich (GMST em graus)
-    // Formula IAU-1982
-    let gmst0 = 280.46061837 + 36000.770053608 * T + 0.000387933 * T * T;
-    let gmst = gmst0 + (ut * 15.0410686); // Avanço diário da rotação da Terra
-    gmst = normalizar(gmst);
+    <div class="results" id="output"></div>
+</div>
 
-    // 4. Tempo Sideral Local (LST)
-    const lst = normalizar(gmst + lon);
-    const lstRad = degToRad(lst);
-    const latRad = degToRad(lat);
-    
-    // Obliquidade da Eclíptica (eps)
-    const epsRad = degToRad(23.4392911 - 0.0130042 * T);
+<script>
+    // Funções Trigonométricas Auxiliares
+    const degToRad = (deg) => (deg * Math.PI) / 180.0;
+    const radToDeg = (rad) => (rad * 180.0) / Math.PI;
+    const normalizar = (grau) => {
+        let g = grau % 360;
+        return g < 0 ? g + 360 : g;
+    };
 
-    // 5. Cálculo do Meio do Céu (MC) e Ascendente (AC)
-    let mc = normalizar(radToDeg(Math.atan2(Math.sin(lstRad), Math.cos(lstRad) * Math.cos(epsRad))));
-    if (Math.sin(lstRad) < 0 && Math.cos(lstRad) < 0) mc = normalizar(mc + 180);
-
-    // Ascendente real sem travamento manual
-    const xAsc = -Math.sin(lstRad) * Math.cos(epsRad) - Math.tan(latRad) * Math.sin(epsRad);
-    const yAsc = Math.cos(lstRad);
-    let asc = normalizar(radToDeg(Math.atan2(yAsc, xAsc)));
-
-    // 6. Planetas e Astros com deslocamento horário
-    const d = jd - 2451545.0; // Dias desde J2000.0
-    
-    const sol = normalizar(280.466 + 0.98564736 * d);
-    const lua = normalizar(218.316 + 13.176396 * d);
-    const mercurio = normalizar(sol + 18 * Math.sin(degToRad(360 * T * 4.15 + (ut * 0.25))));
-    const venus = normalizar(sol + 32 * Math.sin(degToRad(360 * T * 1.62 + (ut * 0.1))));
-    const marte = normalizar(sol + 45 * Math.sin(degToRad(360 * T * 0.53)));
-    const jupiter = normalizar(34.404 + 3034.9057 * T + (d * 0.083));
-    const saturno = normalizar(50.077 + 1222.1138 * T + (d * 0.033));
-    const urano = normalizar(314.055 + 428.4661 * T);
-    const netuno = normalizar(304.349 + 218.4862 * T);
-    const plutao = normalizar(238.929 + 145.180 * T);
-
-    // Ângulos Derivados
-    const dc = normalizar(asc + 180);
-    const ic = normalizar(mc + 180);
-    const vertex = normalizar(asc + 180 - (Math.sin(degToRad(asc)) * 12)); 
-    const antiVertex = normalizar(vertex + 180);
-
-    // Pontos e Nodos
-    const rodaFortuna = normalizar(asc + lua - sol);
-    const nodoNorte = normalizar(125.044558 - 0.0529539 * d);
-    const nodoSul = normalizar(nodoNorte + 180);
-
-    // Centauros e Asteroides
-    const quiron = normalizar(200.0 + 720.0 * T);
-    const lilith = normalizar(sol + 120 + (T * 40.7)); 
-    const ceres = normalizar(150.0 + 800.0 * T);
-    const pallas = normalizar(180.0 + 780.0 * T);
-    const juno = normalizar(210.0 + 700.0 * T);
-    const vesta = normalizar(240.0 + 650.0 * T);
-    const pholus = normalizar(110.0 + 250.0 * T);
-    const capulo = normalizar(normalizar(lilith + 180) + 15);
-
-    // Transnetunianos (TNOs)
-    const eris = normalizar(10.0 + 64.0 * T);
-    const sedna = normalizar(50.0 + 31.0 * T);
-    const haumea = normalizar(190.0 + 126.0 * T);
-    const makemake = normalizar(170.0 + 116.0 * T);
-
-    // Estrelas Fixas
-    const precessao = T * 0.01396;
-    const aldebaran = normalizar(69.78 + precessao);  
-    const regulus = normalizar(149.83 + precessao);   
-    const antares = normalizar(249.76 + precessao);   
-
-    const astros = [
-        { nome: "Sol", grau: sol }, { nome: "Lua", grau: lua },
-        { nome: "Mercúrio", grau: mercurio }, { nome: "Vênus", grau: venus },
-        { nome: "Marte", grau: marte }, { nome: "Júpiter", grau: jupiter },
-        { nome: "Saturno", grau: saturno }, { nome: "Urano", grau: urano },
-        { nome: "Netuno", grau: netuno }, { nome: "Plutão", grau: plutao },
-        
-        { nome: "Ascendente (AC)", grau: asc }, { nome: "Descendente (DC)", grau: dc },
-        { nome: "Meio do Céu (MC)", grau: mc }, { nome: "Fundo do Céu (IC)", grau: ic },
-        { nome: "Vertex", grau: vertex }, { nome: "Anti-vertex", grau: antiVertex },
-
-        { nome: "Roda da Fortuna", grau: rodaFortuna },
-        { nome: "Nodo Norte", grau: nodoNorte }, { nome: "Nodo Sul", grau: nodoSul },
-        { nome: "Quíron", grau: quiron }, { nome: "Lilith", grau: lilith },
-
-        { nome: "Ceres", grau: ceres }, { nome: "Pallas", grau: pallas },
-        { nome: "Juno", grau: juno }, { nome: "Vesta", grau: vesta },
-
-        { nome: "Pholus", grau: pholus }, { nome: "Cápulo", grau: capulo },
-
-        { nome: "Éris", grau: eris }, { nome: "Sedna", grau: sedna },
-        { nome: "Haumea", grau: haumea }, { nome: "Makemake", grau: makemake },
-
-        { nome: "Aldebaran", grau: aldebaran }, { nome: "Regulus", grau: regulus },
-        { nome: "Antares", grau: antares }
+    const SIGNOS = [
+        "Áries", "Touro", "Gêmeos", "Câncer", 
+        "Leão", "Virgem", "Libras", "Escorpião", 
+        "Sagitário", "Capricórnio", "Aquário", "Peixes"
     ];
 
-    // Cúspides de Casas (Sistema Placidus / Igualitário ajustado ao AC)
-    const casas = Array.from({ length: 12 }, (_, i) => normalizar(asc + (i * 30)));
+    function grauParaSigno(grau) {
+        const index = Math.floor(grau / 30);
+        const grauRestante = grau % 30;
+        const min = Math.floor((grauRestante - Math.floor(grauRestante)) * 60);
+        return `${Math.floor(grauRestante)}° ${min}' ${SIGNOS[index]}`;
+    }
 
-    astros.forEach(a => {
-        let casaEncontrada = 12;
-        for (let i = 0; i < 11; i++) {
-            if (a.grau >= casas[i] && a.grau < casas[i+1]) {
-                casaEncontrada = i + 1;
-                break;
+    function calcularMapaNatal() {
+        const dateVal = document.getElementById('date').value;
+        const timeVal = document.getElementById('time').value;
+        const fuso = parseFloat(document.getElementById('fuso').value);
+        const lat = parseFloat(document.getElementById('lat').value);
+        const lon = parseFloat(document.getElementById('lon').value);
+
+        const [year, month, day] = dateVal.split('-').map(Number);
+        const [hours, minutes] = timeVal.split(':').map(Number);
+        
+        // 1. Hora Decimal em Universal Time (UT)
+        const ut = hours + (minutes / 60) - fuso;
+        
+        // 2. Cálculo do Dia Juliano (JD) com fração de hora precisa
+        let m = month, y = year;
+        if (m <= 2) { y -= 1; m += 12; }
+        const A = Math.floor(y / 100);
+        const B = 2 - A + Math.floor(A / 4);
+        
+        const jdMidnight = Math.floor(365.25 * (y + 4716)) + Math.floor(30.6001 * (m + 1)) + day + B - 1524.5;
+        const jd = jdMidnight + (ut / 24.0);
+        
+        // Século Juliano a partir de J2000.0
+        const T = (jd - 2451545.0) / 36525.0;
+
+        // 3. Tempo Sideral Médio de Greenwich (GMST)
+        let gmst0 = 280.46061837 + 36000.770053608 * T + 0.000387933 * T * T;
+        let gmst = gmst0 + (ut * 15.0410686); // Rotação da Terra ao longo do dia
+        gmst = normalizar(gmst);
+
+        // 4. Tempo Sideral Local (LST)
+        const lst = normalizar(gmst + lon);
+        const lstRad = degToRad(lst);
+        const latRad = degToRad(lat);
+        
+        // Obliquidade da Eclíptica (eps)
+        const epsRad = degToRad(23.4392911 - 0.0130042 * T);
+
+        // 5. Meio do Céu (MC) e Ascendente (AC) sem travamentos
+        let mc = normalizar(radToDeg(Math.atan2(Math.sin(lstRad), Math.cos(lstRad) * Math.cos(epsRad))));
+        if (Math.sin(lstRad) < 0 && Math.cos(lstRad) < 0) mc = normalizar(mc + 180);
+
+        const xAsc = -Math.sin(lstRad) * Math.cos(epsRad) - Math.tan(latRad) * Math.sin(epsRad);
+        const yAsc = Math.cos(lstRad);
+        let asc = normalizar(radToDeg(Math.atan2(yAsc, xAsc)));
+
+        // 6. Posicionamento dos Astros
+        const d = jd - 2451545.0; // Dias desde J2000.0
+        
+        const sol = normalizar(280.466 + 0.98564736 * d);
+        const lua = normalizar(218.316 + 13.176396 * d);
+        const mercurio = normalizar(sol + 18 * Math.sin(degToRad(360 * T * 4.15 + (ut * 0.25))));
+        const venus = normalizar(sol + 32 * Math.sin(degToRad(360 * T * 1.62 + (ut * 0.1))));
+        const marte = normalizar(sol + 45 * Math.sin(degToRad(360 * T * 0.53)));
+        const jupiter = normalizar(34.404 + 3034.9057 * T + (d * 0.083));
+        const saturno = normalizar(50.077 + 1222.1138 * T + (d * 0.033));
+        const urano = normalizar(314.055 + 428.4661 * T);
+        const netuno = normalizar(304.349 + 218.4862 * T);
+        const plutao = normalizar(238.929 + 145.180 * T);
+
+        // Ângulos Derivados
+        const dc = normalizar(asc + 180);
+        const ic = normalizar(mc + 180);
+        const vertex = normalizar(asc + 180 - (Math.sin(degToRad(asc)) * 12)); 
+        const antiVertex = normalizar(vertex + 180);
+
+        // Pontos e Nodos
+        const rodaFortuna = normalizar(asc + lua - sol);
+        const nodoNorte = normalizar(125.044558 - 0.0529539 * d);
+        const nodoSul = normalizar(nodoNorte + 180);
+
+        // Centauros e Asteroides
+        const quiron = normalizar(200.0 + 720.0 * T);
+        const lilith = normalizar(sol + 120 + (T * 40.7)); 
+        const ceres = normalizar(150.0 + 800.0 * T);
+        const pallas = normalizar(180.0 + 780.0 * T);
+        const juno = normalizar(210.0 + 700.0 * T);
+        const vesta = normalizar(240.0 + 650.0 * T);
+        const pholus = normalizar(110.0 + 250.0 * T);
+        const capulo = normalizar(normalizar(lilith + 180) + 15);
+
+        // Transnetunianos (TNOs)
+        const eris = normalizar(10.0 + 64.0 * T);
+        const sedna = normalizar(50.0 + 31.0 * T);
+        const haumea = normalizar(190.0 + 126.0 * T);
+        const makemake = normalizar(170.0 + 116.0 * T);
+
+        // Estrelas Fixas
+        const precessao = T * 0.01396;
+        const aldebaran = normalizar(69.78 + precessao);  
+        const regulus = normalizar(149.83 + precessao);   
+        const antares = normalizar(249.76 + precessao);   
+
+        const astros = [
+            { nome: "Sol", grau: sol }, { nome: "Lua", grau: lua },
+            { nome: "Mercúrio", grau: mercurio }, { nome: "Vênus", grau: venus },
+            { nome: "Marte", grau: marte }, { nome: "Júpiter", grau: jupiter },
+            { nome: "Saturno", grau: saturno }, { nome: "Urano", grau: urano },
+            { nome: "Netuno", grau: netuno }, { nome: "Plutão", grau: plutao },
+            
+            { nome: "Ascendente (AC)", grau: asc }, { nome: "Descendente (DC)", grau: dc },
+            { nome: "Meio do Céu (MC)", grau: mc }, { nome: "Fundo do Céu (IC)", grau: ic },
+            { nome: "Vertex", grau: vertex }, { nome: "Anti-vertex", grau: antiVertex },
+
+            { nome: "Roda da Fortuna", grau: rodaFortuna },
+            { nome: "Nodo Norte", grau: nodoNorte }, { nome: "Nodo Sul", grau: nodoSul },
+            { nome: "Quíron", grau: quiron }, { nome: "Lilith", grau: lilith },
+
+            { nome: "Ceres", grau: ceres }, { nome: "Pallas", grau: pallas },
+            { nome: "Juno", grau: juno }, { nome: "Vesta", grau: vesta },
+
+            { nome: "Pholus", grau: pholus }, { nome: "Cápulo", grau: capulo },
+
+            { nome: "Éris", grau: eris }, { nome: "Sedna", grau: sedna },
+            { nome: "Haumea", grau: haumea }, { nome: "Makemake", grau: makemake },
+
+            { nome: "Aldebaran", grau: aldebaran }, { nome: "Regulus", grau: regulus },
+            { nome: "Antares", grau: antares }
+        ];
+
+        // Cúspides das Casas (Equal/Placidus adaptado)
+        const casas = Array.from({ length: 12 }, (_, i) => normalizar(asc + (i * 30)));
+
+        astros.forEach(a => {
+            let casaEncontrada = 12;
+            for (let i = 0; i < 11; i++) {
+                if (a.grau >= casas[i] && a.grau < casas[i+1]) {
+                    casaEncontrada = i + 1;
+                    break;
+                }
             }
-        }
-        a.casa = casaEncontrada;
-    });
+            a.casa = casaEncontrada;
+        });
 
-    return { astros, casas, asc };
-}
+        return { astros, casas };
+    }
+
+    function gerarMapa() {
+        const { astros } = calcularMapaNatal();
+        const output = document.getElementById('output');
+
+        let html = `<h2>Posições Astrológicas</h2>`;
+        html += `<table>
+                    <thead>
+                        <tr>
+                            <th>Astro / Ponto</th>
+                            <th>Posição Sideral / Zodíaco</th>
+                            <th>Casa</th>
+                        </tr>
+                    </thead>
+                    <tbody>`;
+
+        astros.forEach(item => {
+            html += `<tr>
+                        <td><strong>${item.nome}</strong></td>
+                        <td>${grauParaSigno(item.grau)}</td>
+                        <td>Casa ${item.casa}</td>
+                     </tr>`;
+        });
+
+        html += `</tbody></table>`;
+        output.innerHTML = html;
+    }
+</script>
+
+</body>
+</html>
