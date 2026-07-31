@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="theme-color" content="#0d1117">
-    <title>Astro-GNS</title>
+    <title>Astro??</title>
     
     <style>
         :root {
@@ -20,7 +20,7 @@
             --agua: #d2a8ff;
             --ia-color: #a371f7;
         }
-
+ 
         * { 
             box-sizing: border-box; 
             margin: 0; 
@@ -36,7 +36,7 @@
             background-color: var(--bg-principal); 
             color: var(--texto); 
         }
-
+ 
         body {
             display: flex; 
             flex-direction: column; 
@@ -44,7 +44,7 @@
             min-height: 100vh;
             padding: 10px;
         }
-
+ 
         header {
             width: 100%;
             padding: 12px;
@@ -55,7 +55,7 @@
             margin-bottom: 12px;
         }
         header h1 { font-size: 1.2rem; color: var(--sol); font-weight: 700; letter-spacing: 1.5px; }
-
+ 
         .app-layout {
             width: 100%;
             max-width: 1400px;
@@ -63,7 +63,7 @@
             flex-direction: column;
             gap: 16px;
         }
-
+ 
         .controls {
             background: var(--bg-card); 
             padding: 14px; 
@@ -102,20 +102,20 @@
             transition: background-color 0.2s;
         }
         .btn-primary:active { background-color: #2ea043; }
-
+ 
         .dashboard-grid {
             display: grid;
             grid-template-columns: 1fr;
             gap: 16px;
             width: 100%;
         }
-
+ 
         @media (min-width: 900px) {
             .dashboard-grid {
                 grid-template-columns: 480px 1fr;
             }
         }
-
+ 
         .chart-card {
             background: var(--bg-card); 
             border: 1px solid var(--border); 
@@ -128,26 +128,26 @@
         }
         .chart-card h2 { color: var(--destaque); font-size: 1rem; margin-bottom: 10px; text-align: center; }
         #chartSvg { width: 100%; max-width: 460px; height: auto; border-radius: 50%; background: #0b0e14; }
-
+ 
         .signo-symbol { font-family: "Segoe UI Symbol", sans-serif; font-size: 22px; fill: var(--destaque); text-anchor: middle; dominant-baseline: central; }
         .planet-node { cursor: pointer; }
         .planet-node circle { fill: var(--bg-card); stroke: var(--border); stroke-width: 1.5px; }
         .planet-node text { font-family: "Segoe UI Symbol", sans-serif; font-size: 14px; font-weight: bold; text-anchor: middle; dominant-baseline: central; }
-
+ 
         .balance-container {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: 12px;
             width: 100%;
         }
-
+ 
         .balance-card {
             background: var(--bg-card);
             border: 1px solid var(--border);
             border-radius: 12px;
             padding: 14px;
         }
-
+ 
         .ia-clickable {
             cursor: pointer;
             transition: border-color 0.2s, box-shadow 0.2s;
@@ -164,12 +164,12 @@
             margin-top: 2px;
         }
         .balance-card h3 { color: var(--destaque); font-size: 0.95rem; margin-bottom: 12px; border-bottom: 1px solid var(--border); padding-bottom: 6px; }
-
+ 
         .progress-item { margin-bottom: 10px; }
         .progress-info { display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 4px; }
         .bar-bg { background: var(--bg-principal); height: 8px; border-radius: 4px; overflow: hidden; }
         .bar-fill { height: 100%; border-radius: 4px; transition: width 0.4s ease; }
-
+ 
         .expand-list { display: flex; flex-direction: column; gap: 8px; width: 100%; }
         
         .expand-card {
@@ -180,7 +180,7 @@
             transition: border-color 0.2s;
         }
         .expand-card:hover { border-color: var(--destaque); }
-
+ 
         .expand-header {
             padding: 12px;
             display: flex;
@@ -190,7 +190,7 @@
             user-select: none;
             background: rgba(255,255,255,0.01);
         }
-
+ 
         .expand-title {
             display: flex;
             align-items: center;
@@ -198,7 +198,7 @@
             font-size: 0.88rem;
             font-weight: 600;
         }
-
+ 
         .expand-badge {
             font-size: 0.75rem;
             color: #8b949e;
@@ -207,7 +207,7 @@
             border-radius: 6px;
             border: 1px solid var(--border);
         }
-
+ 
         .expand-content {
             display: none;
             padding: 12px;
@@ -220,7 +220,7 @@
         .expand-card.open .expand-content { display: block; }
         .expand-card.open .arrow-icon { transform: rotate(180deg); }
         .arrow-icon { transition: transform 0.2s; font-size: 0.8rem; color: #8b949e; }
-
+ 
         /* Botão para Gerar IA */
         .btn-ia {
             margin-top: 12px;
@@ -238,16 +238,16 @@
             transition: opacity 0.2s;
         }
         .btn-ia:hover { opacity: 0.9; }
-
+ 
         .card-table { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 12px; width: 100%; }
         .card-table h3 { color: var(--destaque); margin-bottom: 10px; font-size: 0.95rem; }
-
+ 
         .matrix-desktop-container {
             display: block;
             width: 100%;
             overflow-x: auto;
         }
-
+ 
         .aspect-matrix { 
             border-collapse: collapse; 
             margin: 0 auto;
@@ -268,13 +268,13 @@
         .aspect-matrix th.header-astro { background: var(--bg-principal); color: var(--sol); font-weight: bold; }
         .aspect-matrix td.empty-cell { background: transparent; border: none; }
         .aspect-matrix td.cell-aspect { background: var(--bg-principal); font-weight: bold; }
-
+ 
         .matrix-mobile-grid {
             display: none;
             grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
             gap: 8px;
         }
-
+ 
         .aspect-mobile-chip {
             background: var(--bg-principal);
             border: 1px solid var(--border);
@@ -285,25 +285,25 @@
             justify-content: space-between;
             font-size: 0.8rem;
         }
-
+ 
         @media (max-width: 600px) {
             .matrix-desktop-container { display: none; }
             .matrix-mobile-grid { display: grid; }
         }
-
+ 
         .badge-aspecto { padding: 3px 6px; border-radius: 4px; font-weight: bold; font-size: 0.75rem; color: #fff; }
         .conj { background: #238636; }
         .opp { background: #da3633; }
         .trig { background: #1f6beb; }
         .quad { background: #d29922; color: #000; }
         .sext { background: #8957e5; }
-
+ 
         .icon-conj { color: #2ea043; }
         .icon-opp  { color: #f85149; }
         .icon-trig { color: #3fb950; }
         .icon-quad { color: #d29922; }
         .icon-sext { color: #a371f7; }
-
+ 
         /* Estilos do Modal/Overlay de Análise IA */
         .modal-overlay {
             position: fixed;
@@ -320,7 +320,7 @@
             padding: 16px;
         }
         .modal-overlay.active { display: flex; }
-
+ 
         .modal-card {
             background: var(--bg-card);
             border: 1px solid var(--border);
@@ -334,12 +334,12 @@
             overflow: hidden;
             animation: fadeIn 0.2s ease-out;
         }
-
+ 
         @keyframes fadeIn {
             from { opacity: 0; transform: scale(0.95); }
             to { opacity: 1; transform: scale(1); }
         }
-
+ 
         .modal-header {
             padding: 14px 18px;
             border-bottom: 1px solid var(--border);
@@ -358,7 +358,7 @@
             line-height: 1;
         }
         .modal-close:hover { color: #fff; }
-
+ 
         .modal-body {
             padding: 18px;
             overflow-y: auto;
@@ -366,7 +366,7 @@
             line-height: 1.6;
             color: var(--texto);
         }
-
+ 
         .loading-spinner {
             display: flex;
             flex-direction: column;
@@ -387,11 +387,11 @@
     </style>
 </head>
 <body>
-
+ 
     <header>
         <h1>ASTRO</h1>
     </header>
-
+ 
     <div class="app-layout">
         <form id="astrologyForm" class="controls" onsubmit="event.preventDefault(); executarTudo();">
             <div class="input-group">
@@ -418,13 +418,13 @@
                 <button type="submit" class="btn-primary">Calcular Mapa Astral</button>
             </div>
         </form>
-
+ 
         <div class="dashboard-grid">
             <div class="chart-card ia-clickable" onclick="dispararAnaliseMapaCompleto()">
                 <h2>Roda Astrológica<span class="ia-hint">✦ Clique para Análise Completa do Mapa</span></h2>
                 <svg id="chartSvg" viewBox="0 0 600 600"></svg>
             </div>
-
+ 
             <div class="balance-container">
                 <div class="balance-card ia-clickable" onclick="dispararAnaliseBalanco('elementos')">
                     <h3>Elementos<span class="ia-hint">✦ Clique para Análise</span></h3>
@@ -440,12 +440,12 @@
                 </div>
             </div>
         </div>
-
+ 
         <div class="card-table">
             <h3>Posições Astrológicas Detalhadas (Clique para Expandir)</h3>
             <div id="astrosExpandList" class="expand-list"></div>
         </div>
-
+ 
         <div class="card-table ia-clickable" onclick="dispararAnaliseAspectosCompleta()">
             <h3>Matriz de Aspectos<span class="ia-hint">✦ Clique para Análise Integrada de Todos os Aspectos</span></h3>
             <div class="matrix-desktop-container">
@@ -453,13 +453,13 @@
             </div>
             <div id="matrixMobileGrid" class="matrix-mobile-grid"></div>
         </div>
-
+ 
         <div class="card-table">
             <h3>Interpretação dos Aspectos (Clique para Expandir)</h3>
             <div id="aspectosExpandList" class="expand-list"></div>
         </div>
     </div>
-
+ 
     <!-- Modal Flutuante para IA -->
     <div id="aiModal" class="modal-overlay" onclick="fecharModalOuter(event)">
         <div class="modal-card">
@@ -472,7 +472,7 @@
             </div>
         </div>
     </div>
-
+ 
     <script>
         const SIGNOS_DADOS = [
             { nome: "Áries", simbolo: "♈︎", elemento: "Fogo", ritmo: "Cardinal", polaridade: "Yang" },
@@ -488,13 +488,13 @@
             { nome: "Aquário", simbolo: "♒︎", elemento: "Ar", ritmo: "Fixo", polaridade: "Yang" },
             { nome: "Peixes", simbolo: "♓︎", elemento: "Água", ritmo: "Mutável", polaridade: "Yin" }
         ];
-
+ 
         const SIMBOLOS_ASTROS = {
             "Sol": "☉", "Lua": "☽", "Mercúrio": "☿", "Vênus": "♀", "Marte": "♂",
             "Júpiter": "♃", "Saturno": "♄", "Urano": "♅", "Netuno": "♆", "Plutão": "♇",
             "Ascendente (AC)": "AC", "Meio do Céu (MC)": "MC"
         };
-
+ 
         const DEFINICAO_ASPECTOS = [
             { nome: "Conjunção", angulo: 0, orbe: 8, classe: "conj", simbolo: "☌", iconClass: "icon-conj" },
             { nome: "Sextil", angulo: 60, orbe: 6, classe: "sext", simbolo: "✶", iconClass: "icon-sext" },
@@ -502,51 +502,51 @@
             { nome: "Trígono", angulo: 120, orbe: 8, classe: "trig", simbolo: "△", iconClass: "icon-trig" },
             { nome: "Oposição", angulo: 180, orbe: 8, classe: "opp", simbolo: "☍", iconClass: "icon-opp" }
         ];
-
+ 
         // Guarda os dados do último mapa calculado, para uso nas análises de IA
         let ULTIMO_ASTROS = [];
         let ULTIMO_CASAS = [];
         let ULTIMO_ASC = 0;
         let ULTIMO_ASPECTOS = [];
         let ULTIMO_BALANCO = { elementos: {}, ritmos: {}, polaridades: {} };
-
+ 
         function degToRad(deg) { return deg * Math.PI / 180; }
         function radToDeg(rad) { return rad * 180 / Math.PI; }
         function normalizar(graus) { return (graus % 360 + 360) % 360; }
-
+ 
         function formatarDMS(grausDecimal) {
             const gAbs = grausDecimal % 30;
             const g = Math.floor(gAbs);
             const m = Math.floor((gAbs - g) * 60);
             return `${g}°${m.toString().padStart(2, '0')}'`;
         }
-
+ 
         function calcularDadosNascimento() {
             const dateVal = document.getElementById('date').value;
             const timeVal = document.getElementById('time').value;
             const fuso = parseFloat(document.getElementById('fuso').value);
             const lat = parseFloat(document.getElementById('lat').value);
             const lon = parseFloat(document.getElementById('lon').value);
-
+ 
             const [year, month, day] = dateVal.split('-').map(Number);
             const [hours, minutes] = timeVal.split(':').map(Number);
             const hourUTC = hours + (minutes / 60) - fuso;
-
+ 
             let m = month, y = year;
             if (m <= 2) { y -= 1; m += 12; }
             let A = Math.floor(y / 100);
             let B = 2 - A + Math.floor(A / 4);
             let jd = Math.floor(365.25 * (y + 4716)) + Math.floor(30.6001 * (m + 1)) + day + (hourUTC / 24.0) + B - 1524.5;
             let T = (jd - 2451545.0) / 36525.0;
-
+ 
             let gmst = 280.46061837 + 36000.770053608 * T;
             let lst = normalizar(gmst + lon);
             let obliq = degToRad(23.4392911 - 0.0130042 * T);
-
+ 
             let mc = normalizar(radToDeg(Math.atan2(Math.sin(degToRad(lst)), Math.cos(degToRad(lst)) * Math.cos(obliq))));
             let asc = normalizar(radToDeg(Math.atan2(Math.cos(degToRad(lst)), -Math.sin(degToRad(lst)) * Math.cos(obliq) - Math.tan(degToRad(lat)) * Math.sin(obliq))));
             if (asc < 60 || asc > 120) asc = normalizar(asc + 90);
-
+ 
             const sol = normalizar(280.46646 + 36000.76983 * T);
             const lua = normalizar(218.3165 + 481267.8813 * T);
             const mercurio = normalizar(sol + 10 * Math.sin(degToRad(360 * T * 4.15)));
@@ -557,7 +557,7 @@
             const urano = normalizar(314.055 + 428.4661 * T);
             const netuno = normalizar(304.349 + 218.4862 * T);
             const plutao = normalizar(238.929 + 145.180 * T);
-
+ 
             const astros = [
                 { nome: "Sol", grau: sol, retro: false },
                 { nome: "Lua", grau: lua, retro: false },
@@ -572,9 +572,9 @@
                 { nome: "Ascendente (AC)", grau: asc, retro: false },
                 { nome: "Meio do Céu (MC)", grau: mc, retro: false }
             ];
-
+ 
             const casas = Array.from({ length: 12 }, (_, i) => normalizar(asc + (i * 30)));
-
+ 
             astros.forEach(a => {
                 let casaEncontrada = 12;
                 for (let i = 0; i < 11; i++) {
@@ -585,10 +585,10 @@
                 }
                 a.casa = casaEncontrada;
             });
-
+ 
             return { astros, casas, asc };
         }
-
+ 
         function calcularAspectos(astros) {
             const aspectos = [];
             for (let i = 0; i < astros.length; i++) {
@@ -596,7 +596,7 @@
                     const a1 = astros[i], a2 = astros[j];
                     let diff = Math.abs(a1.grau - a2.grau);
                     if (diff > 180) diff = 360 - diff;
-
+ 
                     DEFINICAO_ASPECTOS.forEach(asp => {
                         const orbeAtual = Math.abs(diff - asp.angulo);
                         if (orbeAtual <= asp.orbe) {
@@ -610,12 +610,12 @@
             }
             return aspectos;
         }
-
+ 
         function renderizarBalanço(astros) {
             const elementos = { Fogo: 0, Terra: 0, Ar: 0, Água: 0 };
             const ritmos = { Cardinal: 0, Fixo: 0, Mutável: 0 };
             const polaridades = { Yang: 0, Yin: 0 };
-
+ 
             const planetasPrincipais = astros.filter(a => !["Ascendente (AC)", "Meio do Céu (MC)"].includes(a.nome));
             
             planetasPrincipais.forEach(a => {
@@ -625,11 +625,11 @@
                 ritmos[signo.ritmo]++;
                 polaridades[signo.polaridade]++;
             });
-
+ 
             const total = planetasPrincipais.length;
             ULTIMO_BALANCO = { elementos, ritmos, polaridades };
             const coresElementos = { Fogo: "var(--fogo)", Terra: "var(--terra)", Ar: "var(--ar)", Água: "var(--agua)" };
-
+ 
             document.getElementById('elementosBars').innerHTML = Object.keys(elementos).map(k => {
                 const pct = Math.round((elementos[k] / total) * 100);
                 return `
@@ -639,7 +639,7 @@
                     </div>
                 `;
             }).join('');
-
+ 
             document.getElementById('ritmosBars').innerHTML = Object.keys(ritmos).map(k => {
                 const pct = Math.round((ritmos[k] / total) * 100);
                 return `
@@ -649,7 +649,7 @@
                     </div>
                 `;
             }).join('');
-
+ 
             document.getElementById('polaridadesBars').innerHTML = Object.keys(polaridades).map(k => {
                 const pct = Math.round((polaridades[k] / total) * 100);
                 const label = k === "Yang" ? "Yang (Masculino/Ativo)" : "Yin (Feminino/Receptivo)";
@@ -661,7 +661,7 @@
                 `;
             }).join('');
         }
-
+ 
         function renderizarAstrosExpansivel(astros) {
             const container = document.getElementById('astrosExpandList');
             container.innerHTML = astros.map(a => {
@@ -669,7 +669,7 @@
                 const signo = SIGNOS_DADOS[sIdx];
                 const simAstro = SIMBOLOS_ASTROS[a.nome] || '';
                 const combinacao = `${a.nome} em ${signo.nome} na Casa ${a.casa}`;
-
+ 
                 return `
                     <div class="expand-card">
                         <div class="expand-header" onclick="this.parentElement.classList.toggle('open')">
@@ -695,14 +695,14 @@
                 `;
             }).join('');
         }
-
+ 
         function renderizarAspectosExpansivel(aspectos) {
             const container = document.getElementById('aspectosExpandList');
             container.innerHTML = aspectos.map(asp => {
                 const sim1 = SIMBOLOS_ASTROS[asp.astro1] || '';
                 const sim2 = SIMBOLOS_ASTROS[asp.astro2] || '';
                 const combinacao = `${asp.astro1} em ${asp.aspecto} com ${asp.astro2}`;
-
+ 
                 return `
                     <div class="expand-card">
                         <div class="expand-header" onclick="this.parentElement.classList.toggle('open')">
@@ -726,12 +726,12 @@
                 `;
             }).join('');
         }
-
+ 
         function gerarMatrizHtml(astros, aspectos) {
             let html = "";
             let mobileHtml = "";
             const total = astros.length;
-
+ 
             for (let i = 0; i < total; i++) {
                 html += "<tr>";
                 for (let j = 0; j < total; j++) {
@@ -750,7 +750,7 @@
                 }
                 html += "</tr>";
             }
-
+ 
             aspectos.forEach(asp => {
                 mobileHtml += `
                     <div class="aspect-mobile-chip">
@@ -760,34 +760,34 @@
                     </div>
                 `;
             });
-
+ 
             document.getElementById('matrixAspectos').innerHTML = html;
             document.getElementById('matrixMobileGrid').innerHTML = mobileHtml || '<p style="font-size:0.8rem; color:#8b949e;">Nenhum aspecto encontrado.</p>';
         }
-
+ 
         function desenharRodaSVG(astros, casas, asc) {
             const svg = document.getElementById('chartSvg');
             svg.innerHTML = '';
             const cx = 300, cy = 300, rOuter = 285, rInner = 230, rCasas = 160, rCore = 80;
-
+ 
             const grauParaAngulo = (g) => (180 + (g - asc)) % 360;
             const polarToCart = (r, a) => {
                 const rad = (a - 180) * Math.PI / 180;
                 return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
             };
-
+ 
             for (let i = 0; i < 12; i++) {
                 const aIn = grauParaAngulo(i * 30), aFim = grauParaAngulo((i + 1) * 30);
                 const p1 = polarToCart(rOuter, aIn), p2 = polarToCart(rOuter, aFim);
                 const p3 = polarToCart(rInner, aFim), p4 = polarToCart(rInner, aIn);
-
+ 
                 const d = `M ${p1.x} ${p1.y} A ${rOuter} ${rOuter} 0 0 1 ${p2.x} ${p2.y} L ${p3.x} ${p3.y} A ${rInner} ${rInner} 0 0 0 ${p4.x} ${p4.y} Z`;
                 const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
                 path.setAttribute('d', d);
                 path.setAttribute('fill', i % 2 === 0 ? '#161b22' : '#0d1117');
                 path.setAttribute('stroke', '#30363d');
                 svg.appendChild(path);
-
+ 
                 const pTxt = polarToCart((rOuter + rInner) / 2, grauParaAngulo(i * 30 + 15));
                 const txt = document.createElementNS('http://www.w3.org/2000/svg', 'text');
                 txt.setAttribute('x', pTxt.x); txt.setAttribute('y', pTxt.y);
@@ -795,7 +795,7 @@
                 txt.textContent = SIGNOS_DADOS[i].simbolo;
                 svg.appendChild(txt);
             }
-
+ 
             casas.forEach((c, i) => {
                 const p1 = polarToCart(rInner, grauParaAngulo(c)), p2 = polarToCart(rCore, grauParaAngulo(c));
                 const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
@@ -804,41 +804,41 @@
                 line.setAttribute('stroke', (i % 3 === 0) ? '#58a6ff' : '#30363d');
                 svg.appendChild(line);
             });
-
+ 
             const coreCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
             coreCircle.setAttribute('cx', cx); coreCircle.setAttribute('cy', cy); coreCircle.setAttribute('r', rCore);
             coreCircle.setAttribute('fill', '#0b0e14'); coreCircle.setAttribute('stroke', '#30363d');
             svg.appendChild(coreCircle);
-
+ 
             astros.forEach(a => {
                 const p = polarToCart(rCasas, grauParaAngulo(a.grau));
                 const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
                 g.setAttribute('class', 'planet-node');
                 g.setAttribute('transform', `translate(${p.x}, ${p.y})`);
-
+ 
                 const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
                 c.setAttribute('r', 13);
-
+ 
                 const t = document.createElementNS('http://www.w3.org/2000/svg', 'text');
                 t.setAttribute('y', 1); 
                 t.setAttribute('fill', a.nome === "Sol" ? 'var(--sol)' : 'var(--destaque)');
                 t.textContent = SIMBOLOS_ASTROS[a.nome] || a.nome[0];
-
+ 
                 g.appendChild(c); 
                 g.appendChild(t);
                 
                 const title = document.createElementNS('http://www.w3.org/2000/svg', 'title');
                 title.textContent = `${a.nome}: ${formatarDMS(a.grau)}`;
                 g.appendChild(title);
-
+ 
                 svg.appendChild(g);
             });
         }
-
+ 
         // ==========================================
         // INTEGRAÇÃO COM A IA (MODAL + WORKER)
         // ==========================================
-
+ 
         // Abre o modal em estado de carregamento e dispara a chamada à IA.
         // Reutilizado por todos os gatilhos de análise (posição individual, aspecto,
         // balanços, mapa completo e matriz de aspectos).
@@ -852,7 +852,7 @@
             document.getElementById('aiModal').classList.add('active');
             gerarAnaliseIA(promptText);
         }
-
+ 
         function dispararAnaliseIA(combinacao) {
             const promptText = `Atue como um astrólogo experiente e analítico. Faça uma análise detalhada e perspicaz da seguinte posição astrológica: "${combinacao}". 
             Siga estas diretrizes de resposta:
@@ -860,14 +860,14 @@
             - Explique o significado psicológico, os desafios e os pontos fortes dessa combinação.
             - Use formatação HTML básica com parágrafos <p> e destaques em <strong> para facilitar a leitura.
             - Mantenha um tom profissional, acolhedor e profundo.`;
-
+ 
             iniciarAnaliseIA(`Análise: ${combinacao}`, promptText);
         }
-
+ 
         // Análise de síntese para os blocos de Elementos, Modalidades/Ritmos e Polaridades
         function dispararAnaliseBalanco(tipo) {
             if (!ULTIMO_ASTROS.length) return;
-
+ 
             let titulo, rotulo, dados;
             if (tipo === 'elementos') {
                 titulo = 'Análise dos Elementos';
@@ -882,38 +882,38 @@
                 rotulo = 'polaridades (Yang/Masculino, Yin/Feminino)';
                 dados = ULTIMO_BALANCO.polaridades;
             }
-
+ 
             const dadosTexto = Object.entries(dados).map(([k, v]) => `${k}: ${v}`).join(', ');
-
+ 
             const promptText = `Atue como um astrólogo experiente. Faça uma síntese analítica sobre a seguinte distribuição de ${rotulo} no mapa astral desta pessoa (contagem entre os 10 planetas principais, sem contar Ascendente e Meio do Céu): ${dadosTexto}.
             Siga estas diretrizes:
             - Escreva de 3 a 4 parágrafos curtos.
             - Explique o que esse equilíbrio ou desequilíbrio revela sobre a personalidade, o comportamento e os desafios da pessoa.
             - Use formatação HTML básica com parágrafos <p> e destaques em <strong>.
             - Tom profissional, acolhedor e profundo.`;
-
+ 
             iniciarAnaliseIA(titulo, promptText);
         }
-
+ 
         // Análise completa e integrada de todo o mapa astral (clique na roda)
         function dispararAnaliseMapaCompleto() {
             if (!ULTIMO_ASTROS.length) return;
-
+ 
             const listaPosicoes = ULTIMO_ASTROS.map(a => {
                 const sIdx = Math.floor(a.grau / 30) % 12;
                 const signo = SIGNOS_DADOS[sIdx];
                 return `${a.nome} em ${signo.nome} na Casa ${a.casa}`;
             }).join('; ');
-
+ 
             const listaAspectosResumo = ULTIMO_ASPECTOS
                 .map(asp => `${asp.astro1} em ${asp.aspecto} com ${asp.astro2}`)
                 .join('; ');
-
+ 
             const promptText = `Atue como um astrólogo experiente e analítico. Faça uma leitura completa e integrada do seguinte mapa astral:
-
+ 
             Posições planetárias: ${listaPosicoes}.
             Aspectos entre os astros: ${listaAspectosResumo || 'nenhum aspecto relevante encontrado'}.
-
+ 
             Siga estas diretrizes de resposta:
             - Escreva de 5 a 7 parágrafos.
             - Comece com uma visão geral da personalidade central, integrando Sol, Lua e Ascendente.
@@ -921,10 +921,10 @@
             - Aponte os principais desafios e potenciais de crescimento revelados pelo conjunto do mapa.
             - Use formatação HTML básica com parágrafos <p> e destaques em <strong>.
             - Tom profissional, acolhedor e profundo, como uma leitura completa de mapa astral.`;
-
+ 
             iniciarAnaliseIA('Análise Completa do Mapa Astral', promptText);
         }
-
+ 
         // Análise integrada de todos os aspectos (clique na Matriz de Aspectos)
         function dispararAnaliseAspectosCompleta() {
             if (!ULTIMO_ASPECTOS.length) {
@@ -933,44 +933,25 @@
                 document.getElementById('aiModal').classList.add('active');
                 return;
             }
-
+ 
             const lista = ULTIMO_ASPECTOS
                 .map(asp => `${asp.astro1} em ${asp.aspecto} com ${asp.astro2} (orbe ${asp.orbe}°)`)
                 .join('; ');
-
-            const promptText = `Atue como um astrólogo experiente, com abordagem hermética, gnóstica, esotérica e psicológica. Interprete o mapa astral de forma integrada, analisando como planetas, signos, casas e aspectos interagem entre si para revelar tendências da personalidade, conflitos internos, potenciais de desenvolvimento e caminhos de autoconhecimento. Considere o mapa como uma linguagem simbólica da consciência, evitando determinismos, generalizações e interpretações isoladas dos posicionamentos:
-
+ 
+            const promptText = `Atue como um astrólogo experiente. Faça uma análise integrada de todos os aspectos planetários a seguir, explicando como eles se conectam e interagem entre si no mapa astral como um todo:
+ 
             ${lista}
-
+ 
             Siga estas diretrizes:
-- Escreva entre 6 e 8 parágrafos.
-- Não faça introduções nem conclusões genéricas. Inicie imediatamente pela interpretação do mapa.
-- Considere a astrologia como uma linguagem simbólica de autoconhecimento. Nunca trate o mapa como destino imutável ou verdade absoluta, mas como um conjunto de tendências, predisposições e potenciais de desenvolvimento da consciência.
-- Adote uma abordagem inspirada nas tradições gnóstica, hermética, esotérica e ocultista clássica, interpretando os símbolos astrológicos como representações de processos internos da psique e da evolução espiritual.
-- Integre conceitos da psicologia profunda (especialmente arquétipos, sombra, persona, individuação, conflitos internos e mecanismos inconscientes), sem transformar a análise em um texto técnico de psicologia.
-- No primeiro parágrafo, sintetize a essência da personalidade integrando Sol, Lua e Ascendente como uma única estrutura, em vez de descrevê-los separadamente.
-- Nos parágrafos seguintes, interprete Mercúrio, Vênus, Marte, Júpiter, Saturno, Urano, Netuno, Plutão, Quíron, Nodo Norte e demais pontos relevantes apenas quando contribuírem significativamente para a compreensão do conjunto.
-- Analise aspectos, dignidades, casas e repetições de padrões, explicando como reforçam, tensionam ou transformam os temas centrais do mapa.
-- Priorize a interpretação do conjunto em vez de listar significados isolados de cada posicionamento.
-- Aponte conflitos internos, potenciais latentes, talentos naturais, padrões repetitivos, mecanismos de autossabotagem e caminhos de amadurecimento.
-- Quando houver aspectos desafiadores, interprete-os como oportunidades de transformação e integração da consciência, evitando qualquer tom fatalista.
-- Sempre relacione os símbolos astrológicos com comportamentos, emoções, formas de perceber a realidade, relacionamentos, propósito e desenvolvimento pessoal.
-- Utilize uma linguagem profunda, contemplativa e objetiva, evitando misticismo superficial, frases motivacionais ou promessas espirituais.
-- Evite qualquer tipo de ranking ou exagero, como:
-  - "Este é o posicionamento mais forte..."
-  - "Esta é a característica mais importante..."
-  - "O maior desafio..."
-  - "O melhor aspecto..."
-- Não utilize listas ou tópicos. Toda a resposta deve ser composta por parágrafos bem conectados.
-- Evite repetir o significado de um mesmo planeta ou signo ao longo do texto.
-- Não utilize frases genéricas que poderiam servir para qualquer pessoa. Cada afirmação deve estar fundamentada na combinação específica dos posicionamentos e aspectos presentes no mapa.
-- Escreva como um astrólogo experiente com sólida formação hermética, filosófica e psicológica, tratando o mapa como um instrumento de investigação da consciência, não de adivinhação.
-- Use formatação HTML simples, empregando apenas <p> para parágrafos e <strong> para destacar conceitos importantes.
-- Mantenha um tom sério, respeitoso, profundo e analítico, sem excesso de linguagem poética.';
-
+            - Escreva de 4 a 6 parágrafos.
+            - Não analise cada aspecto isoladamente; busque conexões e padrões entre eles (ex: tensões que se repetem, harmonias que se reforçam, planetas muito aspectados que funcionam como "nós" do mapa).
+            - Explique como essa rede de aspectos molda a dinâmica psicológica geral da pessoa.
+            - Use formatação HTML básica com parágrafos <p> e destaques em <strong>.
+            - Tom profissional, acolhedor e profundo.`;
+ 
             iniciarAnaliseIA('Análise Integrada dos Aspectos', promptText);
         }
-
+ 
         async function gerarAnaliseIA(promptText) {
             const modalBody = document.getElementById('modalBody');
             try {
@@ -980,9 +961,9 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ prompt: promptText })
                 });
-
+ 
                 const data = await response.json();
-
+ 
                 if (response.ok && data.resposta) {
                     exibirResultadoIA(data.resposta);
                 } else {
@@ -993,42 +974,42 @@
                 modalBody.innerHTML = `<p style="color:var(--fogo);"><strong>Erro de Conexão:</strong> ${err.message}</p>`;
             }
         }
-
+ 
         function exibirResultadoIA(texto) {
             // Limpa formatações em markdown de bloco de código caso o modelo devolva
             let htmlFormatado = texto.replace(/```html/g, '').replace(/```/g, '');
             document.getElementById('modalBody').innerHTML = htmlFormatado;
         }
-
+ 
         function fecharModal() {
             document.getElementById('aiModal').classList.remove('active');
         }
-
+ 
         function fecharModalOuter(e) {
             if (e.target.id === 'aiModal') fecharModal();
         }
-
+ 
         function executarTudo() {
             const { astros, casas, asc } = calcularDadosNascimento();
             const aspectos = calcularAspectos(astros);
-
+ 
             ULTIMO_ASTROS = astros;
             ULTIMO_CASAS = casas;
             ULTIMO_ASC = asc;
             ULTIMO_ASPECTOS = aspectos;
-
+ 
             renderizarBalanço(astros);
             renderizarAstrosExpansivel(astros);
             renderizarAspectosExpansivel(aspectos);
             gerarMatrizHtml(astros, aspectos);
             desenharRodaSVG(astros, casas, asc);
         }
-
+ 
         window.onload = () => {
             const agora = new Date();
             document.getElementById('date').value = agora.toISOString().split('T')[0];
             document.getElementById('time').value = agora.toTimeString().split(' ')[0].substring(0, 5);
-
+ 
             executarTudo();
         };
     </script>
