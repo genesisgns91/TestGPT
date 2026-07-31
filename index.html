@@ -368,27 +368,32 @@
         @keyframes spin { to { transform: rotate(360deg); } }
     </style>
 
-    <!-- Firebase App & Vertex AI SDKs (v10+) -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-        import { getVertexAI, getGenerativeModel } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-vertexai.js";
+<!-- SDK Oficial Gemini Client-Side -->
+<script type="module">
+    import { GoogleGenerativeAI } from "https://esm.sh/@google/generative-ai";
 
-        // Insira aqui as credenciais públicas geradas no seu Firebase Console
-        const firebaseConfig = {
-            apiKey: "SUA_FIREBASE_API_KEY",
-            authDomain: "seu-projeto.firebaseapp.com",
-            projectId: "seu-projeto-id",
-            storageBucket: "seu-projeto.appspot.com",
-            messagingSenderId: "123456789",
-            appId: "1:123456789:web:abcdef"
-        };
+    // Busca a chave salva no navegador ou solicita ao usuário
+    let apiKey = localStorage.getItem("GEMINI_API_KEY");
 
-        const app = initializeApp(firebaseConfig);
-        const vertexAI = getVertexAI(app);
-        
-        // Instancia o modelo Gemini no escopo global para acesso seguro no front-end
-        window.modelIA = getGenerativeModel(vertexAI, { model: "gemini-1.5-flash" });
-    </script>
+    if (!apiKey) {
+        apiKey = prompt("Insira sua API Key do Gemini / Google AI Studio:");
+        if (apiKey) {
+            localStorage.setItem("GEMINI_API_KEY", apiKey.trim());
+        }
+    }
+
+    if (apiKey) {
+        const genAI = new GoogleGenerativeAI(apiKey.trim());
+        window.modelIA = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    }
+
+    // Função utilitária para trocar a chave no futuro se necessário
+    window.limparApiKey = () => {
+        localStorage.removeItem("GEMINI_API_KEY");
+        alert("API Key removida do navegador!");
+        location.reload();
+    };
+</script>
 </head>
 <body>
 
