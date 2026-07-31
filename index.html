@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="theme-color" content="#0d1117">
-    <title>Astro??</title>
+    <title>Astro</title>
     
     <style>
         :root {
@@ -242,10 +242,12 @@
         .card-table { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 12px; width: 100%; }
         .card-table h3 { color: var(--destaque); margin-bottom: 10px; font-size: 0.95rem; }
  
+        /* Container Único para Matriz Triangular */
         .matrix-desktop-container {
             display: block;
             width: 100%;
             overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
         }
  
         .aspect-matrix { 
@@ -269,26 +271,18 @@
         .aspect-matrix td.empty-cell { background: transparent; border: none; }
         .aspect-matrix td.cell-aspect { background: var(--bg-principal); font-weight: bold; }
  
-        .matrix-mobile-grid {
-            display: none;
-            grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
-            gap: 8px;
-        }
- 
-        .aspect-mobile-chip {
-            background: var(--bg-principal);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            font-size: 0.8rem;
-        }
- 
+        /* Ajustes específicos para manter o triângulo compacto e perfeito em telas menores */
         @media (max-width: 600px) {
-            .matrix-desktop-container { display: none; }
-            .matrix-mobile-grid { display: grid; }
+            .aspect-matrix {
+                width: auto;
+                min-width: 320px;
+            }
+            .aspect-matrix th, .aspect-matrix td {
+                width: 26px;
+                height: 26px;
+                min-width: 26px;
+                font-size: 0.72rem;
+            }
         }
  
         .badge-aspecto { padding: 3px 6px; border-radius: 4px; font-weight: bold; font-size: 0.75rem; color: #fff; }
@@ -451,7 +445,6 @@
             <div class="matrix-desktop-container">
                 <table id="matrixAspectos" class="aspect-matrix"></table>
             </div>
-            <div id="matrixMobileGrid" class="matrix-mobile-grid"></div>
         </div>
  
         <div class="card-table">
@@ -503,7 +496,7 @@
             { nome: "Oposição", angulo: 180, orbe: 8, classe: "opp", simbolo: "☍", iconClass: "icon-opp" }
         ];
  
-        // Guarda os dados do último mapa calculado, para uso nas análises de IA
+        // Guarda os dados do último mapa calculated, para uso nas análises de IA
         let ULTIMO_ASTROS = [];
         let ULTIMO_CASAS = [];
         let ULTIMO_ASC = 0;
@@ -729,7 +722,6 @@
  
         function gerarMatrizHtml(astros, aspectos) {
             let html = "";
-            let mobileHtml = "";
             const total = astros.length;
  
             for (let i = 0; i < total; i++) {
@@ -751,18 +743,7 @@
                 html += "</tr>";
             }
  
-            aspectos.forEach(asp => {
-                mobileHtml += `
-                    <div class="aspect-mobile-chip">
-                        <span>${SIMBOLOS_ASTROS[asp.astro1]} ${asp.astro1}</span>
-                        <span class="${asp.iconClass}" style="font-weight:bold;">${asp.simbolo}</span>
-                        <span>${SIMBOLOS_ASTROS[asp.astro2]} ${asp.astro2}</span>
-                    </div>
-                `;
-            });
- 
             document.getElementById('matrixAspectos').innerHTML = html;
-            document.getElementById('matrixMobileGrid').innerHTML = mobileHtml || '<p style="font-size:0.8rem; color:#8b949e;">Nenhum aspecto encontrado.</p>';
         }
  
         function desenharRodaSVG(astros, casas, asc) {
@@ -839,9 +820,6 @@
         // INTEGRAÇÃO COM A IA (MODAL + WORKER)
         // ==========================================
  
-        // Abre o modal em estado de carregamento e dispara a chamada à IA.
-        // Reutilizado por todos os gatilhos de análise (posição individual, aspecto,
-        // balanços, mapa completo e matriz de aspectos).
         function iniciarAnaliseIA(titulo, promptText) {
             document.getElementById('modalTitle').textContent = `✦ ${titulo}`;
             document.getElementById('modalBody').innerHTML = `
@@ -864,7 +842,6 @@
             iniciarAnaliseIA(`Análise: ${combinacao}`, promptText);
         }
  
-        // Análise de síntese para os blocos de Elementos, Modalidades/Ritmos e Polaridades
         function dispararAnaliseBalanco(tipo) {
             if (!ULTIMO_ASTROS.length) return;
  
@@ -895,7 +872,6 @@
             iniciarAnaliseIA(titulo, promptText);
         }
  
-        // Análise completa e integrada de todo o mapa astral (clique na roda)
         function dispararAnaliseMapaCompleto() {
             if (!ULTIMO_ASTROS.length) return;
  
@@ -925,7 +901,6 @@
             iniciarAnaliseIA('Análise Completa do Mapa Astral', promptText);
         }
  
-        // Análise integrada de todos os aspectos (clique na Matriz de Aspectos)
         function dispararAnaliseAspectosCompleta() {
             if (!ULTIMO_ASPECTOS.length) {
                 document.getElementById('modalTitle').textContent = '✦ Análise Integrada dos Aspectos';
@@ -976,7 +951,6 @@
         }
  
         function exibirResultadoIA(texto) {
-            // Limpa formatações em markdown de bloco de código caso o modelo devolva
             let htmlFormatado = texto.replace(/```html/g, '').replace(/```/g, '');
             document.getElementById('modalBody').innerHTML = htmlFormatado;
         }
