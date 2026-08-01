@@ -875,7 +875,19 @@
             // fórmula aproximada, usamos a própria rotina de busca do astronomy-engine
             // (Astronomy.SearchSunLongitude), que localiza esse instante com precisão de
             // segundos — é o que garante Ascendente, Casas e planetas corretos.
-            const dataEstimativa = new Date(Date.UTC(anoRS, month - 1, day, 12, 0, 0));
+            //
+            // ⚠️ CORREÇÃO IMPORTANTE: Astronomy.SearchSunLongitude busca sempre PARA
+            // FRENTE a partir da data de início. A versão anterior começava a busca ao
+            // meio-dia UTC do próprio dia civil do aniversário no ano "anoRS". Se o
+            // retorno solar exato daquele ano ocorresse ANTES desse meio-dia UTC (o que
+            // é comum e depende do horário/fuso de nascimento), a busca pulava
+            // erroneamente para o retorno do ANO SEGUINTE — fazendo a Revolução Solar
+            // inteira "adiantar" um ano (Ascendente, casas e planetas todos do ano
+            // errado). A correção: iniciar a busca alguns dias ANTES do aniversário
+            // civil, garantindo que o ponto de partida sempre fique antes do retorno
+            // solar real daquele ano (a margem de alguns dias é segura, pois o próximo
+            // retorno seguinte só ocorre ~365 dias depois).
+            const dataEstimativa = new Date(Date.UTC(anoRS, month - 1, day, 12, 0, 0) - 6 * 86400000);
             const buscaRS = Astronomy.SearchSunLongitude(solNatal, dataEstimativa, 400);
             const dataRS = buscaRS.date; // instante exato (UTC) da Revolução Solar
 
