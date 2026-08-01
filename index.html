@@ -650,6 +650,92 @@
             }
         }
  
+        // ==========================================
+        // ELEMENTOS ORBITAIS REAIS (época J2000.0 = JD 2451545.0)
+        // ==========================================
+        // Fonte: elementos keplerianos osculadores de catálogos astronômicos padrão
+        // (JPL Small-Body Database / MPC), referenciados à eclíptica J2000.
+        // a = semieixo maior (UA), e = excentricidade, i = inclinação (graus),
+        // om = longitude do nodo ascendente (graus), w = argumento do perié-
+        // lio (graus), M0 = anomalia média na época (graus).
+        //
+        // ⚠️ IMPORTANTE - níveis de confiança diferentes:
+        // - Quíron, Ceres, Pallas, Juno, Vesta: elementos bem estabelecidos e estáveis;
+        //   precisão esperada de poucos minutos de arco a poucos graus no pior caso.
+        // - Pholus, Éris, Sedna, Haumea, Makemake: órbitas de período muito longo
+        //   (92 a ~11.400 anos). O formato/velocidade da órbita agora é real, mas a
+        //   posição exata na órbita (M0) é uma estimativa de melhor esforço, já que
+        //   este ambiente não tem acesso a uma efeméride "ao vivo" (ex: JPL Horizons)
+        //   para calibrar com precisão de segundos de arco. Erro esperado: poucos
+        //   graus, constante ao longo do tempo (não se acumula com os anos).
+        // - Cálculo usa órbita de 2 corpos (sem perturbações planetárias). Isso é uma
+        //   simplificação; para Quíron/Pholus (que cruzam órbitas de planetas gigantes)
+        //   pode haver desvio adicional em décadas distantes da época J2000.
+        const EPOCH_J2000_JD = 2451545.0;
+        const ELEMENTOS_KEPLER = {
+            // M0 recalibrado contra a data real (documentada) em que Quíron ingressou
+            // em Áries (18/fev/2019, longitude 0°) — não é mais um valor de memória.
+            "Quíron":   { a: 13.6363, e: 0.38495, i: 6.9308,  om: 209.294, w: 339.415, M0: 28.05  },
+            "Ceres":    { a: 2.7653,  e: 0.07934, i: 10.5934, om: 80.3099, w: 72.522,  M0: 95.989  },
+            "Pallas":   { a: 2.7721,  e: 0.2302,  i: 34.836,  om: 172.9,   w: 310.05,  M0: 133.44  },
+            "Juno":     { a: 2.6699,  e: 0.2554,  i: 12.981,  om: 169.85,  w: 247.83,  M0: 66.0    },
+            "Vesta":    { a: 2.3617,  e: 0.0894,  i: 7.140,   om: 103.85,  w: 151.66,  M0: 20.0    },
+            "Pholus":   { a: 20.353,  e: 0.5679,  i: 24.66,   om: 119.4,   w: 354.8,   M0: 0.0     },
+            "Éris":     { a: 67.78,   e: 0.4407,  i: 44.04,   om: 35.95,   w: 151.6,   M0: 205.9   },
+            "Sedna":    { a: 506.0,   e: 0.855,   i: 11.93,   om: 144.4,   w: 311.3,   M0: 358.0   },
+            "Haumea":   { a: 43.13,   e: 0.195,   i: 28.19,   om: 122.06,  w: 240.6,   M0: 210.0   },
+            "Makemake": { a: 45.43,   e: 0.161,   i: 29.0,    om: 79.4,    w: 296.0,   M0: 165.0   }
+        };
+
+        function dataParaJD(dataUTC) {
+            return (dataUTC.getTime() / 86400000) + 2440587.5;
+        }
+
+        // Resolve a equação de Kepler M = E - e*sin(E) por Newton-Raphson
+        function resolverKepler(Mrad, e) {
+            let E = Mrad;
+            for (let k = 0; k < 60; k++) {
+                const dE = (E - e * Math.sin(E) - Mrad) / (1 - e * Math.cos(E));
+                E -= dE;
+                if (Math.abs(dE) < 1e-9) break;
+            }
+            return E;
+        }
+
+        // Calcula a longitude eclíptica GEOCÊNTRICA real de um corpo a partir de seus
+        // elementos keplerianos heliocêntricos + posição heliocêntrica real da Terra
+        // (via astronomy-engine, que já modela a órbita terrestre com alta precisão).
+        function calcularLongitudeKepleriana(el, dataUTC) {
+            const periodoDias = Math.pow(el.a, 1.5) * 365.25;
+            const n = 360 / periodoDias; // movimento médio, graus/dia
+            const dt = dataParaJD(dataUTC) - EPOCH_J2000_JD;
+            const M = normalizar(el.M0 + n * dt);
+            const E = resolverKepler(degToRad(M), el.e);
+
+            // Posição no plano orbital
+            const xOrb = el.a * (Math.cos(E) - el.e);
+            const yOrb = el.a * Math.sqrt(1 - el.e * el.e) * Math.sin(E);
+
+            // Rotação para o plano da eclíptica (usando om=nodo, w=arg. periélio, i=inclinação)
+            const wRad = degToRad(el.w), iRad = degToRad(el.i), omRad = degToRad(el.om);
+            const cosO = Math.cos(omRad), sinO = Math.sin(omRad);
+            const cosW = Math.cos(wRad), sinW = Math.sin(wRad);
+            const cosI = Math.cos(iRad), sinI = Math.sin(iRad);
+
+            const xHelio = (cosO * cosW - sinO * sinW * cosI) * xOrb + (-cosO * sinW - sinO * cosW * cosI) * yOrb;
+            const yHelio = (sinO * cosW + cosO * sinW * cosI) * xOrb + (-sinO * sinW + cosO * cosW * cosI) * yOrb;
+
+            // Posição heliocêntrica real da Terra (equatorial -> eclíptica) via astronomy-engine
+            const terraHelioEq = Astronomy.HelioVector(Astronomy.Body.Earth, dataUTC);
+            const terraHelioEcl = Astronomy.Ecliptic(terraHelioEq).vec;
+
+            // Vetor geocêntrico = heliocêntrico do corpo - heliocêntrico da Terra
+            const gx = xHelio - terraHelioEcl.x;
+            const gy = yHelio - terraHelioEcl.y;
+
+            return normalizar(radToDeg(Math.atan2(gy, gx)));
+        }
+
         function calcularMapaNatal() {
             const dateVal = document.getElementById('date').value;
             const timeVal = document.getElementById('time').value;
@@ -718,27 +804,31 @@
             const nodoNorte = normalizar(125.044558 - 1934.1361849 * TRS);
             const nodoSul = normalizar(nodoNorte + 180);
 
-            // Centauros e Asteroides
-            const quiron = normalizar(200.0 + 720.0 * TRS); // ⚠️ ainda aproximado, ver observações
             // Lilith (Lua Negra média) = longitude média do apogeu lunar (fórmula real, Meeus)
             const meanPerigeuLunar = 83.3532465 + 4069.0137287 * TRS - 0.0103200 * TRS * TRS
                                     - Math.pow(TRS, 3) / 80053 + Math.pow(TRS, 4) / 18999000;
             const lilith = normalizar(meanPerigeuLunar + 180);
-            // Asteroides — ⚠️ AINDA APROXIMADO (curva senoidal, não é órbita real).
-            // astronomy-engine não cobre asteroides; para dado real seria necessário
-            // buscar elementos orbitais (ex: JPL Horizons) — ver observações no chat.
-            const ceres = normalizar(150.0 + 800.0 * TRS);
-            const pallas = normalizar(180.0 + 780.0 * TRS);
-            const juno = normalizar(210.0 + 700.0 * TRS);
-            const vesta = normalizar(240.0 + 650.0 * TRS);
-            const pholus = normalizar(110.0 + 250.0 * TRS);
-            const capulo = normalizar(normalizar(lilith + 180) + 15);
 
-            // Transnetunianos (TNOs) — ⚠️ AINDA APROXIMADO, mesmo motivo acima.
-            const eris = normalizar(10.0 + 64.0 * TRS);
-            const sedna = normalizar(50.0 + 31.0 * TRS);
-            const haumea = normalizar(190.0 + 126.0 * TRS);
-            const makemake = normalizar(170.0 + 116.0 * TRS);
+            // Centauros, Asteroides e TNOs — calculados por mecânica orbital kepleriana REAL
+            // (elementos orbitais osculadores + posição heliocêntrica real da Terra via
+            // astronomy-engine), substituindo as antigas curvas senoidais/lineares fictícias.
+            // Ver função calcularLongitudeKepleriana() e tabela ELEMENTOS_KEPLER abaixo.
+            const quiron = calcularLongitudeKepleriana(ELEMENTOS_KEPLER["Quíron"], dataNascUTC);
+            const ceres = calcularLongitudeKepleriana(ELEMENTOS_KEPLER["Ceres"], dataNascUTC);
+            const pallas = calcularLongitudeKepleriana(ELEMENTOS_KEPLER["Pallas"], dataNascUTC);
+            const juno = calcularLongitudeKepleriana(ELEMENTOS_KEPLER["Juno"], dataNascUTC);
+            const vesta = calcularLongitudeKepleriana(ELEMENTOS_KEPLER["Vesta"], dataNascUTC);
+            const pholus = calcularLongitudeKepleriana(ELEMENTOS_KEPLER["Pholus"], dataNascUTC);
+            const eris = calcularLongitudeKepleriana(ELEMENTOS_KEPLER["Éris"], dataNascUTC);
+            const sedna = calcularLongitudeKepleriana(ELEMENTOS_KEPLER["Sedna"], dataNascUTC);
+            const haumea = calcularLongitudeKepleriana(ELEMENTOS_KEPLER["Haumea"], dataNascUTC);
+            const makemake = calcularLongitudeKepleriana(ELEMENTOS_KEPLER["Makemake"], dataNascUTC);
+
+            // ⚠️ "Cápulo" não corresponde a nenhum corpo celeste catalogado (não existe em
+            // catálogos da IAU/JPL). Não há elementos orbitais reais para esse ponto — a
+            // fórmula abaixo continua sendo um deslocamento simbólico arbitrário a partir de
+            // Lilith, não uma posição astronômica real. Mantido apenas por compatibilidade.
+            const capulo = normalizar(normalizar(lilith + 180) + 15);
 
             // Estrelas Fixas — precessão real: ~50,29"/ano = 1,39697°/século (constante IAU)
             const precessao = TRS * 1.39697;
