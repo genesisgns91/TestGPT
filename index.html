@@ -1,0 +1,1459 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#0d1117">
+    <title>Astro - Mapa Natal Completo</title>
+    
+    <style>
+        :root {
+            --bg-principal: #0d1117;
+            --bg-card: #161b22;
+            --border: #30363d;
+            --texto: #c9d1d9;
+            --destaque: #58a6ff;
+            --sol: #e3b341;
+            --fogo: #f85149;
+            --terra: #7ee787;
+            --ar: #79c0ff;
+            --agua: #d2a8ff;
+            --ia-color: #a371f7;
+        }
+ 
+        * { 
+            box-sizing: border-box; 
+            margin: 0; 
+            padding: 0; 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+            -webkit-tap-highlight-color: transparent; 
+        }
+        
+        html, body {
+            width: 100%;
+            max-width: 100vw;
+            overflow-x: hidden;
+            background-color: var(--bg-principal); 
+            color: var(--texto); 
+        }
+ 
+        body {
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            min-height: 100vh;
+            padding: 10px;
+        }
+ 
+        header {
+            width: 100%;
+            padding: 12px;
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border);
+            text-align: center;
+            border-radius: 10px;
+            margin-bottom: 12px;
+        }
+        header h1 { font-size: 1.2rem; color: var(--sol); font-weight: 700; letter-spacing: 1.5px; }
+        header p { font-size: 0.8rem; color: #8b949e; margin-top: 2px; }
+
+        .app-nav {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            margin-top: 10px;
+        }
+        .nav-tab {
+            text-decoration: none;
+            color: #8b949e;
+            background: var(--bg-principal);
+            border: 1px solid var(--border);
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        .nav-tab:hover { border-color: var(--destaque); color: #fff; }
+        .nav-tab.active {
+            background: var(--destaque);
+            color: #0d1117;
+            border-color: var(--destaque);
+        }
+ 
+        .app-layout {
+            width: 100%;
+            max-width: 1400px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+ 
+        .controls {
+            background: var(--bg-card); 
+            padding: 14px; 
+            border-radius: 12px; 
+            border: 1px solid var(--border);
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); 
+            gap: 10px;
+            width: 100%;
+        }
+        .input-group { display: flex; flex-direction: column; gap: 4px; position: relative; }
+        .input-group.full { grid-column: 1 / -1; }
+        .input-group.span-2 { grid-column: span 2; }
+        
+        @media (max-width: 600px) {
+            .input-group.span-2 { grid-column: 1 / -1; }
+        }
+
+        label { font-size: 0.75rem; color: #8b949e; font-weight: 600; }
+        input { 
+            background: var(--bg-principal); 
+            border: 1px solid var(--border); 
+            color: #fff; 
+            padding: 10px; 
+            border-radius: 8px; 
+            outline: none; 
+            font-size: 0.9rem;
+            width: 100%;
+        }
+        input:focus { border-color: var(--destaque); }
+        
+        .geo-search-container { display: flex; gap: 6px; }
+        .btn-search-geo {
+            background: var(--border);
+            color: #fff;
+            border: none;
+            padding: 0 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 600;
+            white-space: nowrap;
+            transition: background 0.2s;
+        }
+        .btn-search-geo:hover { background: #444c56; }
+        .geo-status { font-size: 0.7rem; color: var(--terra); margin-top: 2px; display: none; }
+
+        .btn-primary {
+            background-color: #238636; 
+            color: white; 
+            border: none; 
+            padding: 12px;
+            border-radius: 8px; 
+            font-weight: bold; 
+            width: 100%; 
+            font-size: 0.95rem; 
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .btn-primary:active { background-color: #2ea043; }
+ 
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 16px;
+            width: 100%;
+        }
+ 
+        @media (min-width: 900px) {
+            .dashboard-grid { grid-template-columns: 480px 1fr; }
+        }
+ 
+        .chart-card {
+            background: var(--bg-card); 
+            border: 1px solid var(--border); 
+            border-radius: 12px; 
+            padding: 12px;
+            display: flex; 
+            flex-direction: column; 
+            align-items: center;
+            width: 100%;
+        }
+        .chart-card-header {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .chart-card h2 { color: var(--destaque); font-size: 1rem; text-align: left; }
+        #chartSvg { width: 100%; max-width: 460px; height: auto; border-radius: 50%; background: #0b0e14; }
+
+        .legenda-precisao {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px 16px;
+            margin-top: 10px;
+            font-size: 0.72rem;
+            color: #8b949e;
+        }
+        .legenda-precisao span { display: flex; align-items: center; gap: 5px; }
+        .ponto-legenda {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+ 
+        .signo-symbol { font-family: "Segoe UI Symbol", sans-serif; font-size: 22px; fill: var(--destaque); text-anchor: middle; dominant-baseline: central; }
+        .planet-node { cursor: pointer; }
+        .planet-node circle { fill: var(--bg-card); stroke-width: 2px; }
+        .planet-node text { font-family: "Segoe UI Symbol", sans-serif; font-size: 15px; font-weight: bold; text-anchor: middle; dominant-baseline: central; }
+ 
+        .balance-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 12px;
+            width: 100%;
+        }
+ 
+        .balance-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 14px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .balance-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 6px;
+        }
+        .balance-card h3 { color: var(--destaque); font-size: 0.95rem; }
+ 
+        .progress-item { margin-bottom: 10px; }
+        .progress-info { display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 4px; }
+        .bar-bg { background: var(--bg-principal); height: 8px; border-radius: 4px; overflow: hidden; }
+        .bar-fill { height: 100%; border-radius: 4px; transition: width 0.4s ease; }
+ 
+        .expand-list { display: flex; flex-direction: column; gap: 8px; width: 100%; }
+        
+        .expand-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            overflow: hidden;
+            transition: border-color 0.2s;
+        }
+        .expand-card:hover { border-color: var(--destaque); }
+ 
+        .expand-header {
+            padding: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            user-select: none;
+            background: rgba(255,255,255,0.01);
+        }
+ 
+        .expand-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.88rem;
+            font-weight: 600;
+        }
+ 
+        .expand-badge {
+            font-size: 0.75rem;
+            color: #8b949e;
+            background: var(--bg-principal);
+            padding: 3px 8px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+        }
+ 
+        .expand-content {
+            display: none;
+            padding: 12px;
+            background: var(--bg-principal);
+            border-top: 1px solid var(--border);
+            font-size: 0.83rem;
+            line-height: 1.5;
+            color: #8b949e;
+        }
+        .expand-card.open .expand-content { display: block; }
+        .expand-card.open .arrow-icon { transform: rotate(180deg); }
+        .arrow-icon { transition: transform 0.2s; font-size: 0.8rem; color: #8b949e; }
+ 
+        .btn-ia {
+            background: linear-gradient(135deg, #8957e5, #3fb950);
+            color: white;
+            border: none;
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            transition: opacity 0.2s;
+            white-space: nowrap;
+        }
+        .btn-ia:hover { opacity: 0.9; }
+        .btn-ia-inline { margin-top: 12px; font-size: 0.8rem; padding: 8px 14px; }
+ 
+        .card-table { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 12px; width: 100%; }
+        .card-table-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .card-table h3 { color: var(--destaque); font-size: 0.95rem; }
+ 
+        .matrix-desktop-container {
+            display: block;
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+ 
+        .aspect-matrix { 
+            border-collapse: collapse; 
+            margin: 0 auto;
+            width: 100%;
+        }
+        
+        .aspect-matrix th, .aspect-matrix td {
+            height: 32px;
+            min-width: 28px;
+            padding: 0; 
+            text-align: center; 
+            vertical-align: middle; 
+            border: 1px solid var(--border); 
+            font-size: 0.75rem;
+        }
+        .aspect-matrix th.header-astro { background: var(--bg-principal); color: var(--sol); font-weight: bold; }
+        .aspect-matrix td.empty-cell { background: transparent; border: none; }
+        .aspect-matrix td.cell-aspect { background: var(--bg-principal); font-weight: bold; }
+ 
+        .badge-aspecto { padding: 3px 6px; border-radius: 4px; font-weight: bold; font-size: 0.75rem; color: #fff; }
+        .conj { background: #238636; }
+        .opp { background: #da3633; }
+        .trig { background: #1f6beb; }
+        .quad { background: #d29922; color: #000; }
+        .sext { background: #8957e5; }
+ 
+        .icon-conj { color: #2ea043; }
+        .icon-opp  { color: #f85149; }
+        .icon-trig { color: #3fb950; }
+        .icon-quad { color: #d29922; }
+        .icon-sext { color: #a371f7; }
+ 
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(4px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            padding: 16px;
+        }
+        .modal-overlay.active { display: flex; }
+ 
+        .modal-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            width: 100%;
+            max-width: 650px;
+            max-height: 85vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            overflow: hidden;
+            animation: fadeIn 0.2s ease-out;
+        }
+ 
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+ 
+        .modal-header {
+            padding: 14px 18px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--bg-principal);
+        }
+        .modal-header h3 { font-size: 1rem; color: var(--sol); display: flex; align-items: center; gap: 8px; }
+        .modal-close {
+            background: transparent;
+            border: none;
+            color: #8b949e;
+            font-size: 1.4rem;
+            cursor: pointer;
+            line-height: 1;
+        }
+        .modal-close:hover { color: #fff; }
+ 
+        .modal-body {
+            padding: 18px;
+            overflow-y: auto;
+            font-size: 0.9rem;
+            line-height: 1.6;
+            color: var(--texto);
+        }
+ 
+        .loading-spinner {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            padding: 30px 0;
+            color: #8b949e;
+        }
+        .spinner {
+            width: 32px;
+            height: 32px;
+            border: 3px solid var(--border);
+            border-top-color: var(--ia-color);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+ 
+    <header>
+        <h1>MAPA ASTRAL NATAL</h1>
+        <p>Análise Astrológica Completa (33 Astros, Ângulos e Estrelas)</p>
+        <nav class="app-nav">
+            <a href="index.html" class="nav-tab active">🌟 Mapa Natal</a>
+            <a href="revolucao_solar.html" class="nav-tab">☀️ Revolução Solar</a>
+        </nav>
+    </header>
+ 
+    <div class="app-layout">
+        <form id="astrologyForm" class="controls" onsubmit="event.preventDefault(); executarTudo();">
+            <div class="input-group">
+                <label for="date">Data de Nascimento</label>
+                <input type="date" id="date" required>
+            </div>
+            <div class="input-group">
+                <label for="time">Hora de Nascimento</label>
+                <input type="time" id="time" required>
+            </div>
+            <div class="input-group">
+                <label for="fuso">Fuso Horário (UTC)</label>
+                <input type="number" id="fuso" value="-3" step="0.5" required>
+            </div>
+
+            <div class="input-group span-2">
+                <label for="cidadeInput">Cidade de Nascimento</label>
+                <div class="geo-search-container">
+                    <input type="text" id="cidadeInput" placeholder="Ex: Curitiba, PR ou São Paulo, Brasil" value="Curitiba, PR">
+                    <button type="button" class="btn-search-geo" onclick="buscarCoordenadas()">🔍 Buscar</button>
+                </div>
+                <div id="geoStatus" class="geo-status">✓ Local encontrado e coordenadas preenchidas</div>
+            </div>
+
+            <div class="input-group">
+                <label for="lat">Latitude</label>
+                <input type="number" id="lat" value="-25.4284" step="0.0001" required>
+            </div>
+            <div class="input-group">
+                <label for="lon">Longitude</label>
+                <input type="number" id="lon" value="-49.2733" step="0.0001" required>
+            </div>
+            <div class="input-group full">
+                <button type="submit" class="btn-primary">Calcular Mapa Natal</button>
+            </div>
+        </form>
+ 
+        <div class="dashboard-grid">
+            <div class="chart-card">
+                <div class="chart-card-header">
+                    <h2>Roda do Mapa Natal</h2>
+                    <button class="btn-ia" onclick="dispararAnaliseMapaCompleto()">✦ Análise Síntese IA</button>
+                </div>
+                <svg id="chartSvg" viewBox="0 0 600 600"></svg>
+                <div class="legenda-precisao">
+                    <span><span class="ponto-legenda" style="background:#58a6ff;"></span> Alta confiabilidade</span>
+                    <span><span class="ponto-legenda" style="background:#e3b341;"></span> Confiabilidade média</span>
+                    <span><span class="ponto-legenda" style="background:#f85149;"></span> Confiabilidade mais baixa</span>
+                </div>
+            </div>
+ 
+            <div class="balance-container">
+                <div class="balance-card">
+                    <div>
+                        <div class="balance-card-header">
+                            <h3>Elementos</h3>
+                            <button class="btn-ia" onclick="dispararAnaliseBalanco('elementos')">✦ Análise IA</button>
+                        </div>
+                        <div id="elementosBars"></div>
+                    </div>
+                </div>
+                <div class="balance-card">
+                    <div>
+                        <div class="balance-card-header">
+                            <h3>Modalidades / Ritmos</h3>
+                            <button class="btn-ia" onclick="dispararAnaliseBalanco('ritmos')">✦ Análise IA</button>
+                        </div>
+                        <div id="ritmosBars"></div>
+                    </div>
+                </div>
+                <div class="balance-card">
+                    <div>
+                        <div class="balance-card-header">
+                            <h3>Polaridades</h3>
+                            <button class="btn-ia" onclick="dispararAnaliseBalanco('polaridades')">✦ Análise IA</button>
+                        </div>
+                        <div id="polaridadesBars"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+ 
+        <div class="card-table">
+            <h3>Posições Astrológicas (Clique para Expandir)</h3>
+            <div id="astrosExpandList" class="expand-list" style="margin-top: 10px;"></div>
+        </div>
+
+        <div class="card-table">
+            <h3>Casas Astrológicas (Clique para Expandir)</h3>
+            <div id="casasExpandList" class="expand-list" style="margin-top: 10px;"></div>
+        </div>
+ 
+        <div class="card-table">
+            <div class="card-table-header">
+                <h3>Matriz de Aspectos do Mapa</h3>
+                <button class="btn-ia" onclick="dispararAnaliseAspectosCompleta()">✦ Análise IA</button>
+            </div>
+            <div class="matrix-desktop-container">
+                <table id="matrixAspectos" class="aspect-matrix"></table>
+            </div>
+        </div>
+ 
+        <div class="card-table">
+            <h3>Interpretação dos Aspectos (Clique para Expandir)</h3>
+            <div id="aspectosExpandList" class="expand-list" style="margin-top: 10px;"></div>
+        </div>
+    </div>
+ 
+    <!-- Modal Flutuante para IA -->
+    <div id="aiModal" class="modal-overlay" onclick="fecharModalOuter(event)">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3 id="modalTitle">✦ Análise Astrológica (IA)</h3>
+                <button class="modal-close" onclick="fecharModal()">&times;</button>
+            </div>
+            <div id="modalBody" class="modal-body">
+                <!-- Conteúdo gerado pela IA -->
+            </div>
+        </div>
+    </div>
+ 
+    <script src="https://cdn.jsdelivr.net/npm/astronomy-engine/astronomy.browser.min.js"></script>
+    <script>
+        const SIGNOS_DADOS = [
+            { nome: "Áries", simbolo: "♈︎", elemento: "Fogo", ritmo: "Cardinal", polaridade: "Yang" },
+            { nome: "Touro", simbolo: "♉︎", elemento: "Terra", ritmo: "Fixo", polaridade: "Yin" },
+            { nome: "Gêmeos", simbolo: "♊︎", elemento: "Ar", ritmo: "Mutável", polaridade: "Yang" },
+            { nome: "Câncer", simbolo: "♋︎", elemento: "Água", ritmo: "Cardinal", polaridade: "Yin" },
+            { nome: "Leão", simbolo: "♌︎", elemento: "Fogo", ritmo: "Fixo", polaridade: "Yang" },
+            { nome: "Virgem", simbolo: "♍︎", elemento: "Terra", ritmo: "Mutável", polaridade: "Yin" },
+            { nome: "Libras", simbolo: "♎︎", elemento: "Ar", ritmo: "Cardinal", polaridade: "Yang" },
+            { nome: "Escorpião", simbolo: "♏︎", elemento: "Água", ritmo: "Fixo", polaridade: "Yin" },
+            { nome: "Sagitário", simbolo: "♐︎", elemento: "Fogo", ritmo: "Mutável", polaridade: "Yang" },
+            { nome: "Capricórnio", simbolo: "♑︎", elemento: "Terra", ritmo: "Cardinal", polaridade: "Yin" },
+            { nome: "Aquário", simbolo: "♒︎", elemento: "Ar", ritmo: "Fixo", polaridade: "Yang" },
+            { nome: "Peixes", simbolo: "♓︎", elemento: "Água", ritmo: "Mutável", polaridade: "Yin" }
+        ];
+
+        const DEFINICAO_CASAS = {
+            1: "Identidade, constituição física, primeira impressão e postura espontânea perante a vida.",
+            2: "Recursos materiais, vida financeira, valores pessoais e capacidade de geração de sustento.",
+            3: "Comunicação, aprendizagem prática, pequenas viagens, relação com irmãos e intelecto diário.",
+            4: "Lar, família, ancestralidade, raízes emocionais e segurança íntima.",
+            5: "Autoexpressão criativa, romances, projetos autoriais, filhos, jogos e prazeres.",
+            6: "Rotina de trabalho, saúde física, hábitos diários, serviço e produtividade.",
+            7: "Relacionamentos duradouros, casamento, parcerias de negócios e contratos sociais.",
+            8: "Transformações profundas, recursos compartilhados, sexualidade, regeneração e finanças ocultas.",
+            9: "Filosofia de vida, ensino superior, viagens longas, expansão espiritual e buscas por significado.",
+            10: "Carreira, imagem pública, vocação, metas profissionais e legado no mundo.",
+            11: "Grupos sociais, amizades, causas coletivas, rede de apoio e planos de futuro.",
+            12: "Subconsciente, espiritualidade, recolhimento, processos ocultos e saúde mental."
+        };
+
+        const SIMBOLOS_ASTROS = {
+            "Sol": "☉", "Lua": "☽", "Mercúrio": "☿", "Vênus": "♀", "Marte": "♂",
+            "Júpiter": "♃", "Saturno": "♄", "Urano": "♅", "Netuno": "♆", "Plutão": "♇",
+            "Ascendente (AC)": "AC", "Meio do Céu (MC)": "MC", 
+            "Descendente (DC)": "DC", "Fundo do Céu (IC)": "IC",
+            "Vertex": "Vx", "Anti-vertex": "Avx",
+            "Quíron": "⚷", "Lilith": "⚸", "Roda da Fortuna": "⊗",
+            "Nodo Norte": "☊", "Nodo Sul": "☋",
+            "Ceres": "⚳", "Pallas": "⚴", "Juno": "⚵", "Vesta": "⚶",
+            "Pholus": "⯛",
+            "Éris": "⯰", "Sedna": "⯲", "Haumea": "🩵", "Makemake": "🩲",
+            "Aldebaran": "✶", "Regulus": "✶", "Antares": "✶"
+        };
+
+        const DEFINICAO_ASTROS = {
+            "Sol": "Sua essência, vitalidade, propósito de vida e identidade central.",
+            "Lua": "Suas emoções, respostas reativas, memórias e necessidades de segurança.",
+            "Mercúrio": "Processo de pensamento, comunicação, intelecto e aprendizado.",
+            "Vênus": "Valores, forma de amar, relacionamentos, estética e finanças.",
+            "Marte": "Força de ação, impulso, desejo, assertividade e como lida com conflitos.",
+            "Júpiter": "Expansão, sorte, filosofia de vida, abundância e sabedoria.",
+            "Saturno": "Estrutura, limites, disciplina, responsabilidade e lições de vida.",
+            "Urano": "Inovação, ruptura, busca por liberdade, originalidade e imprevistos.",
+            "Netuno": "Espiritualidade, intuição, imaginação, ilusões e compaixão.",
+            "Plutão": "Poder pessoal, transformação profunda, regeneração e sombras.",
+            "Ascendente (AC)": "Máscara social, presença física e primeira impressão no mundo.",
+            "Meio do Céu (MC)": "Carreira, reputação pública, ambição e legado profissional.",
+            "Descendente (DC)": "O tipo de parceria que você atrai e o que busca nos outros no espelho relacional.",
+            "Fundo do Céu (IC)": "Suas raízes, ancestralidade, lar, infância e base psíquica interior.",
+            "Quíron": "A ferida sagrada da alma e o local onde você desenvolve o dom da cura.",
+            "Lilith": "Sua força selvagem reprimida, autonomia, tabus e poder instintivo.",
+            "Roda da Fortuna": "Ponto de máxima harmonia, onde o fluxo da prosperidade e alegria se manifestam.",
+            "Vertex": "O 'destino relacional', encontros kármicos e pontos de virada involuntários.",
+            "Anti-vertex": "Ponto polar ao Vertex, associado ao impulso pessoal e gatilhos de transformação.",
+            "Nodo Norte": "Sua missão de alma, direção de crescimento e futuro a ser desenvolvido.",
+            "Nodo Sul": "Sua zona de conforto, hábitos passados e talentos inatos que precisam ser equilibrados.",
+            "Ceres": "Forma de nutrir, autocuidado, apego e relação com a abundância.",
+            "Pallas": "Sabedoria estratégica, inteligência de padrões e resolução de problemas.",
+            "Juno": "Compromisso, casamentos, acordos e o parceiro ideal para longo prazo.",
+            "Vesta": "Foco interior, devoção, disciplina sagrada e onde você canaliza sua energia vital.",
+            "Pholus": "Gatilhos de grande impacto, pequenas causas que geram grandes transformações.",
+            "Éris": "A discórdia construtiva, busca por justiça social e recusa em ser silenciado.",
+            "Sedna": "Transcendência após traições, vulnerabilidade profunda e sabedoria dos abismos.",
+            "Haumea": "Fertilidade criativa, resiliência e renascimento constante.",
+            "Makemake": "Conexão com a natureza, preservação e sabedoria instintiva.",
+            "Aldebaran": "Estrela Real (Touro): Honra, integridade e sucesso através da ética.",
+            "Regulus": "Estrela Real (Leão): Liderança, nobreza e sucesso com risco de queda se houver vingança.",
+            "Antares": "Estrela Real (Escorpião): Intensidade emocional, coragem e transformações passionais."
+        };
+ 
+        const DEFINICAO_ASPECTOS = [
+            { nome: "Conjunção", angulo: 0, orbe: 8, classe: "conj", simbolo: "☌", iconClass: "icon-conj" },
+            { nome: "Sextil", angulo: 60, orbe: 6, classe: "sext", simbolo: "✶", iconClass: "icon-sext" },
+            { nome: "Quadratura", angulo: 90, orbe: 7, classe: "quad", simbolo: "□", iconClass: "icon-quad" },
+            { nome: "Trígono", angulo: 120, orbe: 8, classe: "trig", simbolo: "△", iconClass: "icon-trig" },
+            { nome: "Oposição", angulo: 180, orbe: 8, classe: "opp", simbolo: "☍", iconClass: "icon-opp" }
+        ];
+ 
+        let ULTIMO_ASTROS = [];
+        let ULTIMO_CASAS = [];
+        let ULTIMO_ASC = 0;
+        let ULTIMO_ASPECTOS = [];
+        let ULTIMO_BALANCO = { elementos: {}, ritmos: {}, polaridades: {} };
+ 
+        function degToRad(deg) { return deg * Math.PI / 180; }
+        function radToDeg(rad) { return rad * 180 / Math.PI; }
+        function normalizar(graus) { return (graus % 360 + 360) % 360; }
+ 
+        function formatarDMS(grausDecimal) {
+            const gAbs = grausDecimal % 30;
+            const g = Math.floor(gAbs);
+            const m = Math.floor((gAbs - g) * 60);
+            return `${g}°${m.toString().padStart(2, '0')}'`;
+        }
+
+        // ==========================================
+        // ELEMENTOS ORBITAIS REAIS (cada corpo com sua própria época de referência)
+        // ==========================================
+        // a = semieixo maior (UA), e = excentricidade, i = inclinação (graus),
+        // om = longitude do nodo ascendente (graus), w = argumento do periélio (graus),
+        // M0 = anomalia média na época (graus), epoch = data juliana da época de
+        // referência (fonte: JPL Small-Body Database, elementos osculadores recentes).
+        // ⚠️ Níveis de confiança diferentes (ver também NIVEL_PRECISAO mais abaixo,
+        // usado para colorir os ícones na roda):
+        // - Ceres, Pallas, Juno, Vesta: cinturão principal, órbitas estáveis e pouco
+        //   perturbadas por planetas gigantes — confiança "média" (amarelo).
+        // - Quíron, Pholus: centauros que cruzam as órbitas de Saturno/Urano/Netuno,
+        //   mais sensíveis a perturbações não modeladas neste cálculo de 2 corpos —
+        //   confiança "baixa" (vermelho), mesmo com elementos reais e época recente.
+        // - Éris, Sedna, Haumea, Makemake: TNOs de período muito longo (283 a ~11.400
+        //   anos) — confiança "baixa" (vermelho) pela mesma razão.
+        // - Todos os 10 corpos abaixo usam elementos orbitais REAIS (JPL Small-Body
+        //   Database, via Wikipedia), cada um com sua própria época de referência
+        //   recente (2020-2025) — não mais uma única estimativa arbitrária para o ano
+        //   2000. Cálculo por órbita de 2 corpos (sem perturbações planetárias).
+        const ELEMENTOS_KEPLER = {
+            "Quíron":   { epoch: 2459396.5, a: 13.70,   e: 0.3772,  i: 6.9299,  om: 209.27,  w: 339.71,  M0: 180.70  },
+            "Ceres":    { epoch: 2460200.5, a: 2.767,   e: 0.0789,  i: 10.59,   om: 80.25,   w: 73.42,   M0: 60.08   },
+            "Pallas":   { epoch: 2460200.5, a: 2.77,    e: 0.2302,  i: 34.93,   om: 172.9,   w: 310.9,   M0: 40.6    },
+            "Juno":     { epoch: 2460200.5, a: 2.67,    e: 0.2562,  i: 12.991,  om: 169.84,  w: 247.74,  M0: 37.02   },
+            "Vesta":    { epoch: 2460200.5, a: 2.36,    e: 0.0894,  i: 7.1422,  om: 103.71,  w: 151.66,  M0: 169.4   },
+            "Pholus":   { epoch: 2459396.5, a: 20.348,  e: 0.5698,  i: 24.617,  om: 119.44,  w: 354.77,  M0: 117.26  },
+            "Éris":     { epoch: 2461000.5, a: 67.69,   e: 0.44,    i: 44.18,   om: 36.02,   w: 151.66,  M0: 205.11  },
+            "Sedna":    { epoch: 2458900.5, a: 506.0,   e: 0.8496,  i: 11.9307, om: 144.248, w: 311.352, M0: 358.117 },
+            "Haumea":   { epoch: 2459200.5, a: 43.116,  e: 0.19642, i: 28.2137, om: 122.167, w: 239.041, M0: 218.205 },
+            "Makemake": { epoch: 2461000.5, a: 45.499,  e: 0.1604,  i: 29.002,  om: 79.441,  w: 296.065, M0: 170.497 }
+        };
+
+        // Classificação de confiança de cada ponto, usada para colorir os ícones na
+        // roda (azul = alta, amarelo = média, vermelho = mais baixa).
+        const NIVEL_PRECISAO = {
+            "Sol": "alta", "Lua": "alta", "Mercúrio": "alta", "Vênus": "alta", "Marte": "alta",
+            "Júpiter": "alta", "Saturno": "alta", "Urano": "alta", "Netuno": "alta", "Plutão": "alta",
+            "Ascendente (AC)": "alta", "Descendente (DC)": "alta",
+            "Meio do Céu (MC)": "alta", "Fundo do Céu (IC)": "alta",
+            "Vertex": "alta", "Anti-vertex": "alta",
+            "Nodo Norte": "alta", "Nodo Sul": "alta", "Lilith": "alta", "Roda da Fortuna": "alta",
+            "Aldebaran": "alta", "Regulus": "alta", "Antares": "alta",
+            "Ceres": "media", "Pallas": "media", "Juno": "media", "Vesta": "media",
+            "Quíron": "baixa", "Pholus": "baixa",
+            "Éris": "baixa", "Sedna": "baixa", "Haumea": "baixa", "Makemake": "baixa"
+        };
+        const CORES_PRECISAO = { alta: "#58a6ff", media: "#e3b341", baixa: "#f85149" };
+
+        function dataParaJD(dataUTC) {
+            return (dataUTC.getTime() / 86400000) + 2440587.5;
+        }
+
+        // Resolve a equação de Kepler M = E - e*sin(E) por Newton-Raphson
+        function resolverKepler(Mrad, e) {
+            let E = Mrad;
+            for (let k = 0; k < 60; k++) {
+                const dE = (E - e * Math.sin(E) - Mrad) / (1 - e * Math.cos(E));
+                E -= dE;
+                if (Math.abs(dE) < 1e-9) break;
+            }
+            return E;
+        }
+
+        // Longitude eclíptica GEOCÊNTRICA real de um corpo a partir de elementos
+        // keplerianos heliocêntricos + posição heliocêntrica real da Terra (via
+        // astronomy-engine).
+        function calcularLongitudeKepleriana(el, dataUTC) {
+            const periodoDias = Math.pow(el.a, 1.5) * 365.25;
+            const n = 360 / periodoDias;
+            const dt = dataParaJD(dataUTC) - el.epoch;
+            const M = normalizar(el.M0 + n * dt);
+            const E = resolverKepler(degToRad(M), el.e);
+
+            const xOrb = el.a * (Math.cos(E) - el.e);
+            const yOrb = el.a * Math.sqrt(1 - el.e * el.e) * Math.sin(E);
+
+            const wRad = degToRad(el.w), iRad = degToRad(el.i), omRad = degToRad(el.om);
+            const cosO = Math.cos(omRad), sinO = Math.sin(omRad);
+            const cosW = Math.cos(wRad), sinW = Math.sin(wRad);
+            const cosI = Math.cos(iRad), sinI = Math.sin(iRad);
+
+            const xHelio = (cosO * cosW - sinO * sinW * cosI) * xOrb + (-cosO * sinW - sinO * cosW * cosI) * yOrb;
+            const yHelio = (sinO * cosW + cosO * sinW * cosI) * xOrb + (-sinO * sinW + cosO * cosW * cosI) * yOrb;
+
+            const terraHelioEq = Astronomy.HelioVector(Astronomy.Body.Earth, dataUTC);
+            const terraHelioEcl = Astronomy.Ecliptic(terraHelioEq).vec;
+
+            const gx = xHelio - terraHelioEcl.x;
+            const gy = yHelio - terraHelioEcl.y;
+
+            return normalizar(radToDeg(Math.atan2(gy, gx)));
+        }
+
+        async function buscarCoordenadas() {
+            const cidadeStr = document.getElementById('cidadeInput').value.trim();
+            const statusDiv = document.getElementById('geoStatus');
+            if (!cidadeStr) return;
+
+            statusDiv.style.display = 'block';
+            statusDiv.style.color = '#8b949e';
+            statusDiv.textContent = 'Buscando coordenadas...';
+
+            try {
+                const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(cidadeStr)}&limit=1`);
+                const data = await response.json();
+
+                if (data && data.length > 0) {
+                    const lat = parseFloat(data[0].lat).toFixed(4);
+                    const lon = parseFloat(data[0].lon).toFixed(4);
+                    
+                    document.getElementById('lat').value = lat;
+                    document.getElementById('lon').value = lon;
+                    
+                    statusDiv.style.color = 'var(--terra)';
+                    statusDiv.textContent = `✓ Local encontrado: Lat ${lat}, Lon ${lon}`;
+                } else {
+                    statusDiv.style.color = 'var(--fogo)';
+                    statusDiv.textContent = 'Local não encontrado. Insira a Lat/Lon manualmente.';
+                }
+            } catch (err) {
+                console.error(err);
+                statusDiv.style.color = 'var(--fogo)';
+                statusDiv.textContent = 'Erro ao buscar cidade. Insira a Lat/Lon manualmente.';
+            }
+        }
+ 
+        function calcularMapaNatal() {
+            const dateVal = document.getElementById('date').value;
+            const timeVal = document.getElementById('time').value;
+            const fuso = parseFloat(document.getElementById('fuso').value);
+            const lat = parseFloat(document.getElementById('lat').value);
+            const lon = parseFloat(document.getElementById('lon').value);
+ 
+            const [year, month, day] = dateVal.split('-').map(Number);
+            const [hours, minutes] = timeVal.split(':').map(Number);
+            
+            const hourUTC = hours + (minutes / 60) - fuso;
+            let m = month, y = year;
+            if (m <= 2) { y -= 1; m += 12; }
+            let A = Math.floor(y / 100);
+            let B = 2 - A + Math.floor(A / 4);
+            let jdBirth = Math.floor(365.25 * (y + 4716)) + Math.floor(30.6001 * (m + 1)) + day + (hourUTC / 24.0) + B - 1524.5;
+            let TRS = (jdBirth - 2451545.0) / 36525.0;
+
+            // GMST correto (Meeus): usa a taxa de rotação da Terra por DIA (360.98564736629°/dia),
+            // não por século — o valor anterior estava ~366x menor que o correto, por isso o
+            // Ascendente praticamente não mudava ao alterar o horário de nascimento.
+            let diasDesdeJ2000 = jdBirth - 2451545.0;
+            let gmst = 280.46061837 + 360.98564736629 * diasDesdeJ2000 + 0.000387933 * TRS * TRS - (TRS * TRS * TRS) / 38710000.0;
+            gmst = normalizar(gmst);
+            let lst = normalizar(gmst + lon);
+            let obliq = degToRad(23.4392911 - 0.0130042 * TRS);
+ 
+            let mc = normalizar(radToDeg(Math.atan2(Math.sin(degToRad(lst)), Math.cos(degToRad(lst)) * Math.cos(obliq))));
+            // atan2 já resolve o quadrante corretamente — não é necessário (nem correto)
+            // forçar o resultado para nenhuma faixa fixa de graus.
+            let asc = normalizar(radToDeg(Math.atan2(Math.cos(degToRad(lst)), -Math.sin(degToRad(lst)) * Math.cos(obliq) - Math.tan(degToRad(lat)) * Math.sin(obliq))));
+
+            // Planetas Principais — posições geocêntricas REAIS via astronomy-engine
+            // (mesma classe de precisão de efeméride usada por softwares profissionais)
+            const dataNascUTC = new Date(Date.UTC(year, month - 1, day, 0, 0, 0, 0) + hourUTC * 3600000);
+
+            function longitudeEclipticaReal(corpo) {
+                const vetor = Astronomy.GeoVector(corpo, dataNascUTC, true);
+                return normalizar(Astronomy.Ecliptic(vetor).elon);
+            }
+
+            const sol = longitudeEclipticaReal(Astronomy.Body.Sun);
+            const lua = normalizar(Astronomy.EclipticGeoMoon(dataNascUTC).lon);
+            const mercurio = longitudeEclipticaReal(Astronomy.Body.Mercury);
+            const venus = longitudeEclipticaReal(Astronomy.Body.Venus);
+            const marte = longitudeEclipticaReal(Astronomy.Body.Mars);
+            const jupiter = longitudeEclipticaReal(Astronomy.Body.Jupiter);
+            const saturno = longitudeEclipticaReal(Astronomy.Body.Saturn);
+            const urano = longitudeEclipticaReal(Astronomy.Body.Uranus);
+            const netuno = longitudeEclipticaReal(Astronomy.Body.Neptune);
+            const plutao = longitudeEclipticaReal(Astronomy.Body.Pluto);
+
+            // Ângulos Derivados
+            const dc = normalizar(asc + 180);
+            const ic = normalizar(mc + 180);
+            // Vertex/Anti-vertex — fórmula trigonométrica real (método da co-latitude,
+            // usado por softwares e tabelas de casas tradicionais): calcula-se um
+            // "Ascendente" com a MESMA fórmula do Ascendente comum, mas usando a
+            // co-latitude (90° − latitude) no lugar da latitude. O resultado disso é o
+            // Anti-vertex; o Vertex é o ponto oposto (+180°). Substituiu a fórmula
+            // simplificada anterior (asc + 180 − seno(asc)×12), que não era a fórmula
+            // astronômica padrão.
+            const antiVertex = normalizar(radToDeg(Math.atan2(Math.cos(degToRad(lst)), -Math.sin(degToRad(lst)) * Math.cos(obliq) - Math.tan(degToRad(90 - lat)) * Math.sin(obliq))));
+            const vertex = normalizar(antiVertex + 180);
+
+            // Pontos e Nodos
+            // Roda da Fortuna (Parte da Fortuna): a fórmula tradicional muda entre
+            // mapa diurno (Sol acima do horizonte) e noturno (Sol abaixo do horizonte).
+            const mapaDiurno = normalizar(sol - asc) >= 180;
+            const rodaFortuna = mapaDiurno
+                ? normalizar(asc + lua - sol)
+                : normalizar(asc + sol - lua);
+            const nodoNorte = normalizar(125.044558 - 1934.1361849 * TRS);
+            const nodoSul = normalizar(nodoNorte + 180);
+
+            // Centauros, Asteroides e TNOs — mecânica orbital kepleriana REAL (elementos
+            // orbitais osculadores + posição heliocêntrica real da Terra), substituindo
+            // as antigas curvas senoidais/lineares fictícias. Ver ELEMENTOS_KEPLER e
+            // calcularLongitudeKepleriana() no topo do script.
+            const quiron = calcularLongitudeKepleriana(ELEMENTOS_KEPLER["Quíron"], dataNascUTC);
+            // Lilith (Lua Negra média) = longitude média do apogeu lunar (fórmula real, Meeus)
+            const meanPerigeuLunar = 83.3532465 + 4069.0137287 * TRS - 0.0103200 * TRS * TRS
+                                    - Math.pow(TRS, 3) / 80053 + Math.pow(TRS, 4) / 18999000;
+            const lilith = normalizar(meanPerigeuLunar + 180);
+            const ceres = calcularLongitudeKepleriana(ELEMENTOS_KEPLER["Ceres"], dataNascUTC);
+            const pallas = calcularLongitudeKepleriana(ELEMENTOS_KEPLER["Pallas"], dataNascUTC);
+            const juno = calcularLongitudeKepleriana(ELEMENTOS_KEPLER["Juno"], dataNascUTC);
+            const vesta = calcularLongitudeKepleriana(ELEMENTOS_KEPLER["Vesta"], dataNascUTC);
+            const pholus = calcularLongitudeKepleriana(ELEMENTOS_KEPLER["Pholus"], dataNascUTC);
+            // "Cápulo" foi removido: não corresponde a nenhum corpo celeste catalogado
+            // (IAU/JPL) — era um deslocamento simbólico arbitrário sem base real.
+
+            // Transnetunianos (TNOs)
+            const eris = calcularLongitudeKepleriana(ELEMENTOS_KEPLER["Éris"], dataNascUTC);
+            const sedna = calcularLongitudeKepleriana(ELEMENTOS_KEPLER["Sedna"], dataNascUTC);
+            const haumea = calcularLongitudeKepleriana(ELEMENTOS_KEPLER["Haumea"], dataNascUTC);
+            const makemake = calcularLongitudeKepleriana(ELEMENTOS_KEPLER["Makemake"], dataNascUTC);
+
+            // Estrelas Fixas — precessão real: ~50,29"/ano = 1,39697°/século (constante IAU)
+            const precessao = TRS * 1.39697;
+            const aldebaran = normalizar(69.78 + precessao);  
+            const regulus = normalizar(149.83 + precessao);   
+            const antares = normalizar(249.76 + precessao);   
+
+            const astros = [
+                { nome: "Sol", grau: sol }, { nome: "Lua", grau: lua },
+                { nome: "Mercúrio", grau: mercurio }, { nome: "Vênus", grau: venus },
+                { nome: "Marte", grau: marte }, { nome: "Júpiter", grau: jupiter },
+                { nome: "Saturno", grau: saturno }, { nome: "Urano", grau: urano },
+                { nome: "Netuno", grau: netuno }, { nome: "Plutão", grau: plutao },
+                
+                { nome: "Ascendente (AC)", grau: asc }, { nome: "Descendente (DC)", grau: dc },
+                { nome: "Meio do Céu (MC)", grau: mc }, { nome: "Fundo do Céu (IC)", grau: ic },
+                { nome: "Vertex", grau: vertex }, { nome: "Anti-vertex", grau: antiVertex },
+
+                { nome: "Roda da Fortuna", grau: rodaFortuna },
+                { nome: "Nodo Norte", grau: nodoNorte }, { nome: "Nodo Sul", grau: nodoSul },
+                { nome: "Quíron", grau: quiron }, { nome: "Lilith", grau: lilith },
+
+                { nome: "Ceres", grau: ceres }, { nome: "Pallas", grau: pallas },
+                { nome: "Juno", grau: juno }, { nome: "Vesta", grau: vesta },
+
+                { nome: "Pholus", grau: pholus },
+
+                { nome: "Éris", grau: eris }, { nome: "Sedna", grau: sedna },
+                { nome: "Haumea", grau: haumea }, { nome: "Makemake", grau: makemake },
+
+                { nome: "Aldebaran", grau: aldebaran }, { nome: "Regulus", grau: regulus },
+                { nome: "Antares", grau: antares }
+            ];
+ 
+            const casas = Array.from({ length: 12 }, (_, i) => normalizar(asc + (i * 30)));
+ 
+            // Atribuição de casa considerando a passagem por 0°/360°: a cúspide de uma
+            // casa pode "virar o zero" (ex: Casa 9 em 350° e Casa 10 em 20°). A versão
+            // anterior comparava apenas casas[i] < grau < casas[i+1] assumindo ordem
+            // crescente, então QUALQUER casa em que essa virada ocorresse jogava os
+            // astros incorretamente para a Casa 12 (fallback), em vez da casa correta.
+            astros.forEach(a => {
+                let casaEncontrada = 12;
+                for (let i = 0; i < 12; i++) {
+                    const inicio = casas[i];
+                    const fim = casas[(i + 1) % 12];
+                    if (fim > inicio) {
+                        if (a.grau >= inicio && a.grau < fim) { casaEncontrada = i + 1; break; }
+                    } else {
+                        if (a.grau >= inicio || a.grau < fim) { casaEncontrada = i + 1; break; }
+                    }
+                }
+                a.casa = casaEncontrada;
+            });
+ 
+            return { astros, casas, asc };
+        }
+ 
+        function calcularAspectos(astros) {
+            const aspectos = [];
+            for (let i = 0; i < astros.length; i++) {
+                for (let j = i + 1; j < astros.length; j++) {
+                    const a1 = astros[i], a2 = astros[j];
+                    let diff = Math.abs(a1.grau - a2.grau);
+                    if (diff > 180) diff = 360 - diff;
+ 
+                    DEFINICAO_ASPECTOS.forEach(asp => {
+                        const orbeAtual = Math.abs(diff - asp.angulo);
+                        if (orbeAtual <= asp.orbe) {
+                            aspectos.push({
+                                astro1: a1.nome, astro2: a2.nome, aspecto: asp.nome,
+                                classe: asp.classe, simbolo: asp.simbolo, iconClass: asp.iconClass, orbe: orbeAtual.toFixed(1)
+                            });
+                        }
+                    });
+                }
+            }
+            return aspectos;
+        }
+ 
+        function renderizarBalanço(astros) {
+            const elementos = { Fogo: 0, Terra: 0, Ar: 0, Água: 0 };
+            const ritmos = { Cardinal: 0, Fixo: 0, Mutável: 0 };
+            const polaridades = { Yang: 0, Yin: 0 };
+ 
+            const planetasPrincipais = astros.filter(a => ["Sol", "Lua", "Mercúrio", "Vênus", "Marte", "Júpiter", "Saturno", "Urano", "Netuno", "Plutão"].includes(a.nome));
+            
+            planetasPrincipais.forEach(a => {
+                const sIdx = Math.floor(a.grau / 30) % 12;
+                const signo = SIGNOS_DADOS[sIdx];
+                elementos[signo.elemento]++;
+                ritmos[signo.ritmo]++;
+                polaridades[signo.polaridade]++;
+            });
+ 
+            const total = planetasPrincipais.length;
+            ULTIMO_BALANCO = { elementos, ritmos, polaridades };
+            const coresElementos = { Fogo: "var(--fogo)", Terra: "var(--terra)", Ar: "var(--ar)", Água: "var(--agua)" };
+ 
+            document.getElementById('elementosBars').innerHTML = Object.keys(elementos).map(k => {
+                const pct = Math.round((elementos[k] / total) * 100);
+                return `
+                    <div class="progress-item">
+                        <div class="progress-info"><span>${k} (${elementos[k]})</span><span>${pct}%</span></div>
+                        <div class="bar-bg"><div class="bar-fill" style="width:${pct}%; background:${coresElementos[k]}"></div></div>
+                    </div>
+                `;
+            }).join('');
+ 
+            document.getElementById('ritmosBars').innerHTML = Object.keys(ritmos).map(k => {
+                const pct = Math.round((ritmos[k] / total) * 100);
+                return `
+                    <div class="progress-item">
+                        <div class="progress-info"><span>${k} (${ritmos[k]})</span><span>${pct}%</span></div>
+                        <div class="bar-bg"><div class="bar-fill" style="width:${pct}%; background:var(--destaque)"></div></div>
+                    </div>
+                `;
+            }).join('');
+ 
+            document.getElementById('polaridadesBars').innerHTML = Object.keys(polaridades).map(k => {
+                const pct = Math.round((polaridades[k] / total) * 100);
+                const label = k === "Yang" ? "Yang (Ativo/Extrovertido)" : "Yin (Receptivo/Introspectivo)";
+                return `
+                    <div class="progress-item">
+                        <div class="progress-info"><span>${label}</span><span>${pct}%</span></div>
+                        <div class="bar-bg"><div class="bar-fill" style="width:${pct}%; background:var(--sol)"></div></div>
+                    </div>
+                `;
+            }).join('');
+        }
+ 
+        function renderizarAstrosExpansivel(astros) {
+            const container = document.getElementById('astrosExpandList');
+            container.innerHTML = astros.map(a => {
+                const sIdx = Math.floor(a.grau / 30) % 12;
+                const signo = SIGNOS_DADOS[sIdx];
+                const simAstro = SIMBOLOS_ASTROS[a.nome] || '';
+                const combinacao = `${a.nome} em ${signo.nome} na Casa ${a.casa}`;
+                const explicacaoAstro = DEFINICAO_ASTROS[a.nome] || "";
+                const nivel = NIVEL_PRECISAO[a.nome] || "alta";
+                const corNivel = CORES_PRECISAO[nivel];
+                const rotuloNivel = nivel === 'alta' ? 'Confiabilidade alta' : (nivel === 'media' ? 'Confiabilidade média' : 'Confiabilidade mais baixa');
+
+                return `
+                    <div class="expand-card">
+                        <div class="expand-header" onclick="this.parentElement.classList.toggle('open')">
+                            <div class="expand-title">
+                                <span title="${rotuloNivel}" style="display:inline-block; width:8px; height:8px; border-radius:50%; background:${corNivel}; flex-shrink:0;"></span>
+                                <span style="color:var(--sol); font-size:1.1rem;">${simAstro}</span>
+                                <span>${a.nome} em ${signo.nome} ${signo.simbolo}</span>
+                            </div>
+                            <div style="display:flex; align-items:center; gap:8px;">
+                                <span class="expand-badge">Casa ${a.casa}</span>
+                                <span class="arrow-icon">▼</span>
+                            </div>
+                        </div>
+                        <div class="expand-content">
+                            <p style="margin-bottom: 8px;"><strong>Simbolismo:</strong> ${explicacaoAstro}</p>
+                            <p style="margin-bottom: 8px;"><strong>Significado Natal:</strong> Expressa a energia de <strong>${signo.nome}</strong> ativando a área de vida representada pela <strong>Casa ${a.casa}</strong>.</p>
+                            <p style="margin-bottom: 6px;"><strong>Posição Exata:</strong> ${formatarDMS(a.grau)}</p>
+                            <p style="margin-bottom: 6px;"><strong>${rotuloNivel}</strong></p>
+                            
+                            <button class="btn-ia btn-ia-inline" onclick="event.stopPropagation(); dispararAnaliseIA('${combinacao}')">
+                                ✦ Interpretação Profunda com IA
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderizarCasasExpansivel(casas, astros) {
+            const container = document.getElementById('casasExpandList');
+            container.innerHTML = casas.map((grauCasa, index) => {
+                const numCasa = index + 1;
+                const sIdx = Math.floor(grauCasa / 30) % 12;
+                const signoCuspide = SIGNOS_DADOS[sIdx];
+                
+                const astrosNaCasa = astros.filter(a => a.casa === numCasa);
+                const nomesAstros = astrosNaCasa.length > 0 
+                    ? astrosNaCasa.map(a => `${SIMBOLOS_ASTROS[a.nome] || ''} ${a.nome}`).join(', ')
+                    : 'Nenhum planeta presente (Casa Vazia)';
+
+                const contextoAnalise = `Casa ${numCasa} em ${signoCuspide.nome} contendo: ${astrosNaCasa.map(a => a.nome).join(', ') || 'Sem planetas'}`;
+
+                return `
+                    <div class="expand-card">
+                        <div class="expand-header" onclick="this.parentElement.classList.toggle('open')">
+                            <div class="expand-title">
+                                <span style="color:var(--destaque); font-weight:bold;">Casa ${numCasa}</span>
+                                <span>em ${signoCuspide.nome} ${signoCuspide.simbolo}</span>
+                            </div>
+                            <div style="display:flex; align-items:center; gap:8px;">
+                                <span class="expand-badge">${astrosNaCasa.length} astro(s)</span>
+                                <span class="arrow-icon">▼</span>
+                            </div>
+                        </div>
+                        <div class="expand-content">
+                            <p style="margin-bottom: 8px;"><strong>Tema da Casa:</strong> ${DEFINICAO_CASAS[numCasa]}</p>
+                            <p style="margin-bottom: 8px;"><strong>Cúspide:</strong> ${signoCuspide.nome} (${formatarDMS(grauCasa)})</p>
+                            <p style="margin-bottom: 6px;"><strong>Ocupantes Natas:</strong> ${nomesAstros}</p>
+                            
+                            <button class="btn-ia btn-ia-inline" onclick="event.stopPropagation(); dispararAnaliseCasaIA('${contextoAnalise}')">
+                                ✦ Análise da Casa com IA
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+ 
+        function renderizarAspectosExpansivel(aspectos) {
+            const container = document.getElementById('aspectosExpandList');
+            container.innerHTML = aspectos.map(asp => {
+                const sim1 = SIMBOLOS_ASTROS[asp.astro1] || '';
+                const sim2 = SIMBOLOS_ASTROS[asp.astro2] || '';
+                const combinacao = `${asp.astro1} em ${asp.aspecto} com ${asp.astro2}`;
+
+                return `
+                    <div class="expand-card">
+                        <div class="expand-header" onclick="this.parentElement.classList.toggle('open')">
+                            <div class="expand-title">
+                                <span>${sim1} ${asp.astro1} ${asp.simbolo} ${asp.astro2} ${sim2}</span>
+                            </div>
+                            <div style="display:flex; align-items:center; gap:8px;">
+                                <span class="badge-aspecto ${asp.classe}">${asp.aspecto}</span>
+                                <span class="arrow-icon">▼</span>
+                            </div>
+                        </div>
+                        <div class="expand-content">
+                            <p style="margin-bottom: 8px;"><strong>Dinâmica Psicológica:</strong> Integração interpessoal entre as energias de ${asp.astro1} e ${asp.astro2}.</p>
+                            <p style="margin-bottom: 6px;"><strong>Orbe de Precisão:</strong> ${asp.orbe}°</p>
+                            
+                            <button class="btn-ia btn-ia-inline" onclick="event.stopPropagation(); dispararAnaliseIA('${combinacao}')">
+                                ✦ Interpretar Aspecto com IA
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+ 
+        function gerarMatrizHtml(astros, aspectos) {
+            let html = "";
+            const total = astros.length;
+ 
+            for (let i = 0; i < total; i++) {
+                html += "<tr>";
+                for (let j = 0; j < total; j++) {
+                    if (i === j) {
+                        html += `<th class="header-astro" title="${astros[i].nome}">${SIMBOLOS_ASTROS[astros[i].nome]}</th>`;
+                    } else if (i > j) {
+                        const asp = aspectos.find(a => (a.astro1 === astros[i].nome && a.astro2 === astros[j].nome) || (a.astro2 === astros[i].nome && a.astro1 === astros[j].nome));
+                        if (asp) {
+                            html += `<td class="cell-aspect ${asp.iconClass}" title="${asp.aspecto}">${asp.simbolo}</td>`;
+                        } else {
+                            html += `<td class="cell-aspect"></td>`;
+                        }
+                    } else {
+                        html += `<td class="empty-cell"></td>`;
+                    }
+                }
+                html += "</tr>";
+            }
+ 
+            document.getElementById('matrixAspectos').innerHTML = html;
+        }
+ 
+        function desenharRodaSVG(astros, casas, asc) {
+            const svg = document.getElementById('chartSvg');
+            svg.innerHTML = '';
+            const cx = 300, cy = 300, rOuter = 285, rInner = 230, rCasas = 160, rCore = 80;
+ 
+            const grauParaAngulo = (g) => (180 + (g - asc)) % 360;
+            const polarToCart = (r, a) => {
+                const rad = (a - 180) * Math.PI / 180;
+                return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
+            };
+ 
+            for (let i = 0; i < 12; i++) {
+                const aIn = grauParaAngulo(i * 30), aFim = grauParaAngulo((i + 1) * 30);
+                const p1 = polarToCart(rOuter, aIn), p2 = polarToCart(rOuter, aFim);
+                const p3 = polarToCart(rInner, aFim), p4 = polarToCart(rInner, aIn);
+ 
+                const d = `M ${p1.x} ${p1.y} A ${rOuter} ${rOuter} 0 0 1 ${p2.x} ${p2.y} L ${p3.x} ${p3.y} A ${rInner} ${rInner} 0 0 0 ${p4.x} ${p4.y} Z`;
+                const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                path.setAttribute('d', d);
+                path.setAttribute('fill', i % 2 === 0 ? '#161b22' : '#0d1117');
+                path.setAttribute('stroke', '#30363d');
+                svg.appendChild(path);
+ 
+                const pTxt = polarToCart((rOuter + rInner) / 2, grauParaAngulo(i * 30 + 15));
+                const txt = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                txt.setAttribute('x', pTxt.x); txt.setAttribute('y', pTxt.y);
+                txt.setAttribute('class', 'signo-symbol');
+                txt.textContent = SIGNOS_DADOS[i].simbolo;
+                svg.appendChild(txt);
+            }
+ 
+            casas.forEach((c, i) => {
+                const p1 = polarToCart(rInner, grauParaAngulo(c)), p2 = polarToCart(rCore, grauParaAngulo(c));
+                const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                line.setAttribute('x1', p1.x); line.setAttribute('y1', p1.y);
+                line.setAttribute('x2', p2.x); line.setAttribute('y2', p2.y);
+                line.setAttribute('stroke', (i % 3 === 0) ? '#58a6ff' : '#30363d');
+                svg.appendChild(line);
+            });
+ 
+            const coreCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+            coreCircle.setAttribute('cx', cx); coreCircle.setAttribute('cy', cy); coreCircle.setAttribute('r', rCore);
+            coreCircle.setAttribute('fill', '#0b0e14'); coreCircle.setAttribute('stroke', '#30363d');
+            svg.appendChild(coreCircle);
+ 
+            astros.forEach(a => {
+                const p = polarToCart(rCasas, grauParaAngulo(a.grau));
+                const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                g.setAttribute('class', 'planet-node');
+                g.setAttribute('transform', `translate(${p.x}, ${p.y})`);
+
+                const nivel = NIVEL_PRECISAO[a.nome] || "alta";
+                const corNivel = CORES_PRECISAO[nivel];
+ 
+                const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                c.setAttribute('r', 14);
+                c.setAttribute('stroke', corNivel);
+                c.setAttribute('stroke-width', 2);
+ 
+                const t = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                t.setAttribute('y', 1); 
+                t.setAttribute('fill', a.nome === "Sol" ? 'var(--sol)' : 'var(--destaque)');
+                t.setAttribute('font-size', '15px');
+                t.textContent = SIMBOLOS_ASTROS[a.nome] || a.nome[0];
+ 
+                g.appendChild(c); 
+                g.appendChild(t);
+                
+                const title = document.createElementNS('http://www.w3.org/2000/svg', 'title');
+                title.textContent = `${a.nome}: ${formatarDMS(a.grau)} — confiabilidade ${nivel === 'alta' ? 'alta' : (nivel === 'media' ? 'média' : 'mais baixa')}`;
+                g.appendChild(title);
+ 
+                svg.appendChild(g);
+            });
+        }
+ 
+        // ==========================================
+        // INTEGRAÇÃO COM A IA
+        // ==========================================
+ 
+        function iniciarAnaliseIA(titulo, promptText) {
+            document.getElementById('modalTitle').textContent = `✦ ${titulo}`;
+            document.getElementById('modalBody').innerHTML = `
+                <div class="loading-spinner">
+                    <div class="spinner"></div>
+                    <p>Consultando IA astrológica...</p>
+                </div>`;
+            document.getElementById('aiModal').classList.add('active');
+            gerarAnaliseIA(promptText);
+        }
+ 
+        function dispararAnaliseIA(combinacao) {
+            const promptText = `Atue como um astrólogo humanista e psicológico especialista em Mapa Astral Natal. Faça uma análise detalhada sobre o seguinte elemento no mapa: "${combinacao}". 
+            Siga estas diretrizes:
+            - Escreva de 3 a 4 parágrafos curtos com foco em autoconhecimento e conselhos práticos.
+            - Use formatação HTML básica com parágrafos <p> e destaques em <strong>.
+            - Mantenha um tom profundo, acolhedor e construtivo.`;
+ 
+            iniciarAnaliseIA(`Análise Natal: ${combinacao}`, promptText);
+        }
+
+        function dispararAnaliseCasaIA(contextoCasa) {
+            const promptText = `Atue como um astrólogo especialista. Faça uma análise focada na seguinte Casa do Mapa Natal: "${contextoCasa}".
+            Siga estas diretrizes:
+            - Explique o potencial e temas centrais desenvolvidos nessa área de vida.
+            - Escreva de 3 a 4 parágrafos curtos.
+            - Use formatação HTML básica com parágrafos <p> e destaques em <strong>.`;
+
+            iniciarAnaliseIA(`Análise de Casa Natal`, promptText);
+        }
+ 
+        function dispararAnaliseBalanco(tipo) {
+            if (!ULTIMO_ASTROS.length) return;
+ 
+            let titulo, rotulo, dados;
+            if (tipo === 'elementos') {
+                titulo = `Balanço de Elementos`;
+                rotulo = 'elementos';
+                dados = ULTIMO_BALANCO.elementos;
+            } else if (tipo === 'ritmos') {
+                titulo = `Balanço de Modalidades`;
+                rotulo = 'modalidades';
+                dados = ULTIMO_BALANCO.ritmos;
+            } else {
+                titulo = `Balanço de Polaridades`;
+                rotulo = 'polaridades';
+                dados = ULTIMO_BALANCO.polaridades;
+            }
+ 
+            const dadosTexto = Object.entries(dados).map(([k, v]) => `${k}: ${v}`).join(', ');
+ 
+            const promptText = `Atue como um astrólogo especialista em psicologia analítica. Faça uma análise sobre o temperamento e estrutura psíquica do mapa com base nesta distribuição de ${rotulo}: ${dadosTexto}.
+            Siga estas diretrizes:
+            - Escreva de 3 a 4 parágrafos.
+            - Explique como essa proporção impacta a forma da pessoa sentir, reagir e tomar decisões.
+            - Use formatação HTML básica com parágrafos <p> e destaques em <strong>.`;
+ 
+            iniciarAnaliseIA(titulo, promptText);
+        }
+ 
+        function dispararAnaliseMapaCompleto() {
+            if (!ULTIMO_ASTROS.length) return;
+ 
+            const listaPosicoes = ULTIMO_ASTROS.map(a => {
+                const sIdx = Math.floor(a.grau / 30) % 12;
+                const signo = SIGNOS_DADOS[sIdx];
+                return `${a.nome} em ${signo.nome} na Casa ${a.casa}`;
+            }).join('; ');
+ 
+            const promptText = `Atue como um mestre astrólogo. Elabore um relatório síntese e síntese da personalidade para o Mapa Natal baseado nas seguintes posições:
+ 
+            Posições Natas: ${listaPosicoes}.
+ 
+            Siga estas diretrizes de resposta:
+            - Escreva de 5 a 7 parágrafos.
+            - Destaque a tríade principal (Sol, Lua e Ascendente), os eixos Angulares (MC/IC, DC) e pontos de cura (Quíron/Nodos).
+            - Traga reflexões valiosas sobre vocação, relacionamentos e evolução interior.
+            - Use formatação HTML básica com parágrafos <p> e destaques em <strong>.`;
+ 
+            iniciarAnaliseIA(`Relatório de Síntese Natal`, promptText);
+        }
+ 
+        function dispararAnaliseAspectosCompleta() {
+            if (!ULTIMO_ASPECTOS.length) return;
+ 
+            const lista = ULTIMO_ASPECTOS
+                .map(asp => `${asp.astro1} em ${asp.aspecto} com ${asp.astro2}`)
+                .join('; ');
+ 
+            const promptText = `Atue como um astrólogo psicológico. Faça uma análise da dinâmica de aspectos natas no mapa:
+ 
+            ${lista}
+ 
+            Siga estas diretrizes:
+            - Escreva de 4 a 5 parágrafos.
+            - Conecte as dinâmicas de tensão e harmonia entre a psique e talentos inatos.
+            - Use formatação HTML básica com parágrafos <p> e destaques em <strong>.`;
+ 
+            iniciarAnaliseIA(`Análise Psicológica de Aspectos Natas`, promptText);
+        }
+ 
+        async function gerarAnaliseIA(promptText) {
+            const modalBody = document.getElementById('modalBody');
+            try {
+                const response = await fetch('https://astro-gns-proxy.genesisgns.workers.dev/', {
+                    method: 'POST',
+                    cache: 'no-store',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt: promptText })
+                });
+ 
+                const data = await response.json();
+ 
+                if (response.ok && data.resposta) {
+                    exibirResultadoIA(data.resposta);
+                } else {
+                    modalBody.innerHTML = `<p style="color:var(--fogo);"><strong>Erro:</strong> ${data.error || "Não foi possível obter a resposta da IA."}</p>`;
+                }
+            } catch (err) {
+                console.error(err);
+                modalBody.innerHTML = `<p style="color:var(--fogo);"><strong>Erro de Conexão:</strong> ${err.message}</p>`;
+            }
+        }
+ 
+        function exibirResultadoIA(texto) {
+            let htmlFormatado = texto.replace(/```html/g, '').replace(/```/g, '');
+            document.getElementById('modalBody').innerHTML = htmlFormatado;
+        }
+ 
+        function fecharModal() {
+            document.getElementById('aiModal').classList.remove('active');
+        }
+ 
+        function fecharModalOuter(e) {
+            if (e.target.id === 'aiModal') fecharModal();
+        }
+ 
+        // ==========================================
+        // MECANISMO DE TRANSIÇÃO ENTRE MAPA NATAL E REVOLUÇÃO SOLAR
+        // ==========================================
+        // Os dados de nascimento (data, hora, fuso, cidade e coordenadas) são salvos
+        // no localStorage do navegador. Assim, ao clicar na aba "Revolução Solar",
+        // aquela página já abre com os mesmos dados natais preenchidos, sem precisar
+        // digitar tudo de novo. Não envolve nenhum servidor, apenas o navegador local.
+        const CHAVE_DADOS_NATAIS = 'astro_dados_natais_v1';
+
+        function salvarDadosNatais() {
+            try {
+                const dados = {
+                    date: document.getElementById('date').value,
+                    time: document.getElementById('time').value,
+                    fuso: document.getElementById('fuso').value,
+                    lat: document.getElementById('lat').value,
+                    lon: document.getElementById('lon').value,
+                    cidade: document.getElementById('cidadeInput').value
+                };
+                localStorage.setItem(CHAVE_DADOS_NATAIS, JSON.stringify(dados));
+            } catch (err) {
+                console.warn('Não foi possível salvar os dados natais localmente:', err);
+            }
+        }
+
+        function carregarDadosNatais() {
+            try {
+                const raw = localStorage.getItem(CHAVE_DADOS_NATAIS);
+                if (!raw) return false;
+                const dados = JSON.parse(raw);
+                if (dados.date) document.getElementById('date').value = dados.date;
+                if (dados.time) document.getElementById('time').value = dados.time;
+                if (dados.fuso !== undefined && dados.fuso !== '') document.getElementById('fuso').value = dados.fuso;
+                if (dados.lat !== undefined && dados.lat !== '') document.getElementById('lat').value = dados.lat;
+                if (dados.lon !== undefined && dados.lon !== '') document.getElementById('lon').value = dados.lon;
+                if (dados.cidade) document.getElementById('cidadeInput').value = dados.cidade;
+                return true;
+            } catch (err) {
+                console.warn('Não foi possível carregar os dados natais salvos:', err);
+                return false;
+            }
+        }
+
+        function executarTudo() {
+            const { astros, casas, asc } = calcularMapaNatal();
+            const aspectos = calcularAspectos(astros);
+ 
+            ULTIMO_ASTROS = astros;
+            ULTIMO_CASAS = casas;
+            ULTIMO_ASC = asc;
+            ULTIMO_ASPECTOS = aspectos;
+ 
+            renderizarBalanço(astros);
+            renderizarAstrosExpansivel(astros);
+            renderizarCasasExpansivel(casas, astros);
+            renderizarAspectosExpansivel(aspectos);
+            gerarMatrizHtml(astros, aspectos);
+            desenharRodaSVG(astros, casas, asc);
+
+            salvarDadosNatais();
+        }
+ 
+        window.onload = () => {
+            const agora = new Date();
+            const dadosCarregados = carregarDadosNatais();
+            if (!dadosCarregados) {
+                document.getElementById('date').value = agora.toISOString().split('T')[0];
+                document.getElementById('time').value = agora.toTimeString().split(' ')[0].substring(0, 5);
+            }
+
+            document.getElementById('cidadeInput').addEventListener('keypress', function (e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    buscarCoordenadas();
+                }
+            });
+ 
+            executarTudo();
+        };
+    </script>
+</body>
+</html>
