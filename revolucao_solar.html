@@ -90,7 +90,7 @@
         }
 
         label { font-size: 0.75rem; color: #8b949e; font-weight: 600; }
-        input { 
+        input, select { 
             background: var(--bg-principal); 
             border: 1px solid var(--border); 
             color: #fff; 
@@ -100,7 +100,8 @@
             font-size: 0.9rem;
             width: 100%;
         }
-        input:focus { border-color: var(--destaque); }
+        select { appearance: none; -webkit-appearance: none; }
+        input:focus, select:focus { border-color: var(--destaque); }
         
         .geo-search-container {
             display: flex;
@@ -433,8 +434,8 @@
     <div class="app-layout">
         <form id="astrologyForm" class="controls" onsubmit="event.preventDefault(); executarTudo();">
             <div class="input-group highlight">
-                <label for="anoRevolucao" style="color:var(--sol);">Ano da Revolução Solar</label>
-                <input type="number" id="anoRevolucao" min="1900" max="2100" required>
+                <label for="anoRevolucao" style="color:var(--sol);">Período da Revolução Solar</label>
+                <select id="anoRevolucao" required></select>
             </div>
             
             <div class="input-group">
@@ -647,6 +648,7 @@
         let ULTIMO_ASPECTOS = [];
         let ULTIMO_BALANCO = { elementos: {}, ritmos: {}, polaridades: {} };
         let ANO_SELECIONADO = new Date().getFullYear();
+        let PERIODO_SELECIONADO = `${ANO_SELECIONADO}-${ANO_SELECIONADO + 1}`;
  
         function degToRad(deg) { return deg * Math.PI / 180; }
         function radToDeg(rad) { return rad * 180 / Math.PI; }
@@ -695,6 +697,7 @@
         function calcularRevolucaoSolar() {
             const anoRS = parseInt(document.getElementById('anoRevolucao').value, 10);
             ANO_SELECIONADO = anoRS;
+            PERIODO_SELECIONADO = `${anoRS}-${anoRS + 1}`;
 
             const dateVal = document.getElementById('date').value;
             const timeVal = document.getElementById('time').value;
@@ -705,30 +708,49 @@
             const [year, month, day] = dateVal.split('-').map(Number);
             const [hours, minutes] = timeVal.split(':').map(Number);
             
-            // Cálculo simplificado do Juliano para determinar Sol Natal
+            // Cálculo do Juliano para determinar o Sol Natal
             const hourUTC = hours + (minutes / 60) - fuso;
-            let m = month, y = year;
-            if (m <= 2) { y -= 1; m += 12; }
-            let A = Math.floor(y / 100);
-            let B = 2 - A + Math.floor(A / 4);
-            let jdBirth = Math.floor(365.25 * (y + 4716)) + Math.floor(30.6001 * (m + 1)) + day + (hourUTC / 24.0) + B - 1524.5;
-            let TBirth = (jdBirth - 2451545.0) / 36525.0;
-            // Sol: longitude média + equação do centro (correção real de órbita elíptica, Meeus cap. 25)
-            const solMedioBirth = 280.46646 + 36000.76983 * TBirth;
-            const anomaliaMediaSolBirth = degToRad(357.52911 + 35999.05029 * TBirth);
-            const eqCentroBirth = (1.914602 - 0.004817 * TBirth) * Math.sin(anomaliaMediaSolBirth)
-                            + (0.019993 - 0.000101 * TBirth) * Math.sin(2 * anomaliaMediaSolBirth)
-                            + 0.000289 * Math.sin(3 * anomaliaMediaSolBirth);
-            const solNatal = normalizar(solMedioBirth + eqCentroBirth);
 
-            // Ajusta o tempo para o ano da Revolução Solar
-            let yRS = anoRS;
-            let mRS = month;
-            if (mRS <= 2) { yRS -= 1; mRS += 12; }
-            let A_RS = Math.floor(yRS / 100);
-            let B_RS = 2 - A_RS + Math.floor(A_RS / 4);
-            let jdRS = Math.floor(365.25 * (yRS + 4716)) + Math.floor(30.6001 * (mRS + 1)) + day + (hourUTC / 24.0) + B_RS - 1524.5;
-            let TRS = (jdRS - 2451545.0) / 36525.0;
+            function jdParaSeculo(jd) { return (jd - 2451545.0) / 36525.0; }
+
+            function calcularJD(y, m, d, hUTC) {
+                let mm = m, yy = y;
+                if (mm <= 2) { yy -= 1; mm += 12; }
+                let A = Math.floor(yy / 100);
+                let B = 2 - A + Math.floor(A / 4);
+                return Math.floor(365.25 * (yy + 4716)) + Math.floor(30.6001 * (mm + 1)) + d + (hUTC / 24.0) + B - 1524.5;
+            }
+
+            // Longitude do Sol (Meeus cap. 25: longitude média + equação do centro)
+            function longitudeSol(T) {
+                const solMedio = 280.46646 + 36000.76983 * T;
+                const anomaliaMedia = degToRad(357.52911 + 35999.05029 * T);
+                const eqCentro = (1.914602 - 0.004817 * T) * Math.sin(anomaliaMedia)
+                                + (0.019993 - 0.000101 * T) * Math.sin(2 * anomaliaMedia)
+                                + 0.000289 * Math.sin(3 * anomaliaMedia);
+                return normalizar(solMedio + eqCentro);
+            }
+
+            let jdBirth = calcularJD(year, month, day, hourUTC);
+            let TBirth = jdParaSeculo(jdBirth);
+            const solNatal = longitudeSol(TBirth);
+
+            // A Revolução Solar acontece no instante exato em que o Sol volta ao grau
+            // natal — isso NÃO é necessariamente no mesmo dia/hora do aniversário civil
+            // (o ano trópico tem ~365,2422 dias, então o retorno "desliza" até quase 24h
+            // a cada ano e dá saltos nos anos bissextos). Usamos o aniversário como
+            // estimativa inicial e refinamos por iteração até o Sol bater exatamente
+            // no grau natal — isso é o que garante Ascendente/Casas corretos.
+            let jdRS = calcularJD(anoRS, month, day, hourUTC);
+            for (let iter = 0; iter < 8; iter++) {
+                const T = jdParaSeculo(jdRS);
+                const solAtual = longitudeSol(T);
+                let diff = solNatal - solAtual;
+                diff = ((diff + 540) % 360) - 180; // normaliza para [-180, 180)
+                if (Math.abs(diff) < 0.00005) break;
+                jdRS += diff / 0.9856076686; // graus percorridos pelo Sol por dia
+            }
+            let TRS = jdParaSeculo(jdRS);
 
             // GMST correto (Meeus): usa a taxa de rotação da Terra por DIA (360.98564736629°/dia),
             // não por século — o valor anterior estava ~366x menor que o correto, por isso o
@@ -818,12 +840,20 @@
  
             const casas = Array.from({ length: 12 }, (_, i) => normalizar(asc + (i * 30)));
  
+            // Atribuição de casa considerando a passagem por 0°/360°: a cúspide de uma
+            // casa pode "virar o zero" (ex: Casa 9 em 350° e Casa 10 em 20°). A versão
+            // anterior comparava apenas casas[i] < grau < casas[i+1] assumindo ordem
+            // crescente, então QUALQUER casa em que essa virada ocorresse jogava os
+            // astros incorretamente para a Casa 12 (fallback), em vez da casa correta.
             astros.forEach(a => {
                 let casaEncontrada = 12;
-                for (let i = 0; i < 11; i++) {
-                    if (a.grau >= casas[i] && a.grau < casas[i+1]) {
-                        casaEncontrada = i + 1;
-                        break;
+                for (let i = 0; i < 12; i++) {
+                    const inicio = casas[i];
+                    const fim = casas[(i + 1) % 12];
+                    if (fim > inicio) {
+                        if (a.grau >= inicio && a.grau < fim) { casaEncontrada = i + 1; break; }
+                    } else {
+                        if (a.grau >= inicio || a.grau < fim) { casaEncontrada = i + 1; break; }
                     }
                 }
                 a.casa = casaEncontrada;
@@ -911,7 +941,7 @@
                 const sIdx = Math.floor(a.grau / 30) % 12;
                 const signo = SIGNOS_DADOS[sIdx];
                 const simAstro = SIMBOLOS_ASTROS[a.nome] || '';
-                const combinacao = `${a.nome} em ${signo.nome} na Casa ${a.casa} da Revolução Solar de ${ANO_SELECIONADO}`;
+                const combinacao = `${a.nome} em ${signo.nome} na Casa ${a.casa} da Revolução Solar de ${PERIODO_SELECIONADO}`;
                 const explicacaoAstro = DEFINICAO_ASTROS[a.nome] || "";
 
                 return `
@@ -928,7 +958,7 @@
                         </div>
                         <div class="expand-content">
                             <p style="margin-bottom: 8px;"><strong>Efeito Anual:</strong> ${explicacaoAstro}</p>
-                            <p style="margin-bottom: 8px;"><strong>Foco no Ano (${ANO_SELECIONADO}):</strong> Esta energia atua com a atitude de <strong>${signo.nome}</strong> e concentrará eventos e aprendizados na <strong>Casa ${a.casa}</strong> ao longo do ano.</p>
+                            <p style="margin-bottom: 8px;"><strong>Foco no Ano (${PERIODO_SELECIONADO}):</strong> Esta energia atua com a atitude de <strong>${signo.nome}</strong> e concentrará eventos e aprendizados na <strong>Casa ${a.casa}</strong> ao longo do ano.</p>
                             <p style="margin-bottom: 6px;"><strong>Posição Exata:</strong> ${formatarDMS(a.grau)}</p>
                             
                             <button class="btn-ia btn-ia-inline" onclick="event.stopPropagation(); dispararAnaliseIA('${combinacao}')">
@@ -952,7 +982,7 @@
                     ? astrosNaCasa.map(a => `${SIMBOLOS_ASTROS[a.nome] || ''} ${a.nome}`).join(', ')
                     : 'Nenhum planeta presente (Casa Vazia)';
 
-                const contextoAnalise = `Casa ${numCasa} da Revolução Solar de ${ANO_SELECIONADO} em ${signoCuspide.nome} contendo: ${astrosNaCasa.map(a => a.nome).join(', ') || 'Sem planetas'}`;
+                const contextoAnalise = `Casa ${numCasa} da Revolução Solar de ${PERIODO_SELECIONADO} em ${signoCuspide.nome} contendo: ${astrosNaCasa.map(a => a.nome).join(', ') || 'Sem planetas'}`;
 
                 return `
                     <div class="expand-card">
@@ -985,7 +1015,7 @@
             container.innerHTML = aspectos.map(asp => {
                 const sim1 = SIMBOLOS_ASTROS[asp.astro1] || '';
                 const sim2 = SIMBOLOS_ASTROS[asp.astro2] || '';
-                const combinacao = `${asp.astro1} em ${asp.aspecto} com ${asp.astro2} na Revolução Solar de ${ANO_SELECIONADO}`;
+                const combinacao = `${asp.astro1} em ${asp.aspecto} com ${asp.astro2} na Revolução Solar de ${PERIODO_SELECIONADO}`;
 
                 return `
                     <div class="expand-card">
@@ -999,7 +1029,7 @@
                             </div>
                         </div>
                         <div class="expand-content">
-                            <p style="margin-bottom: 8px;"><strong>Dinâmica do Ano:</strong> Conexão em <strong>${asp.aspecto}</strong> impactando os eventos e clima do ano de ${ANO_SELECIONADO}.</p>
+                            <p style="margin-bottom: 8px;"><strong>Dinâmica do Ano:</strong> Conexão em <strong>${asp.aspecto}</strong> impactando os eventos e clima do ano de ${PERIODO_SELECIONADO}.</p>
                             <p style="margin-bottom: 6px;"><strong>Orbe de Precisão:</strong> ${asp.orbe}°</p>
                             
                             <button class="btn-ia btn-ia-inline" onclick="event.stopPropagation(); dispararAnaliseIA('${combinacao}')">
@@ -1123,9 +1153,9 @@
         }
  
         function dispararAnaliseIA(combinacao) {
-            const promptText = `Atue como um astrólogo especialista em previsões e Revolução Solar. Faça uma análise detalhada e prática do seguinte elemento na Revolução Solar do ano ${ANO_SELECIONADO}: "${combinacao}". 
+            const promptText = `Atue como um astrólogo especialista em previsões e Revolução Solar. Faça uma análise detalhada e prática do seguinte elemento na Revolução Solar do ano ${PERIODO_SELECIONADO}: "${combinacao}". 
             Siga estas diretrizes:
-            - Aborde esta posição como uma tendência, oportunidade ou desafio específico para este ano pessoal de ${ANO_SELECIONADO}.
+            - Aborde esta posição como uma tendência, oportunidade ou desafio específico para este ano pessoal de ${PERIODO_SELECIONADO}.
             - Escreva de 3 a 4 parágrafos curtos com conselhos práticos e psicológicos.
             - Use formatação HTML básica com parágrafos <p> e destaques em <strong>.
             - Mantenha um tom profissional, orientador e encorajador.`;
@@ -1134,9 +1164,9 @@
         }
 
         function dispararAnaliseCasaIA(contextoCasa) {
-            const promptText = `Atue como um astrólogo especialista em Revolução Solar. Faça uma análise focada na seguinte área de vida para o ano de ${ANO_SELECIONADO}: "${contextoCasa}".
+            const promptText = `Atue como um astrólogo especialista em Revolução Solar. Faça uma análise focada na seguinte área de vida para o ano de ${PERIODO_SELECIONADO}: "${contextoCasa}".
             Siga estas diretrizes:
-            - Explique quais os principais acontecimentos, aprendizagens e temas que essa Casa ativará durante o ciclo anual de ${ANO_SELECIONADO}.
+            - Explique quais os principais acontecimentos, aprendizagens e temas que essa Casa ativará durante o ciclo anual de ${PERIODO_SELECIONADO}.
             - Escreva de 3 a 4 parágrafos curtos.
             - Use formatação HTML básica com parágrafos <p> e destaques em <strong>.
             - Tom focado em orientação e planejamento pessoal.`;
@@ -1149,25 +1179,25 @@
  
             let titulo, rotulo, dados;
             if (tipo === 'elementos') {
-                titulo = `Elementos do Ano ${ANO_SELECIONADO}`;
+                titulo = `Elementos do Ano ${PERIODO_SELECIONADO}`;
                 rotulo = 'elementos';
                 dados = ULTIMO_BALANCO.elementos;
             } else if (tipo === 'ritmos') {
-                titulo = `Modalidades do Ano ${ANO_SELECIONADO}`;
+                titulo = `Modalidades do Ano ${PERIODO_SELECIONADO}`;
                 rotulo = 'modalidades';
                 dados = ULTIMO_BALANCO.ritmos;
             } else {
-                titulo = `Polaridades do Ano ${ANO_SELECIONADO}`;
+                titulo = `Polaridades do Ano ${PERIODO_SELECIONADO}`;
                 rotulo = 'polaridades';
                 dados = ULTIMO_BALANCO.polaridades;
             }
  
             const dadosTexto = Object.entries(dados).map(([k, v]) => `${k}: ${v}`).join(', ');
  
-            const promptText = `Atue como um astrólogo preditivo. Faça uma análise sobre o peso e temperamento do ano pessoal de ${ANO_SELECIONADO} com base nesta distribuição de ${rotulo} na Revolução Solar: ${dadosTexto}.
+            const promptText = `Atue como um astrólogo preditivo. Faça uma análise sobre o peso e temperamento do ano pessoal de ${PERIODO_SELECIONADO} com base nesta distribuição de ${rotulo} na Revolução Solar: ${dadosTexto}.
             Siga estas diretrizes:
             - Escreva de 3 a 4 parágrafos.
-            - Explique o ritmo e energia predominante que a pessoa sentirá no dia a dia durante esse ano de ${ANO_SELECIONADO}.
+            - Explique o ritmo e energia predominante que a pessoa sentirá no dia a dia durante esse ano de ${PERIODO_SELECIONADO}.
             - Use formatação HTML básica com parágrafos <p> e destaques em <strong>.`;
  
             iniciarAnaliseIA(titulo, promptText);
@@ -1186,7 +1216,7 @@
                 .map(asp => `${asp.astro1} em ${asp.aspecto} com ${asp.astro2}`)
                 .join('; ');
  
-            const promptText = `Atue como um astrólogo especialista em Revolução Solar. Elabore um relatório de Previsão Anual completo para o ano de ${ANO_SELECIONADO} baseado nas posições a seguir:
+            const promptText = `Atue como um astrólogo especialista em Revolução Solar. Elabore um relatório de Previsão Anual completo para o ano de ${PERIODO_SELECIONADO} baseado nas posições a seguir:
  
             Posições anuais: ${listaPosicoes}.
             Aspectos anuais: ${listaAspectosResumo || 'sem aspectos maiores'}.
@@ -1194,11 +1224,11 @@
             Siga estas diretrizes de resposta:
             - Escreva de 5 a 7 parágrafos.
             - Destaque o Ascendente da Revolução Solar e onde o Sol do ano está localizado (foco central do ano).
-            - Analise onde estarão as maiores oportunidades e os maiores desafios práticos/emocionais ao longo do ciclo de ${ANO_SELECIONADO}.
+            - Analise onde estarão as maiores oportunidades e os maiores desafios práticos/emocionais ao longo do ciclo de ${PERIODO_SELECIONADO}.
             - Conclua com um conselho síntese para o ano.
             - Use formatação HTML básica com parágrafos <p> e destaques em <strong>.`;
  
-            iniciarAnaliseIA(`Relatório de Previsão Anual - ${ANO_SELECIONADO}`, promptText);
+            iniciarAnaliseIA(`Relatório de Previsão Anual - ${PERIODO_SELECIONADO}`, promptText);
         }
  
         function dispararAnaliseAspectosCompleta() {
@@ -1208,7 +1238,7 @@
                 .map(asp => `${asp.astro1} em ${asp.aspecto} com ${asp.astro2}`)
                 .join('; ');
  
-            const promptText = `Atue como um astrólogo preditivo. Faça uma análise dos aspectos atuantes na Revolução Solar do ano de ${ANO_SELECIONADO}:
+            const promptText = `Atue como um astrólogo preditivo. Faça uma análise dos aspectos atuantes na Revolução Solar do ano de ${PERIODO_SELECIONADO}:
  
             ${lista}
  
@@ -1217,7 +1247,7 @@
             - Conecte as tensões e fluidez para explicar os altos e baixos previsíveis do ano.
             - Use formatação HTML básica com parágrafos <p> e destaques em <strong>.`;
  
-            iniciarAnaliseIA(`Aspectos e Tensões do Ano ${ANO_SELECIONADO}`, promptText);
+            iniciarAnaliseIA(`Aspectos e Tensões do Ano ${PERIODO_SELECIONADO}`, promptText);
         }
  
         async function gerarAnaliseIA(promptText) {
@@ -1273,9 +1303,20 @@
             desenharRodaSVG(astros, casas, asc);
         }
  
+        function popularSelectAno() {
+            const select = document.getElementById('anoRevolucao');
+            const anoAtual = new Date().getFullYear();
+            let html = '';
+            for (let ano = anoAtual - 10; ano <= anoAtual + 10; ano++) {
+                html += `<option value="${ano}">${ano}-${ano + 1}</option>`;
+            }
+            select.innerHTML = html;
+            select.value = anoAtual;
+        }
+
         window.onload = () => {
             const agora = new Date();
-            document.getElementById('anoRevolucao').value = agora.getFullYear();
+            popularSelectAno();
             document.getElementById('date').value = agora.toISOString().split('T')[0];
             document.getElementById('time').value = agora.toTimeString().split(' ')[0].substring(0, 5);
 
