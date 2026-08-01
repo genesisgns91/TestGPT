@@ -552,6 +552,7 @@
         </div>
     </div>
  
+    <script src="https://cdn.jsdelivr.net/npm/astronomy-engine/astronomy.browser.min.js"></script>
     <script>
         const SIGNOS_DADOS = [
             { nome: "Áries", simbolo: "♈︎", elemento: "Fogo", ritmo: "Cardinal", polaridade: "Yang" },
@@ -661,6 +662,82 @@
             return `${g}°${m.toString().padStart(2, '0')}'`;
         }
 
+        // ==========================================
+        // ELEMENTOS ORBITAIS REAIS (época J2000.0 = JD 2451545.0)
+        // ==========================================
+        // Mesma tabela usada no Mapa Natal. a = semieixo maior (UA), e = excentricidade,
+        // i = inclinação (graus), om = longitude do nodo ascendente (graus),
+        // w = argumento do periélio (graus), M0 = anomalia média na época (graus).
+        //
+        // ⚠️ Níveis de confiança diferentes:
+        // - Quíron, Ceres, Pallas, Juno, Vesta: elementos bem estabelecidos e estáveis.
+        //   Quíron foi recalibrado contra uma data real e documentada (ingresso em
+        //   Áries em 18/fev/2019), então sua posição foi conferida e batida.
+        // - Pholus, Éris, Sedna, Haumea, Makemake: órbitas de período muito longo
+        //   (92 a ~11.400 anos). A velocidade/forma da órbita agora é real, mas a
+        //   posição exata (M0) é estimativa de melhor esforço, sem efeméride "ao vivo"
+        //   para calibrar com precisão de segundos de arco. O erro esperado é de
+        //   poucos graus e NÃO cresce com o tempo (fica praticamente constante).
+        // - Cálculo por órbita de 2 corpos (sem perturbações planetárias).
+        const EPOCH_J2000_JD = 2451545.0;
+        const ELEMENTOS_KEPLER = {
+            "Quíron":   { a: 13.6363, e: 0.38495, i: 6.9308,  om: 209.294, w: 339.415, M0: 28.05  },
+            "Ceres":    { a: 2.7653,  e: 0.07934, i: 10.5934, om: 80.3099, w: 72.522,  M0: 95.989  },
+            "Pallas":   { a: 2.7721,  e: 0.2302,  i: 34.836,  om: 172.9,   w: 310.05,  M0: 133.44  },
+            "Juno":     { a: 2.6699,  e: 0.2554,  i: 12.981,  om: 169.85,  w: 247.83,  M0: 66.0    },
+            "Vesta":    { a: 2.3617,  e: 0.0894,  i: 7.140,   om: 103.85,  w: 151.66,  M0: 20.0    },
+            "Pholus":   { a: 20.353,  e: 0.5679,  i: 24.66,   om: 119.4,   w: 354.8,   M0: 0.0     },
+            "Éris":     { a: 67.78,   e: 0.4407,  i: 44.04,   om: 35.95,   w: 151.6,   M0: 205.9   },
+            "Sedna":    { a: 506.0,   e: 0.855,   i: 11.93,   om: 144.4,   w: 311.3,   M0: 358.0   },
+            "Haumea":   { a: 43.13,   e: 0.195,   i: 28.19,   om: 122.06,  w: 240.6,   M0: 210.0   },
+            "Makemake": { a: 45.43,   e: 0.161,   i: 29.0,    om: 79.4,    w: 296.0,   M0: 165.0   }
+        };
+
+        function dataParaJD(dataUTC) {
+            return (dataUTC.getTime() / 86400000) + 2440587.5;
+        }
+
+        // Resolve a equação de Kepler M = E - e*sin(E) por Newton-Raphson
+        function resolverKepler(Mrad, e) {
+            let E = Mrad;
+            for (let k = 0; k < 60; k++) {
+                const dE = (E - e * Math.sin(E) - Mrad) / (1 - e * Math.cos(E));
+                E -= dE;
+                if (Math.abs(dE) < 1e-9) break;
+            }
+            return E;
+        }
+
+        // Longitude eclíptica GEOCÊNTRICA real de um corpo a partir de elementos
+        // keplerianos heliocêntricos + posição heliocêntrica real da Terra (via
+        // astronomy-engine).
+        function calcularLongitudeKepleriana(el, dataUTC) {
+            const periodoDias = Math.pow(el.a, 1.5) * 365.25;
+            const n = 360 / periodoDias;
+            const dt = dataParaJD(dataUTC) - EPOCH_J2000_JD;
+            const M = normalizar(el.M0 + n * dt);
+            const E = resolverKepler(degToRad(M), el.e);
+
+            const xOrb = el.a * (Math.cos(E) - el.e);
+            const yOrb = el.a * Math.sqrt(1 - el.e * el.e) * Math.sin(E);
+
+            const wRad = degToRad(el.w), iRad = degToRad(el.i), omRad = degToRad(el.om);
+            const cosO = Math.cos(omRad), sinO = Math.sin(omRad);
+            const cosW = Math.cos(wRad), sinW = Math.sin(wRad);
+            const cosI = Math.cos(iRad), sinI = Math.sin(iRad);
+
+            const xHelio = (cosO * cosW - sinO * sinW * cosI) * xOrb + (-cosO * sinW - sinO * cosW * cosI) * yOrb;
+            const yHelio = (sinO * cosW + cosO * sinW * cosI) * xOrb + (-sinO * sinW + cosO * cosW * cosI) * yOrb;
+
+            const terraHelioEq = Astronomy.HelioVector(Astronomy.Body.Earth, dataUTC);
+            const terraHelioEcl = Astronomy.Ecliptic(terraHelioEq).vec;
+
+            const gx = xHelio - terraHelioEcl.x;
+            const gy = yHelio - terraHelioEcl.y;
+
+            return normalizar(radToDeg(Math.atan2(gy, gx)));
+        }
+
         async function buscarCoordenadas() {
             const cidadeStr = document.getElementById('cidadeInput').value.trim();
             const statusDiv = document.getElementById('geoStatus');
@@ -707,54 +784,36 @@
  
             const [year, month, day] = dateVal.split('-').map(Number);
             const [hours, minutes] = timeVal.split(':').map(Number);
-            
+ 
             // Cálculo do Juliano para determinar o Sol Natal
             const hourUTC = hours + (minutes / 60) - fuso;
+            const dataNascUTC = new Date(Date.UTC(year, month - 1, day, 0, 0, 0, 0) + hourUTC * 3600000);
 
-            function jdParaSeculo(jd) { return (jd - 2451545.0) / 36525.0; }
-
-            function calcularJD(y, m, d, hUTC) {
-                let mm = m, yy = y;
-                if (mm <= 2) { yy -= 1; mm += 12; }
-                let A = Math.floor(yy / 100);
-                let B = 2 - A + Math.floor(A / 4);
-                return Math.floor(365.25 * (yy + 4716)) + Math.floor(30.6001 * (mm + 1)) + d + (hUTC / 24.0) + B - 1524.5;
+            function longitudeEclipticaReal(corpo, data) {
+                const vetor = Astronomy.GeoVector(corpo, data, true);
+                return normalizar(Astronomy.Ecliptic(vetor).elon);
             }
 
-            // Longitude do Sol (Meeus cap. 25: longitude média + equação do centro)
-            function longitudeSol(T) {
-                const solMedio = 280.46646 + 36000.76983 * T;
-                const anomaliaMedia = degToRad(357.52911 + 35999.05029 * T);
-                const eqCentro = (1.914602 - 0.004817 * T) * Math.sin(anomaliaMedia)
-                                + (0.019993 - 0.000101 * T) * Math.sin(2 * anomaliaMedia)
-                                + 0.000289 * Math.sin(3 * anomaliaMedia);
-                return normalizar(solMedio + eqCentro);
-            }
+            // Longitude solar natal REAL (posição geocêntrica aparente exata do Sol no
+            // nascimento, via astronomy-engine — a mesma efeméride usada no Mapa Natal,
+            // substituindo a fórmula aproximada do Sol médio usada antes).
+            const solNatal = longitudeEclipticaReal(Astronomy.Body.Sun, dataNascUTC);
 
-            let jdBirth = calcularJD(year, month, day, hourUTC);
-            let TBirth = jdParaSeculo(jdBirth);
-            const solNatal = longitudeSol(TBirth);
-
-            // A Revolução Solar acontece no instante exato em que o Sol volta ao grau
+            // A Revolução Solar acontece no instante EXATO em que o Sol volta ao grau
             // natal — isso NÃO é necessariamente no mesmo dia/hora do aniversário civil
-            // (o ano trópico tem ~365,2422 dias, então o retorno "desliza" até quase 24h
-            // a cada ano e dá saltos nos anos bissextos). Usamos o aniversário como
-            // estimativa inicial e refinamos por iteração até o Sol bater exatamente
-            // no grau natal — isso é o que garante Ascendente/Casas corretos.
-            let jdRS = calcularJD(anoRS, month, day, hourUTC);
-            for (let iter = 0; iter < 8; iter++) {
-                const T = jdParaSeculo(jdRS);
-                const solAtual = longitudeSol(T);
-                let diff = solNatal - solAtual;
-                diff = ((diff + 540) % 360) - 180; // normaliza para [-180, 180)
-                if (Math.abs(diff) < 0.00005) break;
-                jdRS += diff / 0.9856076686; // graus percorridos pelo Sol por dia
-            }
-            let TRS = jdParaSeculo(jdRS);
+            // (o ano trópico tem ~365,2422 dias, então o retorno "desliza" ao longo do
+            // dia a cada ano e dá saltos nos anos bissextos). Em vez de iterar sobre uma
+            // fórmula aproximada, usamos a própria rotina de busca do astronomy-engine
+            // (Astronomy.SearchSunLongitude), que localiza esse instante com precisão de
+            // segundos — é o que garante Ascendente, Casas e planetas corretos.
+            const dataEstimativa = new Date(Date.UTC(anoRS, month - 1, day, 12, 0, 0));
+            const buscaRS = Astronomy.SearchSunLongitude(solNatal, dataEstimativa, 400);
+            const dataRS = buscaRS.date; // instante exato (UTC) da Revolução Solar
 
-            // GMST correto (Meeus): usa a taxa de rotação da Terra por DIA (360.98564736629°/dia),
-            // não por século — o valor anterior estava ~366x menor que o correto, por isso o
-            // Ascendente praticamente não mudava ao alterar o horário de nascimento.
+            let jdRS = dataParaJD(dataRS);
+            let TRS = (jdRS - 2451545.0) / 36525.0;
+
+            // GMST correto (Meeus): usa a taxa de rotação da Terra por DIA (360.98564736629°/dia)
             let diasDesdeJ2000RS = jdRS - 2451545.0;
             let gmst = 280.46061837 + 360.98564736629 * diasDesdeJ2000RS + 0.000387933 * TRS * TRS - (TRS * TRS * TRS) / 38710000.0;
             gmst = normalizar(gmst);
@@ -766,17 +825,19 @@
             // forçar o resultado para nenhuma faixa fixa de graus.
             let asc = normalizar(radToDeg(Math.atan2(Math.cos(degToRad(lst)), -Math.sin(degToRad(lst)) * Math.cos(obliq) - Math.tan(degToRad(lat)) * Math.sin(obliq))));
 
-            // Posições dos planetas na RS
-            const sol = solNatal; // Por definição da Revolução Solar, Sol está exatamente no grau natal
-            const lua = normalizar(sol + (TRS * 130.5)); 
-            const mercurio = normalizar(sol + 12 * Math.sin(degToRad(360 * TRS * 4.15)));
-            const venus = normalizar(sol + 25 * Math.sin(degToRad(360 * TRS * 1.62)));
-            const marte = normalizar(sol + 55 * Math.sin(degToRad(360 * TRS * 0.53)));
-            const jupiter = normalizar(34.404 + 3034.9057 * TRS);
-            const saturno = normalizar(50.077 + 1222.1138 * TRS);
-            const urano = normalizar(314.055 + 428.4661 * TRS);
-            const netuno = normalizar(304.349 + 218.4862 * TRS);
-            const plutao = normalizar(238.929 + 145.180 * TRS);
+            // Posições REAIS dos planetas no instante exato da RS (via astronomy-engine,
+            // mesma classe de precisão de efeméride usada por softwares profissionais —
+            // substituindo as antigas curvas senoidais fictícias de Lua/Mercúrio/Vênus/Marte).
+            const sol = longitudeEclipticaReal(Astronomy.Body.Sun, dataRS); // deve coincidir com solNatal
+            const lua = normalizar(Astronomy.EclipticGeoMoon(dataRS).lon);
+            const mercurio = longitudeEclipticaReal(Astronomy.Body.Mercury, dataRS);
+            const venus = longitudeEclipticaReal(Astronomy.Body.Venus, dataRS);
+            const marte = longitudeEclipticaReal(Astronomy.Body.Mars, dataRS);
+            const jupiter = longitudeEclipticaReal(Astronomy.Body.Jupiter, dataRS);
+            const saturno = longitudeEclipticaReal(Astronomy.Body.Saturn, dataRS);
+            const urano = longitudeEclipticaReal(Astronomy.Body.Uranus, dataRS);
+            const netuno = longitudeEclipticaReal(Astronomy.Body.Neptune, dataRS);
+            const plutao = longitudeEclipticaReal(Astronomy.Body.Pluto, dataRS);
 
             // Ângulos Derivados
             const dc = normalizar(asc + 180);
@@ -785,28 +846,43 @@
             const antiVertex = normalizar(vertex + 180);
 
             // Pontos e Nodos
-            const rodaFortuna = normalizar(asc + lua - sol);
+            // Roda da Fortuna (Parte da Fortuna): a fórmula tradicional muda entre mapa
+            // diurno (Sol acima do horizonte) e noturno (Sol abaixo do horizonte).
+            const mapaDiurno = normalizar(sol - asc) >= 180;
+            const rodaFortuna = mapaDiurno
+                ? normalizar(asc + lua - sol)
+                : normalizar(asc + sol - lua);
             const nodoNorte = normalizar(125.044558 - 1934.1361849 * TRS);
             const nodoSul = normalizar(nodoNorte + 180);
 
-            // Centauros e Asteroides
-            const quiron = normalizar(200.0 + 720.0 * TRS);
-            const lilith = normalizar(sol + 120 + (TRS * 40.7));
-            const ceres = normalizar(150.0 + 800.0 * TRS);
-            const pallas = normalizar(180.0 + 780.0 * TRS);
-            const juno = normalizar(210.0 + 700.0 * TRS);
-            const vesta = normalizar(240.0 + 650.0 * TRS);
-            const pholus = normalizar(110.0 + 250.0 * TRS);
+            // Centauros, Asteroides e TNOs — mecânica orbital kepleriana REAL (elementos
+            // orbitais osculadores + posição heliocêntrica real da Terra), substituindo
+            // as antigas curvas senoidais/lineares fictícias. Ver ELEMENTOS_KEPLER e
+            // calcularLongitudeKepleriana() no topo do script.
+            const quiron = calcularLongitudeKepleriana(ELEMENTOS_KEPLER["Quíron"], dataRS);
+            // Lilith (Lua Negra média) = longitude média do apogeu lunar (fórmula real, Meeus)
+            const meanPerigeuLunar = 83.3532465 + 4069.0137287 * TRS - 0.0103200 * TRS * TRS
+                                    - Math.pow(TRS, 3) / 80053 + Math.pow(TRS, 4) / 18999000;
+            const lilith = normalizar(meanPerigeuLunar + 180);
+            const ceres = calcularLongitudeKepleriana(ELEMENTOS_KEPLER["Ceres"], dataRS);
+            const pallas = calcularLongitudeKepleriana(ELEMENTOS_KEPLER["Pallas"], dataRS);
+            const juno = calcularLongitudeKepleriana(ELEMENTOS_KEPLER["Juno"], dataRS);
+            const vesta = calcularLongitudeKepleriana(ELEMENTOS_KEPLER["Vesta"], dataRS);
+            const pholus = calcularLongitudeKepleriana(ELEMENTOS_KEPLER["Pholus"], dataRS);
+            // ⚠️ "Cápulo" não corresponde a nenhum corpo celeste catalogado (IAU/JPL). Não
+            // há elementos orbitais reais para esse ponto — continua sendo um deslocamento
+            // simbólico arbitrário a partir de Lilith, mantido apenas por compatibilidade.
             const capulo = normalizar(normalizar(lilith + 180) + 15);
 
             // Transnetunianos (TNOs)
-            const eris = normalizar(10.0 + 64.0 * TRS);
-            const sedna = normalizar(50.0 + 31.0 * TRS);
-            const haumea = normalizar(190.0 + 126.0 * TRS);
-            const makemake = normalizar(170.0 + 116.0 * TRS);
+            const eris = calcularLongitudeKepleriana(ELEMENTOS_KEPLER["Éris"], dataRS);
+            const sedna = calcularLongitudeKepleriana(ELEMENTOS_KEPLER["Sedna"], dataRS);
+            const haumea = calcularLongitudeKepleriana(ELEMENTOS_KEPLER["Haumea"], dataRS);
+            const makemake = calcularLongitudeKepleriana(ELEMENTOS_KEPLER["Makemake"], dataRS);
 
-            // Estrelas Fixas
-            const precessao = TRS * 0.01396;
+            // Estrelas Fixas — precessão real: ~50,29"/ano = 1,39697°/século (constante IAU).
+            // O valor anterior (0,01396) estava ~100x menor que o correto.
+            const precessao = TRS * 1.39697;
             const aldebaran = normalizar(69.78 + precessao);
             const regulus = normalizar(149.83 + precessao);
             const antares = normalizar(249.76 + precessao);
