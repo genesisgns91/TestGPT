@@ -56,6 +56,30 @@
         }
         header h1 { font-size: 1.2rem; color: var(--sol); font-weight: 700; letter-spacing: 1.5px; }
         header p { font-size: 0.8rem; color: #8b949e; margin-top: 2px; }
+
+        .app-nav {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            margin-top: 10px;
+        }
+        .nav-tab {
+            text-decoration: none;
+            color: #8b949e;
+            background: var(--bg-principal);
+            border: 1px solid var(--border);
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        .nav-tab:hover { border-color: var(--destaque); color: #fff; }
+        .nav-tab.active {
+            background: var(--destaque);
+            color: #0d1117;
+            border-color: var(--destaque);
+        }
  
         .app-layout {
             width: 100%;
@@ -429,6 +453,10 @@
     <header>
         <h1>REVOLUÇÃO SOLAR</h1>
         <p>Análise de Previsão Anual (Ano Pessoal)</p>
+        <nav class="app-nav">
+            <a href="index.html" class="nav-tab">🌟 Mapa Natal</a>
+            <a href="revolucao_solar.html" class="nav-tab active">☀️ Revolução Solar</a>
+        </nav>
     </header>
  
     <div class="app-layout">
@@ -611,7 +639,6 @@
             "Juno": "Assuntos de compromisso, parcerias e acordos importantes que ganham destaque no ano.",
             "Vesta": "Onde você vai canalizar foco, devoção e energia vital de forma mais concentrada no ciclo.",
             "Pholus": "Pequenos gatilhos que podem provocar grandes reviravoltas ao longo do ano.",
-            "Cápulo": "Momentos de desapego, purificação e superação de crises pontuais durante o ciclo.",
             "Éris": "Onde questões de justiça, afirmação pessoal e discórdia construtiva podem surgir no ano.",
             "Sedna": "Processos de resgate de vulnerabilidades antigas e amadurecimento emocional profundo no ciclo.",
             "Haumea": "Áreas de renovação, fertilidade criativa e recomeços ao longo do ano.",
@@ -630,7 +657,7 @@
             "Quíron": "⚷", "Lilith": "⚸", "Roda da Fortuna": "⊗",
             "Nodo Norte": "☊", "Nodo Sul": "☋",
             "Ceres": "⚳", "Pallas": "⚴", "Juno": "⚵", "Vesta": "⚶",
-            "Pholus": "⯛", "Cápulo": "Cap",
+            "Pholus": "⯛",
             "Éris": "⯰", "Sedna": "⯲", "Haumea": "🩵", "Makemake": "🩲",
             "Aldebaran": "✶", "Regulus": "✶", "Antares": "✶"
         };
@@ -869,10 +896,8 @@
             const juno = calcularLongitudeKepleriana(ELEMENTOS_KEPLER["Juno"], dataRS);
             const vesta = calcularLongitudeKepleriana(ELEMENTOS_KEPLER["Vesta"], dataRS);
             const pholus = calcularLongitudeKepleriana(ELEMENTOS_KEPLER["Pholus"], dataRS);
-            // ⚠️ "Cápulo" não corresponde a nenhum corpo celeste catalogado (IAU/JPL). Não
-            // há elementos orbitais reais para esse ponto — continua sendo um deslocamento
-            // simbólico arbitrário a partir de Lilith, mantido apenas por compatibilidade.
-            const capulo = normalizar(normalizar(lilith + 180) + 15);
+            // "Cápulo" foi removido: não corresponde a nenhum corpo celeste catalogado
+            // (IAU/JPL) — era um deslocamento simbólico arbitrário sem base real.
 
             // Transnetunianos (TNOs)
             const eris = calcularLongitudeKepleriana(ELEMENTOS_KEPLER["Éris"], dataRS);
@@ -905,7 +930,7 @@
                 { nome: "Ceres", grau: ceres }, { nome: "Pallas", grau: pallas },
                 { nome: "Juno", grau: juno }, { nome: "Vesta", grau: vesta },
 
-                { nome: "Pholus", grau: pholus }, { nome: "Cápulo", grau: capulo },
+                { nome: "Pholus", grau: pholus },
 
                 { nome: "Éris", grau: eris }, { nome: "Sedna", grau: sedna },
                 { nome: "Haumea", grau: haumea }, { nome: "Makemake", grau: makemake },
@@ -1362,6 +1387,50 @@
             if (e.target.id === 'aiModal') fecharModal();
         }
  
+        // ==========================================
+        // MECANISMO DE TRANSIÇÃO ENTRE MAPA NATAL E REVOLUÇÃO SOLAR
+        // ==========================================
+        // Os dados de nascimento (data, hora, fuso, cidade e coordenadas) são salvos
+        // no localStorage do navegador. Assim, ao clicar na aba "Mapa Natal", aquela
+        // página já abre com os mesmos dados natais preenchidos, sem precisar digitar
+        // tudo de novo. Não envolve nenhum servidor, apenas o navegador local. (O ano
+        // da Revolução Solar em si NÃO é compartilhado, pois é específico desta página.)
+        const CHAVE_DADOS_NATAIS = 'astro_dados_natais_v1';
+
+        function salvarDadosNatais() {
+            try {
+                const dados = {
+                    date: document.getElementById('date').value,
+                    time: document.getElementById('time').value,
+                    fuso: document.getElementById('fuso').value,
+                    lat: document.getElementById('lat').value,
+                    lon: document.getElementById('lon').value,
+                    cidade: document.getElementById('cidadeInput').value
+                };
+                localStorage.setItem(CHAVE_DADOS_NATAIS, JSON.stringify(dados));
+            } catch (err) {
+                console.warn('Não foi possível salvar os dados natais localmente:', err);
+            }
+        }
+
+        function carregarDadosNatais() {
+            try {
+                const raw = localStorage.getItem(CHAVE_DADOS_NATAIS);
+                if (!raw) return false;
+                const dados = JSON.parse(raw);
+                if (dados.date) document.getElementById('date').value = dados.date;
+                if (dados.time) document.getElementById('time').value = dados.time;
+                if (dados.fuso !== undefined && dados.fuso !== '') document.getElementById('fuso').value = dados.fuso;
+                if (dados.lat !== undefined && dados.lat !== '') document.getElementById('lat').value = dados.lat;
+                if (dados.lon !== undefined && dados.lon !== '') document.getElementById('lon').value = dados.lon;
+                if (dados.cidade) document.getElementById('cidadeInput').value = dados.cidade;
+                return true;
+            } catch (err) {
+                console.warn('Não foi possível carregar os dados natais salvos:', err);
+                return false;
+            }
+        }
+
         function executarTudo() {
             const { astros, casas, asc } = calcularRevolucaoSolar();
             const aspectos = calcularAspectos(astros);
@@ -1377,6 +1446,8 @@
             renderizarAspectosExpansivel(aspectos);
             gerarMatrizHtml(astros, aspectos);
             desenharRodaSVG(astros, casas, asc);
+
+            salvarDadosNatais();
         }
  
         function popularSelectAno() {
@@ -1393,8 +1464,11 @@
         window.onload = () => {
             const agora = new Date();
             popularSelectAno();
-            document.getElementById('date').value = agora.toISOString().split('T')[0];
-            document.getElementById('time').value = agora.toTimeString().split(' ')[0].substring(0, 5);
+            const dadosCarregados = carregarDadosNatais();
+            if (!dadosCarregados) {
+                document.getElementById('date').value = agora.toISOString().split('T')[0];
+                document.getElementById('time').value = agora.toTimeString().split(' ')[0].substring(0, 5);
+            }
 
             document.getElementById('cidadeInput').addEventListener('keypress', function (e) {
                 if (e.key === 'Enter') {
