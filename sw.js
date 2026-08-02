@@ -13,7 +13,7 @@
 // O nome do cache muda a cada versão (CACHE_VERSION) para forçar a limpeza
 // de caches antigos no evento "activate".
 
-const CACHE_VERSION = 'v2';
+const CACHE_VERSION = 'v3';
 const CACHE_NAME = `astro-cache-${CACHE_VERSION}`;
 
 const ARQUIVOS_ESTATICOS = [
