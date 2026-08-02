@@ -473,6 +473,14 @@
             <div class="input-group full">
                 <button type="submit" class="btn-primary">Calcular Mapa Natal</button>
             </div>
+            <div class="input-group span-2">
+                <label for="nomePessoaInput">Nome da Pessoa (para salvar)</label>
+                <div class="geo-search-container">
+                    <input type="text" id="nomePessoaInput" placeholder="Ex: Maria Silva">
+                    <button type="button" class="btn-search-geo" style="background:#8957e5;" onclick="salvarOuAtivarPessoa()">💾 Salvar / Ativar</button>
+                </div>
+                <div id="pessoaAtivaIndicador" style="display:none; font-size:0.75rem; color:var(--terra); margin-top:4px; cursor:pointer;" onclick="desativarPessoa()" title="Clique para parar de gravar leituras"></div>
+            </div>
         </form>
  
         <div class="dashboard-grid">
@@ -521,6 +529,11 @@
         </div>
  
         <div class="card-table">
+            <h3>👤 Pessoas Salvas (Clique para Expandir)</h3>
+            <div id="pessoasSalvasList" class="expand-list" style="margin-top: 10px;"></div>
+        </div>
+
+        <div class="card-table">
             <h3>Posições Astrológicas (Clique para Expandir)</h3>
             <div id="astrosExpandList" class="expand-list" style="margin-top: 10px;"></div>
         </div>
@@ -551,7 +564,10 @@
         <div class="modal-card">
             <div class="modal-header">
                 <h3 id="modalTitle">✦ Análise Astrológica (IA)</h3>
-                <button class="modal-close" onclick="fecharModal()">&times;</button>
+                <div style="display:flex; align-items:center; gap:6px;">
+                    <button id="btnOuvir" class="modal-close" style="font-size:1.1rem;" title="Ouvir análise" onclick="alternarLeituraVoz()">🔊</button>
+                    <button class="modal-close" onclick="fecharModal()">&times;</button>
+                </div>
             </div>
             <div id="modalBody" class="modal-body">
                 <!-- Conteúdo gerado pela IA -->
@@ -1027,7 +1043,6 @@
                 const sIdx = Math.floor(a.grau / 30) % 12;
                 const signo = SIGNOS_DADOS[sIdx];
                 const simAstro = SIMBOLOS_ASTROS[a.nome] || '';
-                const combinacao = `${a.nome} em ${signo.nome} na Casa ${a.casa}`;
                 const explicacaoAstro = DEFINICAO_ASTROS[a.nome] || "";
                 const nivel = NIVEL_PRECISAO[a.nome] || "alta";
                 const corNivel = CORES_PRECISAO[nivel];
@@ -1052,7 +1067,7 @@
                             <p style="margin-bottom: 6px;"><strong>Posição Exata:</strong> ${formatarDMS(a.grau)}</p>
                             <p style="margin-bottom: 6px;"><strong>${rotuloNivel}</strong></p>
                             
-                            <button class="btn-ia btn-ia-inline" onclick="event.stopPropagation(); dispararAnaliseIA('${combinacao}')">
+                            <button class="btn-ia btn-ia-inline" onclick="event.stopPropagation(); dispararAnaliseIA('${a.nome}', '${signo.nome}', ${a.casa})">
                                 ✦ Interpretação Profunda com IA
                             </button>
                         </div>
@@ -1073,7 +1088,7 @@
                     ? astrosNaCasa.map(a => `${SIMBOLOS_ASTROS[a.nome] || ''} ${a.nome}`).join(', ')
                     : 'Nenhum planeta presente (Casa Vazia)';
 
-                const contextoAnalise = `Casa ${numCasa} em ${signoCuspide.nome} contendo: ${astrosNaCasa.map(a => a.nome).join(', ') || 'Sem planetas'}`;
+                const ocupantesNomes = astrosNaCasa.map(a => a.nome).join(', ') || 'nenhum astro relevante';
 
                 return `
                     <div class="expand-card">
@@ -1092,7 +1107,7 @@
                             <p style="margin-bottom: 8px;"><strong>Cúspide:</strong> ${signoCuspide.nome} (${formatarDMS(grauCasa)})</p>
                             <p style="margin-bottom: 6px;"><strong>Ocupantes Natas:</strong> ${nomesAstros}</p>
                             
-                            <button class="btn-ia btn-ia-inline" onclick="event.stopPropagation(); dispararAnaliseCasaIA('${contextoAnalise}')">
+                            <button class="btn-ia btn-ia-inline" onclick="event.stopPropagation(); dispararAnaliseCasaIA(${numCasa}, '${signoCuspide.nome}', '${ocupantesNomes}')">
                                 ✦ Análise da Casa com IA
                             </button>
                         </div>
@@ -1106,7 +1121,6 @@
             container.innerHTML = aspectos.map(asp => {
                 const sim1 = SIMBOLOS_ASTROS[asp.astro1] || '';
                 const sim2 = SIMBOLOS_ASTROS[asp.astro2] || '';
-                const combinacao = `${asp.astro1} em ${asp.aspecto} com ${asp.astro2}`;
 
                 return `
                     <div class="expand-card">
@@ -1123,7 +1137,7 @@
                             <p style="margin-bottom: 8px;"><strong>Dinâmica Psicológica:</strong> Integração interpessoal entre as energias de ${asp.astro1} e ${asp.astro2}.</p>
                             <p style="margin-bottom: 6px;"><strong>Orbe de Precisão:</strong> ${asp.orbe}°</p>
                             
-                            <button class="btn-ia btn-ia-inline" onclick="event.stopPropagation(); dispararAnaliseIA('${combinacao}')">
+                            <button class="btn-ia btn-ia-inline" onclick="event.stopPropagation(); dispararAnaliseAspectoIA('${asp.astro1}', '${asp.aspecto}', '${asp.astro2}')">
                                 ✦ Interpretar Aspecto com IA
                             </button>
                         </div>
@@ -1239,6 +1253,7 @@
         // ==========================================
  
         function iniciarAnaliseIA(titulo, promptText) {
+            ULTIMO_TITULO_ANALISE = titulo;
             document.getElementById('modalTitle').textContent = `✦ ${titulo}`;
             document.getElementById('modalBody').innerHTML = `
                 <div class="loading-spinner">
@@ -1249,24 +1264,55 @@
             gerarAnaliseIA(promptText);
         }
  
-        function dispararAnaliseIA(combinacao) {
-            const promptText = `Atue como um astrólogo humanista e psicológico especialista em Mapa Astral Natal. Faça uma análise detalhada sobre o seguinte elemento no mapa: "${combinacao}". 
-            Siga estas diretrizes:
-            - Escreva de 3 a 4 parágrafos curtos com foco em autoconhecimento e conselhos práticos.
-            - Use formatação HTML básica com parágrafos <p> e destaques em <strong>.
-            - Mantenha um tom profundo, acolhedor e construtivo.`;
+        // Diretriz de tom compartilhada por todas as análises de IA: sem introdução,
+        // com profundidade filosófica/psicológica/simbólica, mas sem citar escolas de
+        // pensamento, tradições ou termos técnicos de sistemas específicos — o texto
+        // deve soar como uma leitura pessoal, nunca uma aula teórica.
+        const DIRETRIZ_TOM_IA = `Escreva com profundidade filosófica e psicológica, atento às camadas simbólicas, aos padrões ocultos por trás do comportamento e ao significado mais profundo por trás dos eventos de vida — como uma leitura séria, intuitiva e madura. NÃO cite nomes de escolas de pensamento, tradições, sistemas ou termos técnicos de nenhuma linha teórica específica; o foco deve estar inteiramente na pessoa e na energia analisada, com linguagem natural e envolvente.
+            NÃO escreva introduções, saudações, ou frases como "vamos analisar" — comece direto no conteúdo.
+            NÃO use títulos, cabeçalhos ou listas numeradas visíveis no texto final — apenas parágrafos corridos.
+            Use formatação HTML básica com parágrafos <p> e destaques em <strong>.`;
+
+        function dispararAnaliseIA(nomeAstro, nomeSigno, numCasa) {
+            const promptText = `Faça uma leitura astrológica sobre a posição de ${nomeAstro} em ${nomeSigno}, na Casa ${numCasa}, no Mapa Natal desta pessoa.
+
+            Siga rigorosamente esta estrutura, sem indicar os números ou nomes das etapas no texto final:
+            1. Um parágrafo breve sobre o que ${nomeAstro} representa como força interna nesta pessoa.
+            2. Um parágrafo sobre como ${nomeSigno} colore, direciona ou qualifica essa energia.
+            3. Um parágrafo sobre o que a Casa ${numCasa} revela sobre onde e como essa energia se manifesta na vida prática.
+            4. Uma análise geral, mais longa e rica, que une os três elementos acima como um retrato único e coerente, trazendo uma reflexão de autoconhecimento.
+
+            ${DIRETRIZ_TOM_IA}`;
  
-            iniciarAnaliseIA(`Análise Natal: ${combinacao}`, promptText);
+            iniciarAnaliseIA(`${nomeAstro} em ${nomeSigno} — Casa ${numCasa}`, promptText);
         }
 
-        function dispararAnaliseCasaIA(contextoCasa) {
-            const promptText = `Atue como um astrólogo especialista. Faça uma análise focada na seguinte Casa do Mapa Natal: "${contextoCasa}".
-            Siga estas diretrizes:
-            - Explique o potencial e temas centrais desenvolvidos nessa área de vida.
-            - Escreva de 3 a 4 parágrafos curtos.
-            - Use formatação HTML básica com parágrafos <p> e destaques em <strong>.`;
+        function dispararAnaliseAspectoIA(astro1, aspecto, astro2) {
+            const promptText = `Faça uma leitura astrológica sobre o aspecto de ${aspecto} entre ${astro1} e ${astro2} no Mapa Natal desta pessoa.
 
-            iniciarAnaliseIA(`Análise de Casa Natal`, promptText);
+            Siga rigorosamente esta estrutura, sem indicar os números ou nomes das etapas no texto final:
+            1. Um parágrafo breve sobre o que ${astro1} representa como força interna nesta pessoa.
+            2. Um parágrafo breve sobre o que ${astro2} representa como força interna nesta pessoa.
+            3. Um parágrafo sobre a natureza do aspecto de ${aspecto} e como ele aproxima, tensiona ou funde essas duas energias.
+            4. Uma análise geral, mais longa e rica, sobre o que esse encontro de forças revela sobre os padrões, desafios e talentos da pessoa.
+
+            ${DIRETRIZ_TOM_IA}`;
+ 
+            iniciarAnaliseIA(`${astro1} ${aspecto} ${astro2}`, promptText);
+        }
+
+        function dispararAnaliseCasaIA(numCasa, nomeSigno, ocupantes) {
+            const promptText = `Faça uma leitura astrológica sobre a Casa ${numCasa} do Mapa Natal desta pessoa, com cúspide em ${nomeSigno}, contendo: ${ocupantes}.
+
+            Siga rigorosamente esta estrutura, sem indicar os números ou nomes das etapas no texto final:
+            1. Um parágrafo breve sobre o que a Casa ${numCasa} representa como área de vida.
+            2. Um parágrafo sobre como ${nomeSigno}, na cúspide, qualifica a forma como essa área se expressa.
+            3. Um parágrafo sobre o papel dos astros presentes nessa casa (${ocupantes}) e como eles atuam nessa área específica.
+            4. Uma análise geral, mais longa e rica, unindo os três elementos acima em um retrato coerente do potencial dessa área na vida da pessoa.
+
+            ${DIRETRIZ_TOM_IA}`;
+
+            iniciarAnaliseIA(`Casa ${numCasa} em ${nomeSigno}`, promptText);
         }
  
         function dispararAnaliseBalanco(tipo) {
@@ -1289,11 +1335,9 @@
  
             const dadosTexto = Object.entries(dados).map(([k, v]) => `${k}: ${v}`).join(', ');
  
-            const promptText = `Atue como um astrólogo especialista em psicologia analítica. Faça uma análise sobre o temperamento e estrutura psíquica do mapa com base nesta distribuição de ${rotulo}: ${dadosTexto}.
-            Siga estas diretrizes:
-            - Escreva de 3 a 4 parágrafos.
-            - Explique como essa proporção impacta a forma da pessoa sentir, reagir e tomar decisões.
-            - Use formatação HTML básica com parágrafos <p> e destaques em <strong>.`;
+            const promptText = `Faça uma leitura sobre o temperamento e a estrutura psíquica desta pessoa com base nesta distribuição de ${rotulo} no Mapa Natal: ${dadosTexto}.
+            Escreva de 3 a 4 parágrafos, explicando como essa proporção molda a forma da pessoa sentir, reagir e tomar decisões no dia a dia.
+            ${DIRETRIZ_TOM_IA}`;
  
             iniciarAnaliseIA(titulo, promptText);
         }
@@ -1307,15 +1351,12 @@
                 return `${a.nome} em ${signo.nome} na Casa ${a.casa}`;
             }).join('; ');
  
-            const promptText = `Atue como um mestre astrólogo. Elabore um relatório síntese e síntese da personalidade para o Mapa Natal baseado nas seguintes posições:
+            const promptText = `Elabore um relatório-síntese completo da personalidade para o Mapa Natal desta pessoa, baseado nas seguintes posições:
  
             Posições Natas: ${listaPosicoes}.
  
-            Siga estas diretrizes de resposta:
-            - Escreva de 5 a 7 parágrafos.
-            - Destaque a tríade principal (Sol, Lua e Ascendente), os eixos Angulares (MC/IC, DC) e pontos de cura (Quíron/Nodos).
-            - Traga reflexões valiosas sobre vocação, relacionamentos e evolução interior.
-            - Use formatação HTML básica com parágrafos <p> e destaques em <strong>.`;
+            Escreva de 5 a 7 parágrafos, destacando a tríade principal (Sol, Lua e Ascendente), os eixos angulares (MC/IC, DC) e os pontos de cura (Quíron/Nodos), trazendo reflexões valiosas sobre vocação, relacionamentos e evolução interior.
+            ${DIRETRIZ_TOM_IA}`;
  
             iniciarAnaliseIA(`Relatório de Síntese Natal`, promptText);
         }
@@ -1327,14 +1368,12 @@
                 .map(asp => `${asp.astro1} em ${asp.aspecto} com ${asp.astro2}`)
                 .join('; ');
  
-            const promptText = `Atue como um astrólogo psicológico. Faça uma análise da dinâmica de aspectos natas no mapa:
+            const promptText = `Faça uma leitura da dinâmica de aspectos natas desta pessoa:
  
             ${lista}
  
-            Siga estas diretrizes:
-            - Escreva de 4 a 5 parágrafos.
-            - Conecte as dinâmicas de tensão e harmonia entre a psique e talentos inatos.
-            - Use formatação HTML básica com parágrafos <p> e destaques em <strong>.`;
+            Escreva de 4 a 5 parágrafos, conectando as dinâmicas de tensão e harmonia entre os diferentes talentos e padrões inatos.
+            ${DIRETRIZ_TOM_IA}`;
  
             iniciarAnaliseIA(`Análise Psicológica de Aspectos Natas`, promptText);
         }
@@ -1365,14 +1404,66 @@
         function exibirResultadoIA(texto) {
             let htmlFormatado = texto.replace(/```html/g, '').replace(/```/g, '');
             document.getElementById('modalBody').innerHTML = htmlFormatado;
+            if (PESSOA_ATIVA_ID && ULTIMO_TITULO_ANALISE) {
+                salvarLeituraNaPessoaAtiva(ULTIMO_TITULO_ANALISE, htmlFormatado);
+            }
         }
  
         function fecharModal() {
             document.getElementById('aiModal').classList.remove('active');
+            pararLeituraVoz();
         }
  
         function fecharModalOuter(e) {
             if (e.target.id === 'aiModal') fecharModal();
+        }
+
+        // ==========================================
+        // LEITURA EM VOZ ALTA (Web Speech API — nativa do navegador, sem custo)
+        // ==========================================
+        let vozAtiva = false;
+
+        function extrairTextoParaVoz() {
+            const clone = document.getElementById('modalBody').cloneNode(true);
+            return clone.textContent.replace(/\s+/g, ' ').trim();
+        }
+
+        function alternarLeituraVoz() {
+            if (!('speechSynthesis' in window)) {
+                alert('Seu navegador não suporta leitura em voz alta.');
+                return;
+            }
+            const btn = document.getElementById('btnOuvir');
+            if (vozAtiva) {
+                pararLeituraVoz();
+                return;
+            }
+            const texto = extrairTextoParaVoz();
+            if (!texto) return;
+
+            const utterance = new SpeechSynthesisUtterance(texto);
+            utterance.lang = 'pt-BR';
+            utterance.rate = 1;
+            utterance.pitch = 1;
+
+            const vozes = speechSynthesis.getVoices();
+            const vozPt = vozes.find(v => v.lang && v.lang.toLowerCase().startsWith('pt'));
+            if (vozPt) utterance.voice = vozPt;
+
+            utterance.onend = () => { vozAtiva = false; btn.textContent = '🔊'; };
+            utterance.onerror = () => { vozAtiva = false; btn.textContent = '🔊'; };
+
+            speechSynthesis.cancel();
+            speechSynthesis.speak(utterance);
+            vozAtiva = true;
+            btn.textContent = '⏹️';
+        }
+
+        function pararLeituraVoz() {
+            if ('speechSynthesis' in window) speechSynthesis.cancel();
+            vozAtiva = false;
+            const btn = document.getElementById('btnOuvir');
+            if (btn) btn.textContent = '🔊';
         }
  
         // ==========================================
@@ -1418,6 +1509,185 @@
             }
         }
 
+        // ==========================================
+        // PESSOAS SALVAS + HISTÓRICO DE LEITURAS DE IA (localStorage do navegador)
+        // ==========================================
+        // Cada pessoa salva guarda seus dados de nascimento e um histórico de
+        // leituras de IA já geradas. Enquanto uma pessoa estiver "ativa", toda nova
+        // análise de IA gerada nesta página é automaticamente anexada ao histórico
+        // dela. Tudo fica salvo apenas neste navegador (sem servidor).
+        const CHAVE_PESSOAS_SALVAS = 'astro_pessoas_salvas_v1';
+        const ORIGEM_PAGINA = 'Mapa Natal';
+        let PESSOA_ATIVA_ID = null;
+        let ULTIMO_TITULO_ANALISE = '';
+
+        function carregarPessoasSalvas() {
+            try {
+                const raw = localStorage.getItem(CHAVE_PESSOAS_SALVAS);
+                return raw ? JSON.parse(raw) : [];
+            } catch (err) { return []; }
+        }
+
+        function salvarPessoasSalvas(lista) {
+            try { localStorage.setItem(CHAVE_PESSOAS_SALVAS, JSON.stringify(lista)); }
+            catch (err) { console.warn('Não foi possível salvar pessoas:', err); }
+        }
+
+        function salvarOuAtivarPessoa() {
+            const nome = (document.getElementById('nomePessoaInput').value || '').trim();
+            if (!nome) { alert('Digite um nome para salvar.'); return; }
+
+            const dados = {
+                date: document.getElementById('date').value,
+                time: document.getElementById('time').value,
+                fuso: document.getElementById('fuso').value,
+                lat: document.getElementById('lat').value,
+                lon: document.getElementById('lon').value,
+                cidade: document.getElementById('cidadeInput').value
+            };
+
+            const lista = carregarPessoasSalvas();
+            let pessoa = lista.find(p => p.nome.toLowerCase() === nome.toLowerCase() && p.dados.date === dados.date && p.dados.time === dados.time);
+
+            if (!pessoa) {
+                pessoa = { id: 'p_' + Date.now(), nome, dados, criadoEm: new Date().toISOString(), leituras: [] };
+                lista.push(pessoa);
+            } else {
+                pessoa.dados = dados;
+            }
+
+            salvarPessoasSalvas(lista);
+            PESSOA_ATIVA_ID = pessoa.id;
+            atualizarIndicadorPessoaAtiva();
+            renderizarPessoasSalvas();
+        }
+
+        function atualizarIndicadorPessoaAtiva() {
+            const el = document.getElementById('pessoaAtivaIndicador');
+            if (!el) return;
+            if (!PESSOA_ATIVA_ID) { el.style.display = 'none'; return; }
+            const lista = carregarPessoasSalvas();
+            const pessoa = lista.find(p => p.id === PESSOA_ATIVA_ID);
+            if (pessoa) {
+                el.style.display = 'block';
+                el.textContent = `💾 Gravando leituras para: ${pessoa.nome} (clique para parar)`;
+            }
+        }
+
+        function desativarPessoa() {
+            PESSOA_ATIVA_ID = null;
+            atualizarIndicadorPessoaAtiva();
+        }
+
+        function salvarLeituraNaPessoaAtiva(titulo, html) {
+            if (!PESSOA_ATIVA_ID) return;
+            const lista = carregarPessoasSalvas();
+            const pessoa = lista.find(p => p.id === PESSOA_ATIVA_ID);
+            if (!pessoa) return;
+            pessoa.leituras.unshift({
+                id: 'l_' + Date.now(),
+                titulo,
+                origem: ORIGEM_PAGINA,
+                html,
+                criadoEm: new Date().toISOString()
+            });
+            salvarPessoasSalvas(lista);
+            renderizarPessoasSalvas();
+        }
+
+        function excluirPessoa(id) {
+            if (!confirm('Excluir esta pessoa e todas as leituras salvas dela?')) return;
+            let lista = carregarPessoasSalvas();
+            lista = lista.filter(p => p.id !== id);
+            salvarPessoasSalvas(lista);
+            if (PESSOA_ATIVA_ID === id) desativarPessoa();
+            renderizarPessoasSalvas();
+        }
+
+        function excluirLeitura(idPessoa, idLeitura) {
+            const lista = carregarPessoasSalvas();
+            const pessoa = lista.find(p => p.id === idPessoa);
+            if (!pessoa) return;
+            pessoa.leituras = pessoa.leituras.filter(l => l.id !== idLeitura);
+            salvarPessoasSalvas(lista);
+            renderizarPessoasSalvas();
+        }
+
+        function carregarMapaDaPessoa(id) {
+            const lista = carregarPessoasSalvas();
+            const pessoa = lista.find(p => p.id === id);
+            if (!pessoa) return;
+            document.getElementById('date').value = pessoa.dados.date;
+            document.getElementById('time').value = pessoa.dados.time;
+            document.getElementById('fuso').value = pessoa.dados.fuso;
+            document.getElementById('lat').value = pessoa.dados.lat;
+            document.getElementById('lon').value = pessoa.dados.lon;
+            document.getElementById('cidadeInput').value = pessoa.dados.cidade;
+            document.getElementById('nomePessoaInput').value = pessoa.nome;
+            PESSOA_ATIVA_ID = pessoa.id;
+            atualizarIndicadorPessoaAtiva();
+            executarTudo();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function reabrirLeituraSalva(idPessoa, idLeitura) {
+            const lista = carregarPessoasSalvas();
+            const pessoa = lista.find(p => p.id === idPessoa);
+            if (!pessoa) return;
+            const leitura = pessoa.leituras.find(l => l.id === idLeitura);
+            if (!leitura) return;
+            document.getElementById('modalTitle').textContent = `✦ ${leitura.titulo}`;
+            document.getElementById('modalBody').innerHTML = leitura.html;
+            document.getElementById('aiModal').classList.add('active');
+        }
+
+        function renderizarPessoasSalvas() {
+            const container = document.getElementById('pessoasSalvasList');
+            if (!container) return;
+            const lista = carregarPessoasSalvas();
+
+            if (!lista.length) {
+                container.innerHTML = '<p style="color:#8b949e; font-size:0.85rem; padding: 8px 0;">Nenhuma pessoa salva ainda. Preencha os dados acima, digite um nome no campo "Nome da Pessoa" e clique em "Salvar / Ativar".</p>';
+                return;
+            }
+
+            container.innerHTML = lista.slice().reverse().map(p => {
+                const leiturasHtml = p.leituras.length
+                    ? p.leituras.map(l => `
+                        <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid var(--border); gap:8px;">
+                            <div style="cursor:pointer; flex:1;" onclick="reabrirLeituraSalva('${p.id}', '${l.id}')">
+                                <div style="font-size:0.82rem; font-weight:600;">${l.titulo}</div>
+                                <div style="font-size:0.7rem; color:#8b949e;">${l.origem} · ${new Date(l.criadoEm).toLocaleString('pt-BR')}</div>
+                            </div>
+                            <button class="modal-close" style="font-size:1rem;" title="Excluir leitura" onclick="event.stopPropagation(); excluirLeitura('${p.id}', '${l.id}')">🗑️</button>
+                        </div>`).join('')
+                    : '<p style="font-size:0.8rem; color:#8b949e; padding: 6px 0;">Nenhuma leitura salva ainda para esta pessoa.</p>';
+
+                return `
+                    <div class="expand-card">
+                        <div class="expand-header" onclick="this.parentElement.classList.toggle('open')">
+                            <div class="expand-title">
+                                <span>👤 ${p.nome}</span>
+                            </div>
+                            <div style="display:flex; align-items:center; gap:8px;">
+                                <span class="expand-badge">${p.leituras.length} leitura(s)</span>
+                                <span class="arrow-icon">▼</span>
+                            </div>
+                        </div>
+                        <div class="expand-content">
+                            <p style="margin-bottom:8px;"><strong>Nascimento:</strong> ${p.dados.date} às ${p.dados.time} (UTC${p.dados.fuso >= 0 ? '+' : ''}${p.dados.fuso}) — ${p.dados.cidade}</p>
+                            <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px;">
+                                <button class="btn-ia" onclick="carregarMapaDaPessoa('${p.id}')">📂 Carregar este Mapa</button>
+                                <button class="btn-ia" style="background: linear-gradient(135deg, #da3633, #8b2020);" onclick="excluirPessoa('${p.id}')">🗑️ Excluir Pessoa</button>
+                            </div>
+                            <p style="margin-bottom:6px; font-size:0.8rem; color:#8b949e;"><strong>Leituras salvas:</strong></p>
+                            ${leiturasHtml}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
         function executarTudo() {
             const { astros, casas, asc } = calcularMapaNatal();
             const aspectos = calcularAspectos(astros);
@@ -1452,6 +1722,7 @@
                 }
             });
  
+            renderizarPessoasSalvas();
             executarTudo();
         };
     </script>
