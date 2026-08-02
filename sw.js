@@ -3,16 +3,15 @@
 // v4 — Estratégia Network First para HTML e scripts locais:
 //
 // - Páginas HTML e scripts locais: busca SEMPRE primeiro na rede para
-//   garantir que alterações no GitHub Pages entrem no ar imediatamente.
+//   garantir que alterações entrem no ar imediatamente.
 //   Usa o cache apenas quando estiver totalmente offline.
-// - Arquivos estáticos (ícones, manifest): usa "stale-while-revalidate"
-//   para carregamento instantâneo.
-// - auto-claim & skipWaiting: força a assunção imediata da nova versão
-//   sem prender o usuário na versão antiga de background.
+// - Arquivos estáticos (ícones, manifest): usa "stale-while-revalidate".
+// - auto-claim & skipWaiting: força a assunção imediata da nova versão.
 
 const CACHE_VERSION = 'v4';
 const CACHE_NAME = `astro-cache-${CACHE_VERSION}`;
 
+// Todos os arquivos na raiz do projeto
 const ARQUIVOS_ESTATICOS = [
     './manifest.json',
     './icon-192.png',
@@ -21,7 +20,7 @@ const ARQUIVOS_ESTATICOS = [
     './apple-touch-icon.png'
 ];
 
-// Instalação: baixa ícones essenciais e pula a fila de espera
+// Instalação: baixa os arquivos estáticos e pula a fila de espera
 self.addEventListener('install', (event) => {
     event.waitUntil(
         caches.open(CACHE_NAME)
@@ -30,7 +29,7 @@ self.addEventListener('install', (event) => {
     );
 });
 
-// Ativação: apaga todas as versões antigas do cache e assume o controle dos clientes
+// Ativação: limpa caches antigos e assume o controle dos clientes imediatamente
 self.addEventListener('activate', (event) => {
     event.waitUntil(
         caches.keys().then((chaves) =>
@@ -46,7 +45,7 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
     const { request } = event;
 
-    // Ignora chamadas que não usam GET ou que apontam para origens externas (APIs do Worker/OpenStreetMap)
+    // Ignora chamadas que não usam GET ou que apontam para origens externas (Cloudflare Worker, APIs, CDNs)
     if (request.method !== 'GET' || new URL(request.url).origin !== self.location.origin) {
         return;
     }
@@ -57,31 +56,38 @@ self.addEventListener('fetch', (event) => {
         request.url.endsWith('.js') ||
         request.url.endsWith('.html');
 
-    // Estratégia: NETWORK FIRST (Páginas, HTML e JS locais)
+    // NETWORK FIRST: Busca primeiro no servidor (HTML e JS)
     if (ehPaginaOuScript) {
         event.respondWith(
             fetch(request)
                 .then((respostaRede) => {
-                    // Atualiza a cópia do cache silenciosamente em segundo plano
-                    if (respostaRede.status === 200) {
+                    if (respostaRede && respostaRede.status === 200) {
                         const respostaParaCache = respostaRede.clone();
                         caches.open(CACHE_NAME).then((cache) => cache.put(request, respostaParaCache));
                     }
                     return respostaRede;
                 })
-                .catch(() => {
-                    // Se não houver conexão, entrega a última versão salva
-                    return caches.match(request);
+                .catch(async () => {
+                    // Fallback para o cache se estiver sem internet
+                    const respostaCache = await caches.match(request);
+                    if (respostaCache) {
+                        return respostaCache;
+                    }
+                    return new Response('Sem conexão com a internet.', {
+                        status: 503,
+                        statusText: 'Service Unavailable',
+                        headers: new Headers({ 'Content-Type': 'text/plain; charset=utf-8' })
+                    });
                 })
         );
         return;
     }
 
-    // Estratégia: STALE-WHILE-REVALIDATE (Ícones, imagens estáticas e manifest)
+    // STALE-WHILE-REVALIDATE: Imagens e Manifest
     event.respondWith(
         caches.match(request).then((respostaCache) => {
             const buscaRede = fetch(request).then((respostaRede) => {
-                if (respostaRede.status === 200) {
+                if (respostaRede && respostaRede.status === 200) {
                     caches.open(CACHE_NAME).then((cache) => cache.put(request, respostaRede.clone()));
                 }
                 return respostaRede;
