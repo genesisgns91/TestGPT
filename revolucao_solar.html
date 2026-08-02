@@ -297,6 +297,20 @@
             border-radius: 6px;
             border: 1px solid var(--border);
         }
+
+        .indicador-feito {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: rgba(63, 185, 80, 0.15);
+            color: #3fb950;
+            font-size: 0.65rem;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
  
         .expand-content {
             display: none;
@@ -543,7 +557,10 @@
             <div class="chart-card">
                 <div class="chart-card-header">
                     <h2>Roda da Revolução Solar</h2>
-                    <button class="btn-ia" onclick="dispararAnaliseMapaCompleto()">✦ Análise Anual IA</button>
+                    <span style="display:flex; align-items:center; gap:6px;">
+                        <span id="indicadorSintese"></span>
+                        <button class="btn-ia" onclick="dispararAnaliseMapaCompleto()">✦ Análise Anual IA</button>
+                    </span>
                 </div>
                 <svg id="chartSvg" viewBox="0 0 600 600"></svg>
                 <div class="legenda-precisao">
@@ -558,7 +575,10 @@
                     <div>
                         <div class="balance-card-header">
                             <h3>Elementos do Ano</h3>
-                            <button class="btn-ia" onclick="dispararAnaliseBalanco('elementos')">✦ Análise IA</button>
+                            <span style="display:flex; align-items:center; gap:6px;">
+                                <span id="indicadorBalancoElementos"></span>
+                                <button class="btn-ia" onclick="dispararAnaliseBalanco('elementos')">✦ Análise IA</button>
+                            </span>
                         </div>
                         <div id="elementosBars"></div>
                     </div>
@@ -567,7 +587,10 @@
                     <div>
                         <div class="balance-card-header">
                             <h3>Modalidades / Ritmos</h3>
-                            <button class="btn-ia" onclick="dispararAnaliseBalanco('ritmos')">✦ Análise IA</button>
+                            <span style="display:flex; align-items:center; gap:6px;">
+                                <span id="indicadorBalancoRitmos"></span>
+                                <button class="btn-ia" onclick="dispararAnaliseBalanco('ritmos')">✦ Análise IA</button>
+                            </span>
                         </div>
                         <div id="ritmosBars"></div>
                     </div>
@@ -576,7 +599,10 @@
                     <div>
                         <div class="balance-card-header">
                             <h3>Polaridades do Ano</h3>
-                            <button class="btn-ia" onclick="dispararAnaliseBalanco('polaridades')">✦ Análise IA</button>
+                            <span style="display:flex; align-items:center; gap:6px;">
+                                <span id="indicadorBalancoPolaridades"></span>
+                                <button class="btn-ia" onclick="dispararAnaliseBalanco('polaridades')">✦ Análise IA</button>
+                            </span>
                         </div>
                         <div id="polaridadesBars"></div>
                     </div>
@@ -597,7 +623,10 @@
         <div class="card-table">
             <div class="card-table-header">
                 <h3>Matriz de Aspectos do Ano</h3>
-                <button class="btn-ia" onclick="dispararAnaliseAspectosCompleta()">✦ Análise IA</button>
+                <span style="display:flex; align-items:center; gap:6px;">
+                    <span id="indicadorAspectosCompleta"></span>
+                    <button class="btn-ia" onclick="dispararAnaliseAspectosCompleta()">✦ Análise IA</button>
+                </span>
             </div>
             <div class="matrix-desktop-container">
                 <table id="matrixAspectos" class="aspect-matrix"></table>
@@ -1147,6 +1176,7 @@
  
         function renderizarAstrosExpansivel(astros) {
             const container = document.getElementById('astrosExpandList');
+            const ordensSalvas = obterOrdensSalvas();
             container.innerHTML = astros.map(a => {
                 const sIdx = Math.floor(a.grau / 30) % 12;
                 const signo = SIGNOS_DADOS[sIdx];
@@ -1155,6 +1185,7 @@
                 const nivel = NIVEL_PRECISAO[a.nome] || "alta";
                 const corNivel = CORES_PRECISAO[nivel];
                 const rotuloNivel = nivel === 'alta' ? 'Confiabilidade alta' : (nivel === 'media' ? 'Confiabilidade média' : 'Confiabilidade mais baixa');
+                const jaFeito = ordensSalvas.has(2000 + ORDEM_ASTROS_BASE.indexOf(a.nome));
 
                 return `
                     <div class="expand-card">
@@ -1165,6 +1196,7 @@
                                 <span>${a.nome} em ${signo.nome} ${signo.simbolo}</span>
                             </div>
                             <div style="display:flex; align-items:center; gap:8px;">
+                                ${indicadorFeitoHtml(jaFeito)}
                                 <span class="expand-badge">Casa ${a.casa}</span>
                                 <span class="arrow-icon">▼</span>
                             </div>
@@ -1186,6 +1218,7 @@
 
         function renderizarCasasExpansivel(casas, astros) {
             const container = document.getElementById('casasExpandList');
+            const ordensSalvas = obterOrdensSalvas();
             container.innerHTML = casas.map((grauCasa, index) => {
                 const numCasa = index + 1;
                 const sIdx = Math.floor(grauCasa / 30) % 12;
@@ -1197,6 +1230,7 @@
                     : 'Nenhum planeta presente (Casa Vazia)';
 
                 const ocupantesNomes = astrosNaCasa.map(a => a.nome).join(', ') || 'nenhum astro relevante';
+                const jaFeito = ordensSalvas.has(3000 + numCasa);
 
                 return `
                     <div class="expand-card">
@@ -1206,6 +1240,7 @@
                                 <span>em ${signoCuspide.nome} ${signoCuspide.simbolo}</span>
                             </div>
                             <div style="display:flex; align-items:center; gap:8px;">
+                                ${indicadorFeitoHtml(jaFeito)}
                                 <span class="expand-badge">${astrosNaCasa.length} astro(s)</span>
                                 <span class="arrow-icon">▼</span>
                             </div>
@@ -1226,9 +1261,11 @@
  
         function renderizarAspectosExpansivel(aspectos) {
             const container = document.getElementById('aspectosExpandList');
-            container.innerHTML = aspectos.map(asp => {
+            const ordensSalvas = obterOrdensSalvas();
+            container.innerHTML = aspectos.map((asp, indice) => {
                 const sim1 = SIMBOLOS_ASTROS[asp.astro1] || '';
                 const sim2 = SIMBOLOS_ASTROS[asp.astro2] || '';
+                const jaFeito = ordensSalvas.has(5000 + indice);
 
                 return `
                     <div class="expand-card">
@@ -1237,6 +1274,7 @@
                                 <span>${sim1} ${asp.astro1} ${asp.simbolo} ${asp.astro2} ${sim2}</span>
                             </div>
                             <div style="display:flex; align-items:center; gap:8px;">
+                                ${indicadorFeitoHtml(jaFeito)}
                                 <span class="badge-aspecto ${asp.classe}">${asp.aspecto}</span>
                                 <span class="arrow-icon">▼</span>
                             </div>
@@ -1257,6 +1295,7 @@
         function renderizarTemas(astros) {
             const container = document.getElementById('temasExpandList');
             if (!container) return;
+            const ordensSalvas = obterOrdensSalvas();
 
             container.innerHTML = TEMAS_COMBINACOES.map((tema, indice) => {
                 const astrosEncontrados = tema.astros
@@ -1270,6 +1309,8 @@
                     return `${sim} ${a.nome} em ${signo.nome} (Casa ${a.casa})`;
                 }).join(' · ');
 
+                const jaFeito = ordensSalvas.has(6000 + indice);
+
                 return `
                     <div class="expand-card">
                         <div class="expand-header" onclick="this.parentElement.classList.toggle('open')">
@@ -1277,6 +1318,7 @@
                                 <span>${tema.titulo}</span>
                             </div>
                             <div style="display:flex; align-items:center; gap:8px;">
+                                ${indicadorFeitoHtml(jaFeito)}
                                 <span class="expand-badge">${tema.astros.length} astros</span>
                                 <span class="arrow-icon">▼</span>
                             </div>
@@ -1400,8 +1442,22 @@
         // INTEGRAÇÃO COM A IA
         // ==========================================
  
-        function iniciarAnaliseIA(titulo, promptText) {
+        // Ordem canônica dos astros, igual à ordem em que aparecem na lista
+        // "Posições Planetárias da RS" — usada para ordenar as leituras salvas na
+        // mesma sequência dos blocos do app.
+        const ORDEM_ASTROS_BASE = [
+            "Sol", "Lua", "Mercúrio", "Vênus", "Marte", "Júpiter", "Saturno", "Urano", "Netuno", "Plutão",
+            "Ascendente (AC)", "Descendente (DC)", "Meio do Céu (MC)", "Fundo do Céu (IC)", "Vertex", "Anti-vertex",
+            "Roda da Fortuna", "Nodo Norte", "Nodo Sul", "Quíron", "Lilith",
+            "Ceres", "Pallas", "Juno", "Vesta",
+            "Pholus",
+            "Éris", "Sedna", "Haumea", "Makemake",
+            "Aldebaran", "Regulus", "Antares"
+        ];
+
+        function iniciarAnaliseIA(titulo, promptText, ordem) {
             ULTIMO_TITULO_ANALISE = titulo;
+            ULTIMO_ORDEM_ANALISE = (ordem !== undefined && ordem !== null) ? ordem : 9999;
             document.getElementById('modalTitle').textContent = `✦ ${titulo}`;
             document.getElementById('modalBody').innerHTML = `
                 <div class="loading-spinner">
@@ -1432,7 +1488,7 @@
 
             ${DIRETRIZ_TOM_IA}`;
  
-            iniciarAnaliseIA(`${nomeAstro} em ${nomeSigno} — Casa ${numCasa}`, promptText);
+            iniciarAnaliseIA(`${nomeAstro} em ${nomeSigno} — Casa ${numCasa}`, promptText, 2000 + ORDEM_ASTROS_BASE.indexOf(nomeAstro));
         }
 
         function dispararAnaliseAspectoIA(astro1, aspecto, astro2) {
@@ -1446,7 +1502,11 @@
 
             ${DIRETRIZ_TOM_IA}`;
  
-            iniciarAnaliseIA(`${astro1} ${aspecto} ${astro2}`, promptText);
+            const indiceAspecto = ULTIMO_ASPECTOS.findIndex(asp =>
+                (asp.astro1 === astro1 && asp.astro2 === astro2 && asp.aspecto === aspecto) ||
+                (asp.astro1 === astro2 && asp.astro2 === astro1 && asp.aspecto === aspecto)
+            );
+            iniciarAnaliseIA(`${astro1} ${aspecto} ${astro2}`, promptText, 5000 + (indiceAspecto >= 0 ? indiceAspecto : 0));
         }
 
         function dispararAnaliseCasaIA(numCasa, nomeSigno, ocupantes) {
@@ -1460,25 +1520,28 @@
 
             ${DIRETRIZ_TOM_IA}`;
 
-            iniciarAnaliseIA(`Casa ${numCasa} em ${nomeSigno} — ${PERIODO_SELECIONADO}`, promptText);
+            iniciarAnaliseIA(`Casa ${numCasa} em ${nomeSigno} — ${PERIODO_SELECIONADO}`, promptText, 3000 + numCasa);
         }
  
         function dispararAnaliseBalanco(tipo) {
             if (!ULTIMO_ASTROS.length) return;
  
-            let titulo, rotulo, dados;
+            let titulo, rotulo, dados, ordemBalanco;
             if (tipo === 'elementos') {
                 titulo = `Elementos do Ano ${PERIODO_SELECIONADO}`;
                 rotulo = 'elementos';
                 dados = ULTIMO_BALANCO.elementos;
+                ordemBalanco = 1000;
             } else if (tipo === 'ritmos') {
                 titulo = `Modalidades do Ano ${PERIODO_SELECIONADO}`;
                 rotulo = 'modalidades';
                 dados = ULTIMO_BALANCO.ritmos;
+                ordemBalanco = 1001;
             } else {
                 titulo = `Polaridades do Ano ${PERIODO_SELECIONADO}`;
                 rotulo = 'polaridades';
                 dados = ULTIMO_BALANCO.polaridades;
+                ordemBalanco = 1002;
             }
  
             const dadosTexto = Object.entries(dados).map(([k, v]) => `${k}: ${v}`).join(', ');
@@ -1487,7 +1550,7 @@
             Escreva de 3 a 4 parágrafos, explicando o ritmo e a energia predominante que a pessoa sentirá no dia a dia durante esse ciclo.
             ${DIRETRIZ_TOM_IA}`;
  
-            iniciarAnaliseIA(titulo, promptText);
+            iniciarAnaliseIA(titulo, promptText, ordemBalanco);
         }
  
         function dispararAnaliseMapaCompleto() {
@@ -1511,7 +1574,7 @@
             Escreva de 5 a 7 parágrafos, destacando o Ascendente da Revolução Solar e onde o Sol do ano está localizado (foco central do ano), analisando onde estarão as maiores oportunidades e os maiores desafios práticos/emocionais ao longo do ciclo, e conclua com um conselho síntese para o ano.
             ${DIRETRIZ_TOM_IA}`;
  
-            iniciarAnaliseIA(`Relatório de Previsão Anual - ${PERIODO_SELECIONADO}`, promptText);
+            iniciarAnaliseIA(`Relatório de Previsão Anual - ${PERIODO_SELECIONADO}`, promptText, 0);
         }
  
         function dispararAnaliseAspectosCompleta() {
@@ -1528,7 +1591,7 @@
             Escreva de 4 a 5 parágrafos, conectando as tensões e a fluidez para explicar os altos e baixos previsíveis do ano.
             ${DIRETRIZ_TOM_IA}`;
  
-            iniciarAnaliseIA(`Aspectos e Tensões do Ano ${PERIODO_SELECIONADO}`, promptText);
+            iniciarAnaliseIA(`Aspectos e Tensões do Ano ${PERIODO_SELECIONADO}`, promptText, 4000);
         }
 
         function dispararAnaliseTemaIA(indice) {
@@ -1566,7 +1629,7 @@
 
             ${DIRETRIZ_TOM_IA}`;
 
-            iniciarAnaliseIA(`${tema.titulo} — ${PERIODO_SELECIONADO}`, promptText);
+            iniciarAnaliseIA(`${tema.titulo} — ${PERIODO_SELECIONADO}`, promptText, 6000 + indice);
         }
  
         async function gerarAnaliseIA(promptText) {
@@ -1596,7 +1659,7 @@
             let htmlFormatado = texto.replace(/```html/g, '').replace(/```/g, '');
             document.getElementById('modalBody').innerHTML = htmlFormatado;
             if (PESSOA_ATIVA_ID && ULTIMO_TITULO_ANALISE) {
-                salvarLeituraNaPessoaAtiva(ULTIMO_TITULO_ANALISE, htmlFormatado);
+                salvarLeituraNaPessoaAtiva(ULTIMO_TITULO_ANALISE, htmlFormatado, ULTIMO_ORDEM_ANALISE);
             }
         }
  
@@ -1710,6 +1773,7 @@
         const CHAVE_PESSOAS_SALVAS = 'astro_pessoas_salvas_v1';
         let PESSOA_ATIVA_ID = null;
         let ULTIMO_TITULO_ANALISE = '';
+        let ULTIMO_ORDEM_ANALISE = 9999;
 
         function carregarPessoasSalvas() {
             try {
@@ -1750,6 +1814,7 @@
             PESSOA_ATIVA_ID = pessoa.id;
             atualizarIndicadorPessoaAtiva();
             renderizarPessoasSalvas();
+            atualizarTodosIndicadores();
         }
 
         function atualizarIndicadorPessoaAtiva() {
@@ -1767,9 +1832,53 @@
         function desativarPessoa() {
             PESSOA_ATIVA_ID = null;
             atualizarIndicadorPessoaAtiva();
+            atualizarTodosIndicadores();
         }
 
-        function salvarLeituraNaPessoaAtiva(titulo, html) {
+        // Retorna o conjunto de "ordem" já salvas para a pessoa ativa — usado para
+        // marcar com um ícone discreto quais itens já têm leitura de IA salva.
+        function obterOrdensSalvas() {
+            if (!PESSOA_ATIVA_ID) return new Set();
+            const lista = carregarPessoasSalvas();
+            const pessoa = lista.find(p => p.id === PESSOA_ATIVA_ID);
+            if (!pessoa) return new Set();
+            return new Set(pessoa.leituras.map(l => l.ordem));
+        }
+
+        function indicadorFeitoHtml(jaFeito) {
+            return jaFeito ? '<span class="indicador-feito" title="Já existe uma leitura de IA salva para este item">✓</span>' : '';
+        }
+
+        // Atualiza os selos "✓" fixos (fora das listas expansíveis): Análise Anual
+        // completa, Matriz de Aspectos completa e os 3 balanços.
+        function atualizarIndicadoresEstaticos() {
+            const ordensSalvas = obterOrdensSalvas();
+            const mapa = {
+                indicadorSintese: 0,
+                indicadorAspectosCompleta: 4000,
+                indicadorBalancoElementos: 1000,
+                indicadorBalancoRitmos: 1001,
+                indicadorBalancoPolaridades: 1002
+            };
+            Object.entries(mapa).forEach(([idEl, ordem]) => {
+                const el = document.getElementById(idEl);
+                if (el) el.innerHTML = indicadorFeitoHtml(ordensSalvas.has(ordem));
+            });
+        }
+
+        // Atualiza TODOS os selos "já feito": as listas expansíveis (astros, casas,
+        // aspectos, temas) e os indicadores fixos — sem precisar recalcular o mapa
+        // inteiro, usando os dados já calculados (ULTIMO_ASTROS, etc).
+        function atualizarTodosIndicadores() {
+            if (!ULTIMO_ASTROS.length) return;
+            renderizarAstrosExpansivel(ULTIMO_ASTROS);
+            renderizarCasasExpansivel(ULTIMO_CASAS, ULTIMO_ASTROS);
+            renderizarAspectosExpansivel(ULTIMO_ASPECTOS);
+            renderizarTemas(ULTIMO_ASTROS);
+            atualizarIndicadoresEstaticos();
+        }
+
+        function salvarLeituraNaPessoaAtiva(titulo, html, ordem) {
             if (!PESSOA_ATIVA_ID) return;
             const lista = carregarPessoasSalvas();
             const pessoa = lista.find(p => p.id === PESSOA_ATIVA_ID);
@@ -1779,10 +1888,26 @@
                 titulo,
                 origem: `Revolução Solar ${PERIODO_SELECIONADO}`,
                 html,
+                ordem: (ordem !== undefined && ordem !== null) ? ordem : 9999,
                 criadoEm: new Date().toISOString()
             });
             salvarPessoasSalvas(lista);
             renderizarPessoasSalvas();
+            atualizarTodosIndicadores();
+        }
+
+        // Ordena as leituras salvas seguindo a MESMA ordem em que os blocos
+        // aparecem no app (Síntese → Balanços → Posições → Casas → Aspectos →
+        // Temas), em vez da ordem cronológica de quando foram geradas. Leituras
+        // salvas antes desse recurso existir (sem "ordem") ficam ao final,
+        // ordenadas por data.
+        function ordenarLeituras(leituras) {
+            return leituras.slice().sort((a, b) => {
+                const oa = (a.ordem !== undefined && a.ordem !== null) ? a.ordem : Infinity;
+                const ob = (b.ordem !== undefined && b.ordem !== null) ? b.ordem : Infinity;
+                if (oa !== ob) return oa - ob;
+                return new Date(b.criadoEm) - new Date(a.criadoEm);
+            });
         }
 
         function excluirPessoa(id) {
@@ -1792,6 +1917,7 @@
             salvarPessoasSalvas(lista);
             if (PESSOA_ATIVA_ID === id) desativarPessoa();
             renderizarPessoasSalvas();
+            atualizarTodosIndicadores();
         }
 
         function excluirLeitura(idPessoa, idLeitura) {
@@ -1801,6 +1927,7 @@
             pessoa.leituras = pessoa.leituras.filter(l => l.id !== idLeitura);
             salvarPessoasSalvas(lista);
             renderizarPessoasSalvas();
+            atualizarTodosIndicadores();
         }
 
         function carregarMapaDaPessoa(id) {
@@ -1849,7 +1976,7 @@
             if (!pessoa.leituras.length) {
                 conteudo += 'Nenhuma leitura salva ainda.\n';
             } else {
-                pessoa.leituras.slice().reverse().forEach(l => {
+                ordenarLeituras(pessoa.leituras).forEach(l => {
                     conteudo += `${l.titulo}\n`;
                     conteudo += `${l.origem} — ${new Date(l.criadoEm).toLocaleString('pt-BR')}\n`;
                     conteudo += `${'-'.repeat(40)}\n`;
@@ -1874,7 +2001,7 @@
             if (!pessoa) return;
 
             const leiturasHtml = pessoa.leituras.length
-                ? pessoa.leituras.slice().reverse().map(l => `
+                ? ordenarLeituras(pessoa.leituras).map(l => `
                     <div style="margin-bottom:24px; page-break-inside:avoid;">
                         <h2 style="color:#5b3a00; font-size:1.1rem; margin-bottom:2px;">${l.titulo}</h2>
                         <p style="font-size:0.8rem; color:#666; margin-bottom:10px;">${l.origem} — ${new Date(l.criadoEm).toLocaleString('pt-BR')}</p>
@@ -1921,7 +2048,7 @@
 
             container.innerHTML = lista.slice().reverse().map(p => {
                 const leiturasHtml = p.leituras.length
-                    ? p.leituras.map(l => `
+                    ? ordenarLeituras(p.leituras).map(l => `
                         <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid var(--border); gap:8px;">
                             <div style="cursor:pointer; flex:1;" onclick="reabrirLeituraSalva('${p.id}', '${l.id}')">
                                 <div style="font-size:0.82rem; font-weight:600;">${l.titulo}</div>
@@ -1974,6 +2101,7 @@
             renderizarTemas(astros);
             gerarMatrizHtml(astros, aspectos);
             desenharRodaSVG(astros, casas, asc);
+            atualizarIndicadoresEstaticos();
 
             salvarDadosNatais();
         }
