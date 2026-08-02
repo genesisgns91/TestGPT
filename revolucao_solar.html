@@ -495,6 +495,7 @@
         <nav class="app-nav">
             <a href="index.html" class="nav-tab">🌟 Mapa Natal</a>
             <a href="revolucao_solar.html" class="nav-tab active">☀️ Revolução Solar</a>
+            <button type="button" class="nav-tab" style="cursor:pointer;" onclick="limparCacheDoApp()" title="Força o app a buscar a versão mais nova, sem apagar pessoas salvas">🧹 Limpar Cache</button>
         </nav>
     </header>
  
@@ -2115,6 +2116,40 @@
             }
             select.innerHTML = html;
             select.value = anoAtual;
+        }
+
+        // ==========================================
+        // LIMPAR CACHE TÉCNICO (sem apagar pessoas salvas)
+        // ==========================================
+        // Importante: as "Pessoas Salvas" e suas leituras ficam no localStorage —
+        // uma gaveta de armazenamento totalmente separada do cache do Service
+        // Worker (que guarda cópias de HTML/ícones para o app abrir rápido/offline).
+        // Esta função remove APENAS a segunda gaveta: desregistra o Service Worker
+        // e apaga o Cache Storage, depois recarrega a página forçando uma busca
+        // nova ao servidor. O localStorage (pessoas salvas) não é tocado.
+        async function limparCacheDoApp() {
+            const confirmou = confirm(
+                'Isso vai limpar o cache técnico do app e recarregar a página, para ' +
+                'garantir que você veja a versão mais recente.\n\n' +
+                'Suas Pessoas Salvas e leituras de IA NÃO serão apagadas — ficam ' +
+                'guardadas em outro lugar, separado desse cache.\n\nContinuar?'
+            );
+            if (!confirmou) return;
+
+            try {
+                if ('serviceWorker' in navigator) {
+                    const registros = await navigator.serviceWorker.getRegistrations();
+                    await Promise.all(registros.map((registro) => registro.unregister()));
+                }
+                if ('caches' in window) {
+                    const chaves = await caches.keys();
+                    await Promise.all(chaves.map((chave) => caches.delete(chave)));
+                }
+            } catch (err) {
+                console.warn('Erro ao limpar cache técnico:', err);
+            }
+
+            window.location.href = window.location.pathname + '?atualizado=' + Date.now();
         }
 
         window.onload = () => {
