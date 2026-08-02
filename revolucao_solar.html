@@ -2009,7 +2009,16 @@
             executarTudo();
 
             if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.register('./sw.js').catch(err => console.warn('Falha ao registrar Service Worker:', err));
+                navigator.serviceWorker.register('./sw.js').then((registro) => {
+                    registro.update();
+                }).catch(err => console.warn('Falha ao registrar Service Worker:', err));
+
+                let jaRecarregou = false;
+                navigator.serviceWorker.addEventListener('controllerchange', () => {
+                    if (jaRecarregou) return;
+                    jaRecarregou = true;
+                    window.location.reload();
+                });
             }
         };
     </script>
