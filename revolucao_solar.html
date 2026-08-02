@@ -533,6 +533,11 @@
                 <div id="pessoaAtivaIndicador" style="display:none; font-size:0.75rem; color:var(--terra); margin-top:4px; cursor:pointer;" onclick="desativarPessoa()" title="Clique para parar de gravar leituras"></div>
             </div>
         </form>
+
+        <div class="card-table">
+            <h3>👤 Pessoas Salvas (Clique para Expandir)</h3>
+            <div id="pessoasSalvasList" class="expand-list" style="margin-top: 10px;"></div>
+        </div>
  
         <div class="dashboard-grid">
             <div class="chart-card">
@@ -580,11 +585,6 @@
         </div>
  
         <div class="card-table">
-            <h3>👤 Pessoas Salvas (Clique para Expandir)</h3>
-            <div id="pessoasSalvasList" class="expand-list" style="margin-top: 10px;"></div>
-        </div>
-
-        <div class="card-table">
             <h3>Posições Planetárias da RS (Clique para Expandir)</h3>
             <div id="astrosExpandList" class="expand-list" style="margin-top: 10px;"></div>
         </div>
@@ -607,6 +607,11 @@
         <div class="card-table">
             <h3>Interpretação dos Aspectos Anuais (Clique para Expandir)</h3>
             <div id="aspectosExpandList" class="expand-list" style="margin-top: 10px;"></div>
+        </div>
+
+        <div class="card-table">
+            <h3>🔮 Áreas Específicas da Vida no Ano (Combinações Temáticas)</h3>
+            <div id="temasExpandList" class="expand-list" style="margin-top: 10px;"></div>
         </div>
     </div>
  
@@ -714,6 +719,25 @@
             { nome: "Quadratura", angulo: 90, orbe: 7, classe: "quad", simbolo: "□", iconClass: "icon-quad" },
             { nome: "Trígono", angulo: 120, orbe: 8, classe: "trig", simbolo: "△", iconClass: "icon-trig" },
             { nome: "Oposição", angulo: 180, orbe: 8, classe: "opp", simbolo: "☍", iconClass: "icon-opp" }
+        ];
+
+        // Combinações temáticas: agrupam astros específicos por área da vida, para
+        // uma leitura de IA focada apenas naquele recorte (posições + aspectos entre
+        // eles) dentro do ano da Revolução Solar, em vez de uma análise ponto a ponto
+        // ou do mapa anual inteiro.
+        const TEMAS_COMBINACOES = [
+            { titulo: "Amor e Relacionamentos", astros: ["Vênus", "Lua", "Marte", "Sol"], descricao: "Amor, afeto, linguagem da sedução, dinâmica de atração e necessidades emocionais em relacionamentos." },
+            { titulo: "Mente e Aprendizado", astros: ["Mercúrio", "Lua", "Saturno"], descricao: "Raciocínio, capacidade de aprendizado, foco, retenção de memória e estilo de comunicação." },
+            { titulo: "Vitalidade e Autoafirmação", astros: ["Sol", "Ascendente (AC)", "Marte"], descricao: "Vitalidade, força de ação, expressão do ego, presença física e autoafirmação." },
+            { titulo: "Carreira e Vocação", astros: ["Saturno", "Meio do Céu (MC)", "Sol", "Mercúrio"], descricao: "Ambição profissional, vocação, construção de carreira, reputação pública e métodos de trabalho." },
+            { titulo: "Psique Profunda", astros: ["Lua", "Plutão", "Netuno"], descricao: "Psique profunda, padrões inconscientes, mecanismos de defesa, traumas, intuição e imaginação." },
+            { titulo: "Propósito de Vida", astros: ["Nodo Norte", "Nodo Sul", "Saturno", "Quíron"], descricao: "Propósito de vida, bagagem de passado, lições evolutivas, feridas estruturantes e amadurecimento." },
+            { titulo: "Personalidade Básica", astros: ["Sol", "Lua"], descricao: "Equilíbrio básico da personalidade, integração entre a vontade consciente e o mundo emocional interior." },
+            { titulo: "Atração e Polaridade", astros: ["Vênus", "Marte"], descricao: "Dinâmica de atração sexual, polaridade entre desejo (conquista) e receptividade (relação)." },
+            { titulo: "Filosofia de Vida", astros: ["Júpiter", "Saturno"], descricao: "Filosofia de vida, capacidade de expansão equilibrada com limites, ética e estrutura de crescimento no mundo." },
+            { titulo: "Expressão Artística", astros: ["Mercúrio", "Vênus"], descricao: "Expressão artística, diplomacia na fala, estética verbal e inteligência social." },
+            { titulo: "Impulso e Resiliência", astros: ["Marte", "Plutão"], descricao: "Impulso de sobrevivência, capacidade de regeneração, resiliência física e força de vontade sob extrema pressão." },
+            { titulo: "Sensibilidade e Acolhimento", astros: ["Lua", "Vênus"], descricao: "Sensibilidade, busca por conforto, autocuidado e forma de acolher pessoas e ambientes." }
         ];
  
         let ULTIMO_ASTROS = [];
@@ -1230,6 +1254,46 @@
             }).join('');
         }
  
+        function renderizarTemas(astros) {
+            const container = document.getElementById('temasExpandList');
+            if (!container) return;
+
+            container.innerHTML = TEMAS_COMBINACOES.map((tema, indice) => {
+                const astrosEncontrados = tema.astros
+                    .map(nome => astros.find(a => a.nome === nome))
+                    .filter(Boolean);
+
+                const resumoPosicoes = astrosEncontrados.map(a => {
+                    const sIdx = Math.floor(a.grau / 30) % 12;
+                    const signo = SIGNOS_DADOS[sIdx];
+                    const sim = SIMBOLOS_ASTROS[a.nome] || '';
+                    return `${sim} ${a.nome} em ${signo.nome} (Casa ${a.casa})`;
+                }).join(' · ');
+
+                return `
+                    <div class="expand-card">
+                        <div class="expand-header" onclick="this.parentElement.classList.toggle('open')">
+                            <div class="expand-title">
+                                <span>${tema.titulo}</span>
+                            </div>
+                            <div style="display:flex; align-items:center; gap:8px;">
+                                <span class="expand-badge">${tema.astros.length} astros</span>
+                                <span class="arrow-icon">▼</span>
+                            </div>
+                        </div>
+                        <div class="expand-content">
+                            <p style="margin-bottom: 8px;"><strong>Sobre este tema:</strong> ${tema.descricao}</p>
+                            <p style="margin-bottom: 8px; font-size:0.8rem;">${resumoPosicoes || 'Calcule a Revolução Solar para ver as posições.'}</p>
+
+                            <button class="btn-ia btn-ia-inline" onclick="event.stopPropagation(); dispararAnaliseTemaIA(${indice})">
+                                ✦ Analisar este Tema com IA
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
         function gerarMatrizHtml(astros, aspectos) {
             let html = "";
             const total = astros.length;
@@ -1465,6 +1529,44 @@
             ${DIRETRIZ_TOM_IA}`;
  
             iniciarAnaliseIA(`Aspectos e Tensões do Ano ${PERIODO_SELECIONADO}`, promptText);
+        }
+
+        function dispararAnaliseTemaIA(indice) {
+            if (!ULTIMO_ASTROS.length) return;
+            const tema = TEMAS_COMBINACOES[indice];
+            if (!tema) return;
+
+            const astrosEncontrados = tema.astros
+                .map(nome => ULTIMO_ASTROS.find(a => a.nome === nome))
+                .filter(Boolean);
+            if (!astrosEncontrados.length) return;
+
+            const descricaoPosicoes = astrosEncontrados.map(a => {
+                const sIdx = Math.floor(a.grau / 30) % 12;
+                const signo = SIGNOS_DADOS[sIdx];
+                return `${a.nome} em ${signo.nome} (Casa ${a.casa})`;
+            }).join('; ');
+
+            const nomesEnvolvidos = astrosEncontrados.map(a => a.nome);
+            const aspectosRelevantes = ULTIMO_ASPECTOS.filter(asp =>
+                nomesEnvolvidos.includes(asp.astro1) && nomesEnvolvidos.includes(asp.astro2)
+            );
+            const descricaoAspectos = aspectosRelevantes.length
+                ? aspectosRelevantes.map(asp => `${asp.astro1} em ${asp.aspecto} com ${asp.astro2}`).join('; ')
+                : 'nenhum aspecto direto relevante entre esses pontos específicos';
+
+            const promptText = `Faça uma leitura astrológica sobre o tema "${tema.titulo}" (${tema.descricao}) na Revolução Solar do ano ${PERIODO_SELECIONADO} desta pessoa, considerando os seguintes astros e suas posições: ${descricaoPosicoes}.
+
+            Aspectos relevantes entre esses astros: ${descricaoAspectos}.
+
+            Siga rigorosamente esta estrutura, sem indicar os números ou nomes das etapas no texto final:
+            1. Um parágrafo comentando brevemente a posição de cada astro envolvido (signo e casa) e o que cada um contribui especificamente para esse tema durante este ciclo.
+            2. Um parágrafo sobre a dinâmica formada pelos aspectos entre esses astros e como essa tensão ou fluidez atua especificamente nessa área da vida ao longo do ano.
+            3. Uma análise geral, rica e integrada, sobre como esse conjunto tende a se expressar nessa área da vida durante o ano de ${PERIODO_SELECIONADO}.
+
+            ${DIRETRIZ_TOM_IA}`;
+
+            iniciarAnaliseIA(`${tema.titulo} — ${PERIODO_SELECIONADO}`, promptText);
         }
  
         async function gerarAnaliseIA(promptText) {
@@ -1729,6 +1831,84 @@
             document.getElementById('aiModal').classList.add('active');
         }
 
+        function extrairTextoDeHtml(html) {
+            const div = document.createElement('div');
+            div.innerHTML = html;
+            return div.textContent.replace(/\n{3,}/g, '\n\n').trim();
+        }
+
+        function exportarTxtPessoa(id) {
+            const lista = carregarPessoasSalvas();
+            const pessoa = lista.find(p => p.id === id);
+            if (!pessoa) return;
+
+            let conteudo = `LEITURAS ASTROLÓGICAS — ${pessoa.nome}\n`;
+            conteudo += `Nascimento: ${pessoa.dados.date} às ${pessoa.dados.time} (UTC${pessoa.dados.fuso >= 0 ? '+' : ''}${pessoa.dados.fuso}) — ${pessoa.dados.cidade}\n`;
+            conteudo += `${'='.repeat(60)}\n\n`;
+
+            if (!pessoa.leituras.length) {
+                conteudo += 'Nenhuma leitura salva ainda.\n';
+            } else {
+                pessoa.leituras.slice().reverse().forEach(l => {
+                    conteudo += `${l.titulo}\n`;
+                    conteudo += `${l.origem} — ${new Date(l.criadoEm).toLocaleString('pt-BR')}\n`;
+                    conteudo += `${'-'.repeat(40)}\n`;
+                    conteudo += `${extrairTextoDeHtml(l.html)}\n\n`;
+                });
+            }
+
+            const blob = new Blob([conteudo], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${pessoa.nome.replace(/\s+/g, '_')}_leituras.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function exportarPdfPessoa(id) {
+            const lista = carregarPessoasSalvas();
+            const pessoa = lista.find(p => p.id === id);
+            if (!pessoa) return;
+
+            const leiturasHtml = pessoa.leituras.length
+                ? pessoa.leituras.slice().reverse().map(l => `
+                    <div style="margin-bottom:24px; page-break-inside:avoid;">
+                        <h2 style="color:#5b3a00; font-size:1.1rem; margin-bottom:2px;">${l.titulo}</h2>
+                        <p style="font-size:0.8rem; color:#666; margin-bottom:10px;">${l.origem} — ${new Date(l.criadoEm).toLocaleString('pt-BR')}</p>
+                        <div style="font-size:0.95rem; line-height:1.6; color:#222;">${l.html}</div>
+                    </div>
+                    <hr style="border:none; border-top:1px solid #ccc; margin:20px 0;">
+                `).join('')
+                : '<p>Nenhuma leitura salva ainda.</p>';
+
+            const documentoHtml = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">
+                <title>${pessoa.nome} — Leituras Astrológicas</title>
+                <style>
+                    body { font-family: Georgia, 'Times New Roman', serif; padding: 30px; color:#222; }
+                    h1 { color:#5b3a00; border-bottom:2px solid #e3b341; padding-bottom:8px; }
+                    .meta { color:#666; font-size:0.9rem; margin-bottom:24px; }
+                    strong { color:#5b3a00; }
+                    @media print { body { padding: 10mm; } }
+                </style>
+                </head><body>
+                <h1>${pessoa.nome}</h1>
+                <p class="meta">Nascimento: ${pessoa.dados.date} às ${pessoa.dados.time} (UTC${pessoa.dados.fuso >= 0 ? '+' : ''}${pessoa.dados.fuso}) — ${pessoa.dados.cidade}</p>
+                ${leiturasHtml}
+                </body></html>`;
+
+            const janela = window.open('', '_blank');
+            if (!janela) { alert('Permita pop-ups neste site para exportar em PDF.'); return; }
+            janela.document.open();
+            janela.document.write(documentoHtml);
+            janela.document.close();
+            const dispararImpressao = () => { janela.focus(); janela.print(); };
+            janela.onload = dispararImpressao;
+            setTimeout(dispararImpressao, 400);
+        }
+
         function renderizarPessoasSalvas() {
             const container = document.getElementById('pessoasSalvasList');
             if (!container) return;
@@ -1766,6 +1946,8 @@
                             <p style="margin-bottom:8px;"><strong>Nascimento:</strong> ${p.dados.date} às ${p.dados.time} (UTC${p.dados.fuso >= 0 ? '+' : ''}${p.dados.fuso}) — ${p.dados.cidade}</p>
                             <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px;">
                                 <button class="btn-ia" onclick="carregarMapaDaPessoa('${p.id}')">📂 Carregar este Mapa</button>
+                                <button class="btn-ia" onclick="exportarTxtPessoa('${p.id}')">📄 Exportar TXT</button>
+                                <button class="btn-ia" onclick="exportarPdfPessoa('${p.id}')">🧾 Exportar PDF</button>
                                 <button class="btn-ia" style="background: linear-gradient(135deg, #da3633, #8b2020);" onclick="excluirPessoa('${p.id}')">🗑️ Excluir Pessoa</button>
                             </div>
                             <p style="margin-bottom:6px; font-size:0.8rem; color:#8b949e;"><strong>Leituras salvas:</strong></p>
@@ -1789,6 +1971,7 @@
             renderizarAstrosExpansivel(astros);
             renderizarCasasExpansivel(casas, astros);
             renderizarAspectosExpansivel(aspectos);
+            renderizarTemas(astros);
             gerarMatrizHtml(astros, aspectos);
             desenharRodaSVG(astros, casas, asc);
 
