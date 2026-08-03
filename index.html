@@ -293,6 +293,15 @@
             font-weight: bold;
             flex-shrink: 0;
         }
+
+        .marca-retrogrado {
+            font-size: 0.68rem;
+            font-weight: bold;
+            color: #f0883e;
+            margin-left: 1px;
+            vertical-align: super;
+            opacity: 0.9;
+        }
  
         .expand-content {
             display: none;
@@ -525,6 +534,7 @@
                     <span><span class="ponto-legenda" style="background:#58a6ff;"></span> Alta confiabilidade</span>
                     <span><span class="ponto-legenda" style="background:#e3b341;"></span> Confiabilidade média</span>
                     <span><span class="ponto-legenda" style="background:#f85149;"></span> Confiabilidade mais baixa</span>
+                    <span><span style="color:#f0883e; font-weight:bold; font-size:0.8rem;">℞</span> Retrógrado</span>
                 </div>
             </div>
  
@@ -739,6 +749,16 @@
         function degToRad(deg) { return deg * Math.PI / 180; }
         function radToDeg(rad) { return rad * 180 / Math.PI; }
         function normalizar(graus) { return (graus % 360 + 360) % 360; }
+
+        // Retrogradação: compara a longitude do corpo no instante do mapa com a
+        // longitude dele 1 dia depois. Se o grau "andar pra trás" (considerando a
+        // volta do 360°/0°), o corpo está retrógrado nesse momento — aparente da
+        // Terra, exatamente como softwares profissionais calculam.
+        function ehRetrogrado(grauAtual, grauDepois) {
+            let diff = grauDepois - grauAtual;
+            diff = ((diff + 180) % 360 + 360) % 360 - 180;
+            return diff < 0;
+        }
  
         function formatarDMS(grausDecimal) {
             const gAbs = grausDecimal % 30;
@@ -910,8 +930,8 @@
             // (mesma classe de precisão de efeméride usada por softwares profissionais)
             const dataNascUTC = new Date(Date.UTC(year, month - 1, day, 0, 0, 0, 0) + hourUTC * 3600000);
 
-            function longitudeEclipticaReal(corpo) {
-                const vetor = Astronomy.GeoVector(corpo, dataNascUTC, true);
+            function longitudeEclipticaReal(corpo, dataCustom) {
+                const vetor = Astronomy.GeoVector(corpo, dataCustom || dataNascUTC, true);
                 return normalizar(Astronomy.Ecliptic(vetor).elon);
             }
 
@@ -925,6 +945,22 @@
             const urano = longitudeEclipticaReal(Astronomy.Body.Uranus);
             const netuno = longitudeEclipticaReal(Astronomy.Body.Neptune);
             const plutao = longitudeEclipticaReal(Astronomy.Body.Pluto);
+
+            // Retrogradação dos planetas e corpos menores: compara a posição no
+            // instante do mapa com a posição 1 dia depois. Sol, Lua, ângulos, nodos,
+            // Lilith, Roda da Fortuna e estrelas fixas nunca entram aqui (não
+            // retrogradam de verdade, ou o conceito não se aplica a eles).
+            const dataSeguinte = new Date(dataNascUTC.getTime() + 86400000);
+            const RETROGRADOS = {
+                "Mercúrio": ehRetrogrado(mercurio, longitudeEclipticaReal(Astronomy.Body.Mercury, dataSeguinte)),
+                "Vênus": ehRetrogrado(venus, longitudeEclipticaReal(Astronomy.Body.Venus, dataSeguinte)),
+                "Marte": ehRetrogrado(marte, longitudeEclipticaReal(Astronomy.Body.Mars, dataSeguinte)),
+                "Júpiter": ehRetrogrado(jupiter, longitudeEclipticaReal(Astronomy.Body.Jupiter, dataSeguinte)),
+                "Saturno": ehRetrogrado(saturno, longitudeEclipticaReal(Astronomy.Body.Saturn, dataSeguinte)),
+                "Urano": ehRetrogrado(urano, longitudeEclipticaReal(Astronomy.Body.Uranus, dataSeguinte)),
+                "Netuno": ehRetrogrado(netuno, longitudeEclipticaReal(Astronomy.Body.Neptune, dataSeguinte)),
+                "Plutão": ehRetrogrado(plutao, longitudeEclipticaReal(Astronomy.Body.Pluto, dataSeguinte))
+            };
 
             // Ângulos Derivados
             const dc = normalizar(asc + 180);
@@ -972,6 +1008,18 @@
             const haumea = calcularLongitudeKepleriana(ELEMENTOS_KEPLER["Haumea"], dataNascUTC);
             const makemake = calcularLongitudeKepleriana(ELEMENTOS_KEPLER["Makemake"], dataNascUTC);
 
+            // Retrogradação dos corpos menores (mesma técnica: compara com 1 dia depois)
+            RETROGRADOS["Quíron"] = ehRetrogrado(quiron, calcularLongitudeKepleriana(ELEMENTOS_KEPLER["Quíron"], dataSeguinte));
+            RETROGRADOS["Ceres"] = ehRetrogrado(ceres, calcularLongitudeKepleriana(ELEMENTOS_KEPLER["Ceres"], dataSeguinte));
+            RETROGRADOS["Pallas"] = ehRetrogrado(pallas, calcularLongitudeKepleriana(ELEMENTOS_KEPLER["Pallas"], dataSeguinte));
+            RETROGRADOS["Juno"] = ehRetrogrado(juno, calcularLongitudeKepleriana(ELEMENTOS_KEPLER["Juno"], dataSeguinte));
+            RETROGRADOS["Vesta"] = ehRetrogrado(vesta, calcularLongitudeKepleriana(ELEMENTOS_KEPLER["Vesta"], dataSeguinte));
+            RETROGRADOS["Pholus"] = ehRetrogrado(pholus, calcularLongitudeKepleriana(ELEMENTOS_KEPLER["Pholus"], dataSeguinte));
+            RETROGRADOS["Éris"] = ehRetrogrado(eris, calcularLongitudeKepleriana(ELEMENTOS_KEPLER["Éris"], dataSeguinte));
+            RETROGRADOS["Sedna"] = ehRetrogrado(sedna, calcularLongitudeKepleriana(ELEMENTOS_KEPLER["Sedna"], dataSeguinte));
+            RETROGRADOS["Haumea"] = ehRetrogrado(haumea, calcularLongitudeKepleriana(ELEMENTOS_KEPLER["Haumea"], dataSeguinte));
+            RETROGRADOS["Makemake"] = ehRetrogrado(makemake, calcularLongitudeKepleriana(ELEMENTOS_KEPLER["Makemake"], dataSeguinte));
+
             // Estrelas Fixas — precessão real: ~50,29"/ano = 1,39697°/século (constante IAU)
             const precessao = TRS * 1.39697;
             const aldebaran = normalizar(69.78 + precessao);  
@@ -1004,6 +1052,8 @@
                 { nome: "Aldebaran", grau: aldebaran }, { nome: "Regulus", grau: regulus },
                 { nome: "Antares", grau: antares }
             ];
+
+            astros.forEach(a => { a.retrogrado = RETROGRADOS[a.nome] || false; });
  
             const casas = Array.from({ length: 12 }, (_, i) => normalizar(asc + (i * 30)));
  
@@ -1114,6 +1164,7 @@
                 const corNivel = CORES_PRECISAO[nivel];
                 const rotuloNivel = nivel === 'alta' ? 'Confiabilidade alta' : (nivel === 'media' ? 'Confiabilidade média' : 'Confiabilidade mais baixa');
                 const jaFeito = ordensSalvas.has(2000 + ORDEM_ASTROS_BASE.indexOf(a.nome));
+                const marcaR = a.retrogrado ? '<span class="marca-retrogrado" title="Retrógrado">℞</span>' : '';
 
                 return `
                     <div class="expand-card">
@@ -1121,7 +1172,7 @@
                             <div class="expand-title">
                                 <span title="${rotuloNivel}" style="display:inline-block; width:8px; height:8px; border-radius:50%; background:${corNivel}; flex-shrink:0;"></span>
                                 <span style="color:var(--sol); font-size:1.1rem;">${simAstro}</span>
-                                <span>${a.nome} em ${signo.nome} ${signo.simbolo}</span>
+                                <span>${a.nome}${marcaR} em ${signo.nome} ${signo.simbolo}</span>
                             </div>
                             <div style="display:flex; align-items:center; gap:8px;">
                                 ${indicadorFeitoHtml(jaFeito)}
@@ -1131,11 +1182,11 @@
                         </div>
                         <div class="expand-content">
                             <p style="margin-bottom: 8px;"><strong>Simbolismo:</strong> ${explicacaoAstro}</p>
-                            <p style="margin-bottom: 8px;"><strong>Significado Natal:</strong> Expressa a energia de <strong>${signo.nome}</strong> ativando a área de vida representada pela <strong>Casa ${a.casa}</strong>.</p>
-                            <p style="margin-bottom: 6px;"><strong>Posição Exata:</strong> ${formatarDMS(a.grau)}</p>
+                            <p style="margin-bottom: 8px;"><strong>Significado Natal:</strong> Expressa a energia de <strong>${signo.nome}</strong> ativando a área de vida representada pela <strong>Casa ${a.casa}</strong>.${a.retrogrado ? ' Está <strong>retrógrado</strong> neste mapa, o que muda a forma como essa energia se expressa.' : ''}</p>
+                            <p style="margin-bottom: 6px;"><strong>Posição Exata:</strong> ${formatarDMS(a.grau)}${a.retrogrado ? ' ℞' : ''}</p>
                             <p style="margin-bottom: 6px;"><strong>${rotuloNivel}</strong></p>
                             
-                            <button class="btn-ia btn-ia-inline" onclick="event.stopPropagation(); dispararAnaliseIA('${a.nome}', '${signo.nome}', ${a.casa})">
+                            <button class="btn-ia btn-ia-inline" onclick="event.stopPropagation(); dispararAnaliseIA('${a.nome}', '${signo.nome}', ${a.casa}, ${a.retrogrado ? 'true' : 'false'})">
                                 ✦ Interpretação Profunda com IA
                             </button>
                         </div>
@@ -1154,10 +1205,10 @@
                 
                 const astrosNaCasa = astros.filter(a => a.casa === numCasa);
                 const nomesAstros = astrosNaCasa.length > 0 
-                    ? astrosNaCasa.map(a => `${SIMBOLOS_ASTROS[a.nome] || ''} ${a.nome}`).join(', ')
+                    ? astrosNaCasa.map(a => `${SIMBOLOS_ASTROS[a.nome] || ''} ${a.nome}${a.retrogrado ? ' ℞' : ''}`).join(', ')
                     : 'Nenhum planeta presente (Casa Vazia)';
 
-                const ocupantesNomes = astrosNaCasa.map(a => a.nome).join(', ') || 'nenhum astro relevante';
+                const ocupantesNomes = astrosNaCasa.map(a => `${a.nome}${a.retrogrado ? ' (retrógrado)' : ''}`).join(', ') || 'nenhum astro relevante';
                 const jaFeito = ordensSalvas.has(3000 + numCasa);
 
                 return `
@@ -1234,7 +1285,7 @@
                     const sIdx = Math.floor(a.grau / 30) % 12;
                     const signo = SIGNOS_DADOS[sIdx];
                     const sim = SIMBOLOS_ASTROS[a.nome] || '';
-                    return `${sim} ${a.nome} em ${signo.nome} (Casa ${a.casa})`;
+                    return `${sim} ${a.nome}${a.retrogrado ? ' ℞' : ''} em ${signo.nome} (Casa ${a.casa})`;
                 }).join(' · ');
 
                 const jaFeito = ordensSalvas.has(6000 + indice);
@@ -1357,9 +1408,20 @@
  
                 g.appendChild(c); 
                 g.appendChild(t);
+
+                if (a.retrogrado) {
+                    const rTxt = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                    rTxt.setAttribute('x', 10);
+                    rTxt.setAttribute('y', -8);
+                    rTxt.setAttribute('font-size', '8px');
+                    rTxt.setAttribute('font-weight', 'bold');
+                    rTxt.setAttribute('fill', '#f0883e');
+                    rTxt.textContent = 'R';
+                    g.appendChild(rTxt);
+                }
                 
                 const title = document.createElementNS('http://www.w3.org/2000/svg', 'title');
-                title.textContent = `${a.nome}: ${formatarDMS(a.grau)} — confiabilidade ${nivel === 'alta' ? 'alta' : (nivel === 'media' ? 'média' : 'mais baixa')}`;
+                title.textContent = `${a.nome}: ${formatarDMS(a.grau)} — confiabilidade ${nivel === 'alta' ? 'alta' : (nivel === 'media' ? 'média' : 'mais baixa')}${a.retrogrado ? ' — Retrógrado' : ''}`;
                 g.appendChild(title);
  
                 svg.appendChild(g);
@@ -1405,8 +1467,12 @@
             NÃO use títulos, cabeçalhos ou listas numeradas visíveis no texto final — apenas parágrafos corridos.
             Use formatação HTML básica com parágrafos <p> e destaques em <strong>.`;
 
-        function dispararAnaliseIA(nomeAstro, nomeSigno, numCasa) {
-            const promptText = `Faça uma leitura astrológica sobre a posição de ${nomeAstro} em ${nomeSigno}, na Casa ${numCasa}, no Mapa Natal desta pessoa.
+        function dispararAnaliseIA(nomeAstro, nomeSigno, numCasa, retrogrado) {
+            const notaRetrogrado = retrogrado
+                ? `\n\nImportante: ${nomeAstro} está RETRÓGRADO neste mapa. Isso muda o tom da leitura — considere isso ao longo de toda a análise (energia mais internalizada, revisitada, reprocessada, em vez de expressa diretamente para fora), sem citar o termo técnico "retrógrado" como se fosse um jargão à parte, apenas incorporando esse matiz na interpretação.`
+                : '';
+
+            const promptText = `Faça uma leitura astrológica sobre a posição de ${nomeAstro} em ${nomeSigno}, na Casa ${numCasa}, no Mapa Natal desta pessoa.${notaRetrogrado}
 
             Siga rigorosamente esta estrutura, sem indicar os números ou nomes das etapas no texto final:
             1. Um parágrafo breve sobre o que ${nomeAstro} representa como força interna nesta pessoa.
@@ -1416,11 +1482,18 @@
 
             ${DIRETRIZ_TOM_IA}`;
  
-            iniciarAnaliseIA(`${nomeAstro} em ${nomeSigno} — Casa ${numCasa}`, promptText, 2000 + ORDEM_ASTROS_BASE.indexOf(nomeAstro));
+            iniciarAnaliseIA(`${nomeAstro}${retrogrado ? ' ℞' : ''} em ${nomeSigno} — Casa ${numCasa}`, promptText, 2000 + ORDEM_ASTROS_BASE.indexOf(nomeAstro));
         }
 
         function dispararAnaliseAspectoIA(astro1, aspecto, astro2) {
-            const promptText = `Faça uma leitura astrológica sobre o aspecto de ${aspecto} entre ${astro1} e ${astro2} no Mapa Natal desta pessoa.
+            const a1 = ULTIMO_ASTROS.find(a => a.nome === astro1);
+            const a2 = ULTIMO_ASTROS.find(a => a.nome === astro2);
+            const notasRetrogrado = [
+                a1 && a1.retrogrado ? `${astro1} está retrógrado neste mapa.` : '',
+                a2 && a2.retrogrado ? `${astro2} está retrógrado neste mapa.` : ''
+            ].filter(Boolean).join(' ');
+
+            const promptText = `Faça uma leitura astrológica sobre o aspecto de ${aspecto} entre ${astro1} e ${astro2} no Mapa Natal desta pessoa.${notasRetrogrado ? '\n\nImportante: ' + notasRetrogrado + ' Considere esse matiz (energia mais internalizada/reprocessada) na leitura, sem tratar o termo como jargão à parte.' : ''}
 
             Siga rigorosamente esta estrutura, sem indicar os números ou nomes das etapas no texto final:
             1. Um parágrafo breve sobre o que ${astro1} representa como força interna nesta pessoa.
@@ -1530,7 +1603,7 @@
             const descricaoPosicoes = astrosEncontrados.map(a => {
                 const sIdx = Math.floor(a.grau / 30) % 12;
                 const signo = SIGNOS_DADOS[sIdx];
-                return `${a.nome} em ${signo.nome} (Casa ${a.casa})`;
+                return `${a.nome}${a.retrogrado ? ' (retrógrado)' : ''} em ${signo.nome} (Casa ${a.casa})`;
             }).join('; ');
 
             const nomesEnvolvidos = astrosEncontrados.map(a => a.nome);
