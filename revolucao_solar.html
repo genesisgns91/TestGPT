@@ -1909,6 +1909,11 @@
         // em uma página aparece também na outra, com o histórico de leituras de
         // ambos os contextos (Mapa Natal e Revolução Solar) reunido no mesmo lugar.
         const CHAVE_PESSOAS_SALVAS = 'astro_pessoas_salvas_v1';
+        // Identificador fixo desta página, salvo em cada leitura de IA gerada aqui.
+        // É o que permite os selos "✓ já feito" do Mapa Natal e da Revolução Solar
+        // serem contados de forma totalmente independente, mesmo a pessoa sendo
+        // compartilhada entre as duas páginas.
+        const CONTEXTO_PAGINA = 'solar';
         let PESSOA_ATIVA_ID = null;
         let ULTIMO_TITULO_ANALISE = '';
         let ULTIMO_ORDEM_ANALISE = 9999;
@@ -1973,14 +1978,30 @@
             atualizarTodosIndicadores();
         }
 
-        // Retorna o conjunto de "ordem" já salvas para a pessoa ativa — usado para
-        // marcar com um ícone discreto quais itens já têm leitura de IA salva.
+        // Identifica de qual página uma leitura salva veio ('natal' ou 'solar').
+        // Leituras novas já trazem o campo 'contexto' gravado diretamente. Leituras
+        // antigas (salvas antes dessa separação existir) não têm esse campo — nesse
+        // caso, inferimos pelo texto de 'origem' salvo junto com a leitura.
+        function obterContextoDaLeitura(l) {
+            if (l.contexto) return l.contexto;
+            return (l.origem || '').startsWith('Revolução Solar') ? 'solar' : 'natal';
+        }
+
+        // Retorna o conjunto de "ordem" já salvas para a pessoa ativa, filtrando
+        // apenas leituras do CONTEXTO desta página (Revolução Solar). Isso garante
+        // que um selo "✓ já feito" aqui não apareça por causa de uma leitura
+        // equivalente feita no Mapa Natal, e vice-versa — cada página passa a ter
+        // seu próprio controle de "já feito", independente da outra.
         function obterOrdensSalvas() {
             if (!PESSOA_ATIVA_ID) return new Set();
             const lista = carregarPessoasSalvas();
             const pessoa = lista.find(p => p.id === PESSOA_ATIVA_ID);
             if (!pessoa) return new Set();
-            return new Set(pessoa.leituras.map(l => l.ordem));
+            return new Set(
+                pessoa.leituras
+                    .filter(l => obterContextoDaLeitura(l) === CONTEXTO_PAGINA)
+                    .map(l => l.ordem)
+            );
         }
 
         function indicadorFeitoHtml(jaFeito) {
@@ -2025,6 +2046,7 @@
                 id: 'l_' + Date.now(),
                 titulo,
                 origem: `Revolução Solar ${PERIODO_SELECIONADO}`,
+                contexto: CONTEXTO_PAGINA,
                 html,
                 ordem: (ordem !== undefined && ordem !== null) ? ordem : 9999,
                 criadoEm: new Date().toISOString()
