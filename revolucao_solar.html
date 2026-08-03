@@ -649,11 +649,15 @@
     <div id="aiModal" class="modal-overlay" onclick="fecharModalOuter(event)">
         <div class="modal-card">
             <div class="modal-header">
-                <h3 id="modalTitle">✦ Análise da Revolução Solar (IA)</h3>
-                <div style="display:flex; align-items:center; gap:6px;">
+                <h3 id="modalTitle" style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">✦ Análise da Revolução Solar (IA)</h3>
+                <div style="display:flex; align-items:center; gap:6px; flex-shrink:0;">
                     <button id="btnOuvir" class="modal-close" style="font-size:1.1rem;" title="Ouvir análise" onclick="alternarLeituraVoz()">🔊</button>
                     <button class="modal-close" onclick="fecharModal()">&times;</button>
                 </div>
+            </div>
+            <div style="padding:8px 18px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:8px; background:var(--bg-principal);">
+                <label for="vozSelect" style="font-size:0.72rem; color:#8b949e; white-space:nowrap;">🗣️ Voz:</label>
+                <select id="vozSelect" onchange="salvarVozPreferida()" style="flex:1; font-size:0.75rem; background:var(--bg-card); color:#fff; border:1px solid var(--border); border-radius:6px; padding:4px 6px; min-width:0;"></select>
             </div>
             <div id="modalBody" class="modal-body">
                 <!-- Conteúdo gerado pela IA -->
@@ -1676,7 +1680,63 @@
         // ==========================================
         // LEITURA EM VOZ ALTA (Web Speech API — nativa do navegador, sem custo)
         // ==========================================
+        // A qualidade da voz depende só do que o aparelho/navegador oferece — não
+        // dá pra trocar por uma "biblioteca melhor" sem sair do modelo 100%
+        // gratuito e client-side. Em compensação, aqui a gente: (1) tenta escolher
+        // automaticamente a MELHOR voz em português disponível (vozes "de rede",
+        // tipo Google/Microsoft neurais, soam bem mais humanas que as vozes locais
+        // básicas do sistema); (2) deixa a pessoa escolher manualmente entre todas
+        // as vozes em português do aparelho, e lembra a escolha pra próxima vez.
         let vozAtiva = false;
+        let VOZES_DISPONIVEIS = [];
+        const CHAVE_VOZ_PREFERIDA = 'astro_voz_preferida_v1';
+
+        // Nomes de vozes de rede (neurais/WaveNet) conhecidas por soarem mais
+        // naturais, usadas para ordenar a lista com as melhores primeiro.
+        const PISTAS_VOZ_BOA = ['google', 'wavenet', 'neural', 'natural', 'online', 'luciana', 'microsoft'];
+
+        function pontuarVoz(v) {
+            const nome = (v.name || '').toLowerCase();
+            let pontos = 0;
+            if (v.lang && v.lang.toLowerCase() === 'pt-br') pontos += 10;
+            else if (v.lang && v.lang.toLowerCase().startsWith('pt')) pontos += 5;
+            PISTAS_VOZ_BOA.forEach(pista => { if (nome.includes(pista)) pontos += 3; });
+            if (!v.localService) pontos += 2; // vozes de rede tendem a soar melhor que as locais
+            return pontos;
+        }
+
+        function carregarVozes() {
+            if (!('speechSynthesis' in window)) return;
+            const todas = speechSynthesis.getVoices();
+            let candidatas = todas.filter(v => v.lang && v.lang.toLowerCase().startsWith('pt'));
+            if (!candidatas.length) candidatas = todas; // aparelho sem voz em pt: mostra todas como fallback
+
+            VOZES_DISPONIVEIS = candidatas.slice().sort((a, b) => pontuarVoz(b) - pontuarVoz(a));
+            popularSeletorVozes();
+        }
+
+        function popularSeletorVozes() {
+            const select = document.getElementById('vozSelect');
+            if (!select || !VOZES_DISPONIVEIS.length) return;
+
+            const preferida = localStorage.getItem(CHAVE_VOZ_PREFERIDA);
+
+            select.innerHTML = VOZES_DISPONIVEIS.map(v =>
+                `<option value="${v.name}">${v.name}${v.lang ? ' (' + v.lang + ')' : ''}</option>`
+            ).join('');
+
+            if (preferida && VOZES_DISPONIVEIS.some(v => v.name === preferida)) {
+                select.value = preferida;
+            } else {
+                select.value = VOZES_DISPONIVEIS[0].name; // já vem ordenada com a melhor primeiro
+            }
+        }
+
+        function salvarVozPreferida() {
+            const select = document.getElementById('vozSelect');
+            if (!select) return;
+            localStorage.setItem(CHAVE_VOZ_PREFERIDA, select.value);
+        }
 
         function extrairTextoParaVoz() {
             const clone = document.getElementById('modalBody').cloneNode(true);
@@ -1698,12 +1758,15 @@
 
             const utterance = new SpeechSynthesisUtterance(texto);
             utterance.lang = 'pt-BR';
-            utterance.rate = 1;
+            // Um pouco mais lenta que o padrão (1.0) costuma soar mais natural e
+            // menos "robótica" na leitura de textos longos.
+            utterance.rate = 0.93;
             utterance.pitch = 1;
 
-            const vozes = speechSynthesis.getVoices();
-            const vozPt = vozes.find(v => v.lang && v.lang.toLowerCase().startsWith('pt'));
-            if (vozPt) utterance.voice = vozPt;
+            const select = document.getElementById('vozSelect');
+            const nomeEscolhido = select ? select.value : '';
+            const vozEscolhida = VOZES_DISPONIVEIS.find(v => v.name === nomeEscolhido) || VOZES_DISPONIVEIS[0];
+            if (vozEscolhida) utterance.voice = vozEscolhida;
 
             utterance.onend = () => { vozAtiva = false; btn.textContent = '🔊'; };
             utterance.onerror = () => { vozAtiva = false; btn.textContent = '🔊'; };
@@ -2170,6 +2233,11 @@
  
             renderizarPessoasSalvas();
             executarTudo();
+
+            if ('speechSynthesis' in window) {
+                carregarVozes();
+                speechSynthesis.onvoiceschanged = carregarVozes;
+            }
 
             if ('serviceWorker' in navigator) {
                 navigator.serviceWorker.register('./sw.js').then((registro) => {
