@@ -169,6 +169,40 @@
         .sintese-section { margin-bottom: 12px; }
         .sintese-section strong { color: var(--sol); }
 
+        /* PAINEL PRINCIPAL: RODA + POSIÇÕES */
+        .transitos-dashboard { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:16px; width:100%; align-items:stretch; }
+        .wheel-panel, .positions-panel { background:var(--bg-card); border:1px solid var(--border); border-radius:12px; padding:14px; min-width:0; }
+        .wheel-panel { display:flex; flex-direction:column; align-items:center; }
+        .wheel-panel-header, .positions-panel-header { width:100%; display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px; }
+        .wheel-panel-header h2, .positions-panel-header h2 { color:var(--destaque); font-size:1rem; }
+        #chartSvg { width:100%; max-width:600px; height:auto; aspect-ratio:1/1; border-radius:50%; background:#0b0e14; }
+        .wheel-legend { display:flex; flex-wrap:wrap; justify-content:center; gap:7px 14px; margin-top:8px; font-size:.72rem; color:#8b949e; }
+        .wheel-legend span { display:inline-flex; align-items:center; gap:5px; }
+        .wheel-dot { width:9px; height:9px; border-radius:50%; display:inline-block; }
+        .positions-list { display:flex; flex-direction:column; gap:7px; }
+        .position-row { display:grid; grid-template-columns:34px minmax(78px,1fr) minmax(95px,1fr) 74px; gap:8px; align-items:center; background:var(--bg-principal); border:1px solid var(--border); border-radius:8px; padding:8px 9px; }
+        .position-glyph { font-family:"Segoe UI Symbol",sans-serif; font-size:1.2rem; color:var(--ia-color); text-align:center; }
+        .position-main strong { display:block; color:#fff; font-size:.82rem; }
+        .position-main small, .position-house small { display:block; color:#8b949e; font-size:.68rem; margin-top:2px; }
+        .position-sign { font-size:.8rem; font-weight:700; color:var(--sol); }
+        .position-house { text-align:right; color:#c9d1d9; font-size:.76rem; }
+        .day-details-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px; margin-top:12px; }
+        .day-detail-card { background:var(--bg-principal); border:1px solid var(--border); border-radius:8px; padding:10px; }
+        .day-detail-card .detail-label { color:#8b949e; font-size:.68rem; text-transform:uppercase; font-weight:700; }
+        .day-detail-card .detail-value { color:#fff; font-size:.88rem; font-weight:700; margin-top:4px; }
+        .day-detail-card .detail-help { color:#8b949e; font-size:.7rem; line-height:1.4; margin-top:5px; }
+        .block-ai-head { display:flex; align-items:center; gap:7px; }
+        .ai-inline-panel { margin-top:12px; display:none; background:rgba(163,113,247,.08); border:1px solid var(--ia-color); border-radius:9px; padding:12px; line-height:1.55; font-size:.84rem; }
+        .sol-lua-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; width:100%; }
+        .sol-lua-grid > .esoteric-card { min-width:0; }
+        .sintese-box { position:relative; }
+        .sintese-metrics { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; margin:12px 0; }
+        .sintese-metric { background:var(--bg-principal); border:1px solid var(--border); border-radius:8px; padding:9px; }
+        .sintese-metric span { display:block; color:#8b949e; font-size:.67rem; text-transform:uppercase; font-weight:700; }
+        .sintese-metric strong { display:block; color:#fff; margin-top:3px; font-size:.82rem; }
+        @media (max-width:900px) { .transitos-dashboard,.sol-lua-grid{grid-template-columns:1fr;} .day-details-grid{grid-template-columns:repeat(2,minmax(0,1fr));} }
+        @media (max-width:600px) { .position-row{grid-template-columns:30px 1fr 1fr;} .position-house{grid-column:2/-1;text-align:left;} .day-details-grid{grid-template-columns:1fr;} .sintese-metrics{grid-template-columns:1fr;} }
+
         .card-table { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 12px; width: 100%; }
         .card-table h3 { color: var(--destaque); font-size: 0.95rem; margin-bottom: 10px; }
         .pessoa-item { display: flex; justify-content: space-between; align-items: center; background: var(--bg-principal); padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border); margin-bottom: 6px; }
@@ -260,99 +294,111 @@
             <div id="pessoasSalvasList"></div>
         </div>
 
-        <div class="chart-card">
-            <div class="chart-card-header">
-                <h2>Roda de Trânsitos Planetários</h2>
+        <div class="transitos-dashboard">
+            <div class="wheel-panel">
+                <div class="wheel-panel-header">
+                    <h2>Roda Comparativa — Natal × Céu do Dia</h2>
+                    <button type="button" class="btn-ia" onclick="gerarAnaliseIABloco('panorama')">✦ Panorama IA</button>
+                </div>
+                <svg id="chartSvg" viewBox="0 0 600 600" role="img" aria-label="Roda astrológica comparativa"></svg>
+                <div class="wheel-legend">
+                    <span><i class="wheel-dot" style="background:var(--destaque);"></i> Mapa natal</span>
+                    <span><i class="wheel-dot" style="background:var(--ia-color);"></i> Céu do dia</span>
+                    <span><i class="wheel-dot" style="background:var(--sol);"></i> Signos</span>
+                </div>
+                <div class="ai-inline-panel" id="iaPanorama"></div>
             </div>
-            <svg id="chartSvg" viewBox="0 0 500 500" role="img" aria-label="Roda de trânsitos planetários"></svg>
-            <div class="legenda-precisao">
-                <span><span class="ponto-legenda" style="background: var(--destaque);"></span> Posição Natal</span>
-                <span><span class="ponto-legenda" style="background: var(--ia-color);"></span> Trânsito do Dia</span>
+            <div class="positions-panel">
+                <div class="positions-panel-header"><h2>10 Astros Principais — Céu do Dia</h2><span class="tag-ceu">🌐 TRÂNSITO</span></div>
+                <p style="font-size:.78rem;color:#8b949e;line-height:1.45;margin-bottom:10px;">As casas abaixo são lidas sobre o mapa natal: mostram em qual setor da vida cada posição do céu atual está ativando o mapa de origem.</p>
+                <div id="posicoesPrincipaisList" class="positions-list"></div>
             </div>
         </div>
 
         <div class="grid-3-colunas">
             <div class="esoteric-card">
-                <h3>🔥 Triplicidades (Elementos)</h3>
+                <h3><span>🔥 Triplicidades (Elementos)</span><button type="button" class="btn-ia" onclick="gerarAnaliseIABloco('elementos')">✦ IA</button></h3>
+                <p style="font-size:.75rem;color:#8b949e;line-height:1.45;margin-bottom:8px;">Compara a distribuição de Fogo, Terra, Ar e Água no céu atual com a composição do mapa natal.</p>
                 <div class="element-bar-container" id="elementosContainer"></div>
+                <div class="ai-inline-panel" id="iaElementos"></div>
             </div>
             <div class="esoteric-card">
-                <h3>🏛️ Quadruplicidades (Ritmos)</h3>
+                <h3><span>🏛️ Quadruplicidades (Ritmos)</span><button type="button" class="btn-ia" onclick="gerarAnaliseIABloco('ritmos')">✦ IA</button></h3>
+                <p style="font-size:.75rem;color:#8b949e;line-height:1.45;margin-bottom:8px;">Mostra se o dia tende a iniciar, sustentar ou adaptar processos em contraste com o padrão natal.</p>
                 <div class="element-bar-container" id="modalidadesContainer"></div>
+                <div class="ai-inline-panel" id="iaRitmos"></div>
             </div>
             <div class="esoteric-card">
-                <h3>☯️ Polaridades</h3>
+                <h3><span>☯️ Polaridades</span><button type="button" class="btn-ia" onclick="gerarAnaliseIABloco('polaridades')">✦ IA</button></h3>
+                <p style="font-size:.75rem;color:#8b949e;line-height:1.45;margin-bottom:8px;">Contrasta a ênfase Yang/Masculina e Yin/Feminina do momento com o equilíbrio estrutural natal.</p>
                 <div class="element-bar-container" id="polaridadesContainer"></div>
+                <div class="ai-inline-panel" id="iaPolaridades"></div>
             </div>
         </div>
 
         <div class="esoteric-card">
             <h3>
                 <span>☀️ 1. Visão Geral do Céu do Momento</span>
-                <span class="tag-ceu">🌐 CÉU DO MOMENTO</span>
+                <span class="block-ai-head"><span class="tag-ceu">🌐 CÉU DO MOMENTO</span><button type="button" class="btn-ia" onclick="gerarAnaliseIABloco('dia')">✦ Análise IA</button></span>
             </h3>
-            <p style="font-size:0.85rem; line-height:1.5; color:#c9d1d9; margin-bottom:12px;" id="climaGeralTexto">Processando posições coletivas...</p>
-            <div class="esoteric-grid">
-                <div class="esoteric-item">
-                    <label>Regente do Dia <span class="tag-ceu">🌐</span></label>
-                    <p id="regenteDiaVal">---</p>
+            <p style="font-size:.85rem;line-height:1.6;color:#c9d1d9;margin-bottom:12px;" id="climaGeralTexto">Processando posições coletivas...</p>
+            <div class="day-details-grid">
+                <div class="day-detail-card"><div class="detail-label">Regente do dia</div><div class="detail-value" id="regenteDiaVal">---</div><div class="detail-help" id="regenteDiaHelp">Planeta tradicionalmente associado ao dia da semana e à sua tônica simbólica.</div></div>
+                <div class="day-detail-card"><div class="detail-label">Hora planetária</div><div class="detail-value" id="horaPlanetariaVal">---</div><div class="detail-help" id="horaPlanetariaHelp">Cada hora é atribuída a um planeta pela sequência caldaica, iniciada pelo regente do dia ao nascer do Sol.</div></div>
+                <div class="day-detail-card"><div class="detail-label">Governante alquímico</div><div class="detail-value" id="governanteAlquimicoVal">---</div><div class="detail-help" id="governanteAlquimicoHelp">Metal e princípio simbólico tradicionalmente relacionados ao planeta regente.</div></div>
+                <div class="day-detail-card"><div class="detail-label">Luz do dia</div><div class="detail-value" id="luzDiaVal">---</div><div class="detail-help" id="luzDiaHelp">Nascer e pôr do Sol determinam a divisão tradicional entre 12 horas diurnas e 12 noturnas.</div></div>
+            </div>
+            <div class="esoteric-grid" style="margin-top:12px;">
+                <div class="esoteric-item"><label>Princípio do regente <span class="tag-ceu">🌐</span></label><p id="principioRegenteVal">---</p></div>
+                <div class="esoteric-item"><label>Nº da hora planetária <span class="tag-ceu">🌐</span></label><p id="numeroHoraVal">---</p></div>
+                <div class="esoteric-item"><label>Ascendente do momento <span class="tag-ceu">🌐</span></label><p id="ascMomentoVal">---</p></div>
+                <div class="esoteric-item"><label>Fase lunar <span class="tag-ceu">🌐</span></label><p id="faseLunarVal">---</p></div>
+            </div>
+            <div class="ai-inline-panel" id="iaDia"></div>
+        </div>
+
+        <div class="sol-lua-grid">
+            <div class="esoteric-card card-natal-highlight">
+                <h3><span>☉ 2. Sol — Foco do Ciclo Pessoal</span><span class="block-ai-head"><span class="tag-natal">🔵 PERSONALIZADO</span><button type="button" class="btn-ia" onclick="gerarAnaliseIABloco('sol')">✦ IA</button></span></h3>
+                <div class="esoteric-grid">
+                    <div class="esoteric-item item-natal"><label>Posição atual <span class="tag-ceu">🌐</span></label><p id="solPosicaoVal">---</p></div>
+                    <div class="esoteric-item item-natal"><label>Casa natal ativada <span class="tag-natal">🔵</span></label><p id="solCasaVal">---</p></div>
+                    <div class="esoteric-item item-natal"><label>Regente da casa <span class="tag-natal">🔵</span></label><p id="solRegenteCasaVal">---</p></div>
                 </div>
-                <div class="esoteric-item">
-                    <label>Hora Planetária <span class="tag-ceu">🌐</span></label>
-                    <p id="horaPlanetariaVal">---</p>
+                <p style="font-size:.84rem;color:#c9d1d9;line-height:1.6;" id="solExplicacaoTexto">Aguardando cálculo...</p>
+                <div class="ai-inline-panel" id="iaSol"></div>
+            </div>
+            <div class="esoteric-card card-natal-highlight">
+                <h3><span>🌙 3. Lua — Ritmo & Sensibilidade</span><span class="block-ai-head"><span class="tag-natal">🔵 PERSONALIZADO</span><button type="button" class="btn-ia" onclick="gerarAnaliseIABloco('lua')">✦ IA</button></span></h3>
+                <div class="esoteric-grid">
+                    <div class="esoteric-item item-natal"><label>Posição atual <span class="tag-ceu">🌐</span></label><p id="luaPosicaoVal">---</p></div>
+                    <div class="esoteric-item item-natal"><label>Casa natal ativada <span class="tag-natal">🔵</span></label><p id="luaCasaVal">---</p></div>
                 </div>
+                <p style="font-size:.84rem;color:#c9d1d9;line-height:1.6;margin-bottom:10px;" id="luaDetalhesTexto">Calculando ritmos emocionais...</p>
+                <div id="luaAspectosList" class="expand-list"></div>
+                <div class="ai-inline-panel" id="iaLua"></div>
             </div>
         </div>
 
         <div class="esoteric-card card-natal-highlight">
-            <h3>
-                <span>☉ 2. Sol — Foco do Ciclo Pessoal</span>
-                <span class="tag-natal">🔵 PERSONALIZADO</span>
-            </h3>
-            <div class="esoteric-grid">
-                <div class="esoteric-item item-natal">
-                    <label>Casa Natal Transitada <span class="tag-natal">🔵</span></label>
-                    <p id="solCasaVal">---</p>
-                </div>
-                <div class="esoteric-item item-natal">
-                    <label>Regente da Casa Natal <span class="tag-natal">🔵</span></label>
-                    <p id="solRegenteCasaVal">---</p>
-                </div>
-            </div>
-            <p style="font-size:0.85rem; color:#c9d1d9;" id="solExplicacaoTexto">Aguardando cálculo...</p>
-        </div>
-
-        <div class="esoteric-card card-natal-highlight">
-            <h3>
-                <span>🌙 3. A Lua — Ritmo & Sensibilidade</span>
-                <span class="tag-natal">🔵 PERSONALIZADO</span>
-            </h3>
-            <p style="font-size:0.85rem; color:#c9d1d9; margin-bottom:10px;" id="luaDetalhesTexto">Calculando ritmos emocionais...</p>
-            <div id="luaAspectosList" class="expand-list"></div>
-        </div>
-
-        <div class="esoteric-card card-natal-highlight">
-            <h3>
-                <span>⚖️ 4. Ativações Individuais Expansíveis</span>
-                <span class="tag-natal">🔵 PERSONALIZADO</span>
-            </h3>
+            <h3><span>⚖️ 4. Ativações Individuais Expansíveis</span><span class="block-ai-head"><span class="tag-natal">🔵 PERSONALIZADO</span><button type="button" class="btn-ia" onclick="gerarAnaliseIABloco('ativacoes')">✦ Panorama IA</button></span></h3>
+            <p style="font-size:.82rem;color:#8b949e;line-height:1.5;margin-bottom:10px;">Aqui estão os contatos mais relevantes entre o céu atual e os pontos estruturais do mapa natal. A força de um trânsito não depende apenas do aspecto: duração, orbe, planeta envolvido e área natal ativada alteram seu peso.</p>
             <div id="transitosRelevantesList" class="expand-list"></div>
+            <div class="ai-inline-panel" id="iaAtivacoes"></div>
         </div>
 
         <div class="esoteric-card card-natal-highlight">
-            <h3>
-                <span>🏛️ 5. Processo Dominante & Convergência</span>
-                <span class="tag-natal">🔵 PERSONALIZADO</span>
-            </h3>
-            <div id="convergenciaConteudo" style="font-size:0.85rem; line-height:1.6; color:#c9d1d9;">Processando convergências...</div>
+            <h3><span>🏛️ 5. Processo Dominante & Convergência</span><span class="block-ai-head"><span class="tag-natal">🔵 PERSONALIZADO</span><button type="button" class="btn-ia" onclick="gerarAnaliseIABloco('convergencia')">✦ Análise IA</button></span></h3>
+            <p style="font-size:.82rem;color:#8b949e;line-height:1.5;margin-bottom:10px;">Este bloco procura convergência: quando vários fatores do céu atual apontam para a mesma casa, tema psicológico ou eixo de vida, essa região ganha prioridade interpretativa.</p>
+            <div id="convergenciaConteudo" style="font-size:.85rem;line-height:1.65;color:#c9d1d9;">Processando convergências...</div>
+            <div class="ai-inline-panel" id="iaConvergencia"></div>
         </div>
 
         <div class="sintese-box">
-            <h4>
-                <span>📜 6. Síntese do Mapa Natal Ativado</span>
-                <span class="tag-natal">🔵 PERSONALIZADO</span>
-            </h4>
+            <h4><span>📜 6. Síntese do Mapa Natal Ativado</span><span class="block-ai-head"><span class="tag-natal">🔵 PERSONALIZADO</span><button type="button" class="btn-ia" onclick="gerarAnaliseIABloco('sintese')">✦ Síntese IA</button></span></h4>
+            <p style="font-size:.82rem;color:#8b949e;line-height:1.5;margin-bottom:8px;">A síntese final reúne céu coletivo, mapa natal, casas, aspectos, elementos, ritmos, polaridades e convergências. O objetivo é responder onde o dia toca mais fundo, o que tensiona, o que favorece, como a pessoa pode se sentir e qual atitude consciente integra melhor o momento.</p>
             <div id="sinteseFinalConteudo">Aguardando processamento integral...</div>
+            <div class="ai-inline-panel" id="iaSintese"></div>
         </div>
 
     </div>
@@ -528,6 +574,70 @@ function calcularPosicaoPlaneta(nome, dataUtc) {
             card.classList.toggle('open');
         }
 
+        let contextoTransitosAtual = null;
+
+        const CORRESPONDENCIAS_ALQUIMICAS = {
+            Sol: { metal: 'Ouro', principio: 'consciência, vitalidade, centralidade e manifestação do propósito' },
+            Lua: { metal: 'Prata', principio: 'receptividade, memória, imaginação e sensibilidade' },
+            Marte: { metal: 'Ferro', principio: 'ação, coragem, corte, impulso e enfrentamento' },
+            Mercúrio: { metal: 'Mercúrio', principio: 'mediação, inteligência, movimento e comunicação' },
+            Júpiter: { metal: 'Estanho', principio: 'expansão, ordem, confiança e crescimento' },
+            Vênus: { metal: 'Cobre', principio: 'atração, conciliação, prazer, valor e vínculo' },
+            Saturno: { metal: 'Chumbo', principio: 'limite, estrutura, tempo, responsabilidade e condensação' }
+        };
+
+        const PRINCIPIOS_PLANETARIOS = {
+            Sol:'vitalidade e consciência', Lua:'sensibilidade e adaptação', Mercúrio:'mente e comunicação', Vênus:'vínculo e valores', Marte:'ação e iniciativa', Júpiter:'expansão e sentido', Saturno:'estrutura e responsabilidade'
+        };
+
+        function formatarHoraLocal(dataUtc, fuso) {
+            const d = new Date(dataUtc.getTime() + fuso * 3600000);
+            return d.toISOString().substring(11,16);
+        }
+
+        function calcularFaseLunar(lonLua, lonSol) {
+            const elongacao = normalizarGraus(lonLua - lonSol);
+            if (elongacao < 22.5 || elongacao >= 337.5) return 'Lua Nova';
+            if (elongacao < 67.5) return 'Crescente';
+            if (elongacao < 112.5) return 'Quarto Crescente';
+            if (elongacao < 157.5) return 'Gibosa Crescente';
+            if (elongacao < 202.5) return 'Lua Cheia';
+            if (elongacao < 247.5) return 'Gibosa Minguante';
+            if (elongacao < 292.5) return 'Quarto Minguante';
+            return 'Minguante';
+        }
+
+        function obterDadosHoraPlanetaria(utcAtual, lat, lon, fuso, regenteDia) {
+            const observer = new Astronomy.Observer(lat, lon, 0);
+            const inicioDiaUtc = new Date(`${document.getElementById('dataTransito').value}T00:00:00Z`);
+            let nascer, por;
+            try {
+                nascer = Astronomy.SearchRiseSet(Astronomy.Body.Sun, observer, +1, inicioDiaUtc, 1);
+                por = Astronomy.SearchRiseSet(Astronomy.Body.Sun, observer, -1, new Date(inicioDiaUtc.getTime()+86400000), 1);
+            } catch(e) { nascer = null; por = null; }
+            const diaIdx = new Date(`${document.getElementById('dataTransito').value}T12:00:00`).getDay();
+            const regentesDias = ['Saturno','Sol','Lua','Marte','Mercúrio','Júpiter','Vênus'];
+            const regente = regentesDias[diaIdx];
+            let numero = 1, horaPlaneta = regente, periodo = 'diurna';
+            if (nascer && por) {
+                const sunrise = nascer.date.getTime();
+                const sunset = por.date.getTime();
+                const t = utcAtual.getTime();
+                if (t >= sunrise && t < sunset) {
+                    numero = Math.min(12, Math.floor((t-sunrise)/((sunset-sunrise)/12))+1);
+                    horaPlaneta = ORDEM_CALDAICA[(ORDEM_CALDAICA.indexOf(regente)+numero-1)%7];
+                } else {
+                    periodo = 'noturna';
+                    let proximoNascer = sunrise + 86400000;
+                    const inicioNoite = t >= sunset ? sunset : sunrise-86400000;
+                    const fimNoite = t >= sunset ? proximoNascer : sunrise;
+                    numero = Math.min(12, Math.floor((t-inicioNoite)/((fimNoite-inicioNoite)/12))+1);
+                    horaPlaneta = ORDEM_CALDAICA[(ORDEM_CALDAICA.indexOf(regente)+12+numero-1)%7];
+                }
+            }
+            return { regente, horaPlaneta, numero, periodo, nascer, por };
+        }
+
         function executarAnalise() {
             // Data Natal
             const dNatal = document.getElementById('date').value;
@@ -563,34 +673,78 @@ function calcularPosicaoPlaneta(nome, dataUtc) {
             desenharRodaAstrologica(planetasNatais, planetasHoje, angulosNatais.casas);
 
             // ELEMENTOS, RITMOS E POLARIDADES
-            calcularElementosERitmos(planetasHoje);
+            calcularElementosERitmos(planetasHoje, planetasNatais);
 
             // 1. VISÃO GERAL DO CÉU
             const solHojeInfo = obterInfoSigno(planetasHoje["Sol"]);
             const luaHojeInfo = obterInfoSigno(planetasHoje["Lua"]);
-            document.getElementById('climaGeralTexto').innerText = 
-                `O céu coletivo apresenta o Sol em ${solHojeInfo.signo} (${solHojeInfo.grau}°) e a Lua em ${luaHojeInfo.signo} (${luaHojeInfo.grau}°). ` +
-                `Momento de integrar os aspectos emocionais do dia com a consciência objetiva.`;
+            const horaDia = obterDadosHoraPlanetaria(utcAtual, latA, lonA, fusoAtual);
+            const regenteDia = horaDia.regente;
+            const alquimiaDia = CORRESPONDENCIAS_ALQUIMICAS[regenteDia] || { metal:'—', principio:PRINCIPIOS_PLANETARIOS[regenteDia] || '—' };
+            const faseLunar = calcularFaseLunar(planetasHoje["Lua"], planetasHoje["Sol"]);
+            const ascMomento = calcularCasasEAngulos(latA, lonA, utcAtual).asc;
+            const ascMomentoInfo = obterInfoSigno(ascMomento);
 
-            const diaSemana = new Date(`${dAtual}T12:00:00`).getDay();
-            document.getElementById('regenteDiaVal').innerText = PLANETAS_SEMANA[diaSemana];
-            document.getElementById('horaPlanetariaVal').innerText = ORDEM_CALDAICA[diaSemana % 7];
+            document.getElementById('climaGeralTexto').innerHTML =
+                `O céu do momento apresenta <strong>Sol em ${solHojeInfo.signo} ${solHojeInfo.grau}°</strong> e <strong>Lua em ${luaHojeInfo.signo} ${luaHojeInfo.grau}°</strong>. ` +
+                `O Sol descreve a direção consciente e a vitalidade coletiva; a Lua mostra o ritmo receptivo e emocional. ` +
+                `A leitura realmente individual começa quando essas posições são confrontadas com as casas, signos e aspectos do mapa natal.`;
+            document.getElementById('regenteDiaVal').innerText = regenteDia;
+            document.getElementById('regenteDiaHelp').innerText = `O ${regenteDia} colore simbolicamente o dia com ${PRINCIPIOS_PLANETARIOS[regenteDia] || 'sua função tradicional'}. Não é uma causa física, mas uma chave interpretativa tradicional.`;
+            document.getElementById('horaPlanetariaVal').innerText = `${horaDia.horaPlaneta} — ${horaDia.periodo}`;
+            document.getElementById('numeroHoraVal').innerText = `${horaDia.numero}ª hora ${horaDia.periodo}`;
+            document.getElementById('horaPlanetariaHelp').innerText = `A ${horaDia.numero}ª hora ${horaDia.periodo} é regida por ${horaDia.horaPlaneta}; a sequência é simbólica e segue a ordem caldaica a partir do regente do dia.`;
+            document.getElementById('governanteAlquimicoVal').innerText = `${alquimiaDia.metal} — ${regenteDia}`;
+            document.getElementById('governanteAlquimicoHelp').innerText = `Na correspondência alquímica tradicional, ${regenteDia} relaciona-se a ${alquimiaDia.metal}. O simbolismo aponta para ${alquimiaDia.principio}.`;
+            document.getElementById('principioRegenteVal').innerText = PRINCIPIOS_PLANETARIOS[regenteDia] || '—';
+            document.getElementById('ascMomentoVal').innerText = `${ascMomentoInfo.simbolo} ${ascMomentoInfo.signo} ${ascMomentoInfo.grau}°`;
+            document.getElementById('faseLunarVal').innerText = faseLunar;
+            document.getElementById('luzDiaVal').innerText = (horaDia.nascer && horaDia.por) ? `${formatarHoraLocal(horaDia.nascer.date,fusoAtual)} → ${formatarHoraLocal(horaDia.por.date,fusoAtual)}` : 'Não calculada';
+
+            // 10 astros principais: posições do céu atual projetadas sobre as casas natais.
+            const ordemAstros = ["Sol","Lua","Mercúrio","Vênus","Marte","Júpiter","Saturno","Urano","Netuno","Plutão"];
+            document.getElementById('posicoesPrincipaisList').innerHTML = ordemAstros.map(p => {
+                const info = obterInfoSigno(planetasHoje[p]);
+                const casa = acharCasa(planetasHoje[p], angulosNatais.casas);
+                const natalInfo = obterInfoSigno(planetasNatais[p]);
+                return `<div class="position-row" title="Natal: ${natalInfo.signo} ${natalInfo.grau}° | Trânsito: ${info.signo} ${info.grau}°">
+                    <div class="position-glyph">${SIMBOLOS_PLANETAS[p]}</div>
+                    <div class="position-main"><strong>${p}</strong><small>Natal: ${natalInfo.signo} ${natalInfo.grau}°</small></div>
+                    <div class="position-sign">${info.simbolo} ${info.signo}<small>${info.grau}°${String(info.min).padStart(2,'0')}'</small></div>
+                    <div class="position-house">Casa ${casa}<small>${SIGNIFICADO_CASAS[casa]}</small></div>
+                </div>`;
+            }).join('');
+
+            contextoTransitosAtual = {
+                data: dAtual, hora: hAtual, local: {lat:latA,lon:lonA},
+                regenteDia, horaPlanetaria: horaDia.horaPlaneta, numeroHora: horaDia.numero, periodoHora: horaDia.periodo,
+                metalAlquimico: alquimiaDia.metal, principioRegente: alquimiaDia.principio, faseLunar,
+                sol: {signo:solHojeInfo.signo, grau:solHojeInfo.grau, casa:null}, lua:{signo:luaHojeInfo.signo,grau:luaHojeInfo.grau,casa:null},
+                planetasHoje, planetasNatais, casasNatais: angulosNatais.casas, trânsitosEncontrados: []
+            };
 
             // 2. SOL
             const casaSolNatal = acharCasa(planetasHoje["Sol"], angulosNatais.casas);
             const signoCuspideSol = SIGNOS[Math.floor(angulosNatais.casas[casaSolNatal - 1] / 30)];
             const regenteCasaSol = REGENTES_SIGNOS[signoCuspideSol];
+            document.getElementById('solPosicaoVal').innerText = `${solHojeInfo.simbolo} ${solHojeInfo.signo} ${solHojeInfo.grau}°${String(solHojeInfo.min).padStart(2,'0')}'`;
             document.getElementById('solCasaVal').innerText = `Casa ${casaSolNatal} Natal`;
             document.getElementById('solRegenteCasaVal').innerText = regenteCasaSol;
             document.getElementById('solExplicacaoTexto').innerHTML = 
-                `O Sol em trânsito ilumina a sua <strong>Casa ${casaSolNatal} Natal</strong> (${SIGNIFICADO_CASAS[casaSolNatal]}). ` +
-                `Sua vitalidade e atenção consciente estão concentradas neste setor da vida.`;
+                `O Sol em trânsito em <strong>${solHojeInfo.signo}</strong> percorre a <strong>Casa ${casaSolNatal} Natal</strong>. ` +
+                `Essa casa mostra onde a consciência, vitalidade e vontade tendem a buscar expressão hoje: <strong>${SIGNIFICADO_CASAS[casaSolNatal]}</strong>. ` +
+                `O sentido pessoal nasce da comparação entre o Sol atual e o Sol natal, além dos aspectos que o trânsito forma com o restante do mapa.`;
 
             // 3. LUA
             const casaLuaNatal = acharCasa(planetasHoje["Lua"], angulosNatais.casas);
+            document.getElementById('luaPosicaoVal').innerText = `${luaHojeInfo.simbolo} ${luaHojeInfo.signo} ${luaHojeInfo.grau}°${String(luaHojeInfo.min).padStart(2,'0')}'`;
+            document.getElementById('luaCasaVal').innerText = `Casa ${casaLuaNatal} Natal`;
             document.getElementById('luaDetalhesTexto').innerHTML = 
-                `A Lua hoje ilumina a sua <strong>Casa ${casaLuaNatal} Natal</strong> (${luaHojeInfo.signo}). ` +
-                `<strong>Área Mobilizada:</strong> ${SIGNIFICADO_CASAS[casaLuaNatal]}.`;
+                `A Lua em <strong>${luaHojeInfo.signo}</strong> atravessa a <strong>Casa ${casaLuaNatal} Natal</strong>, ativando ${SIGNIFICADO_CASAS[casaLuaNatal]}. ` +
+                `Ela descreve o ritmo subjetivo do dia: aquilo que tende a chamar atenção emocionalmente, aumentar necessidade de segurança ou provocar mudanças de disposição.`;
+
+            contextoTransitosAtual.sol.casa = casaSolNatal;
+            contextoTransitosAtual.lua.casa = casaLuaNatal;
 
             let htmlLuaAspectos = "";
             listaP.concat(["Asc","MC"]).forEach(pNatal => {
@@ -689,97 +843,75 @@ function calcularPosicaoPlaneta(nome, dataUtc) {
                     </div>
                 </div>`;
 
+            contextoTransitosAtual.trânsitosEncontrados = trânsitosEncontrados;
+
             // 5. CONVERGÊNCIA
             let casasFoco = {};
             trânsitosEncontrados.forEach(t => { casasFoco[t.casaTrans] = (casasFoco[t.casaTrans] || 0) + 1; });
             let casaMaisAtiva = Object.keys(casasFoco).sort((a,b) => casasFoco[b] - casasFoco[a])[0];
+            const aspectosExatos = trânsitosEncontrados.filter(t=>t.asp.estado==='Exato').length;
+            const longos = trânsitosEncontrados.filter(t=>t.temp==='LONGO PRAZO').length;
+            const tensionantes = trânsitosEncontrados.filter(t=>['Quadratura','Oposição'].includes(t.asp.nome));
+            const facilitadores = trânsitosEncontrados.filter(t=>['Trígono','Sextil'].includes(t.asp.nome));
+            const maiorTensao = tensionantes[0];
+            const maiorFacilidade = facilitadores[0];
+            const casaTexto = casaMaisAtiva ? `Casa ${casaMaisAtiva} Natal — ${SIGNIFICADO_CASAS[casaMaisAtiva]}` : 'Nenhuma casa concentrou aspectos dentro da orbe usada.';
 
             document.getElementById('convergenciaConteudo').innerHTML = `
-                <p><strong>🔵 Área de Maior Ativação:</strong> ${casaMaisAtiva ? `A <strong>Casa ${casaMaisAtiva} Natal</strong> (${SIGNIFICADO_CASAS[casaMaisAtiva]}) aloca a maior densidade de trânsitos hoje.` : 'Distribuição equilibrada no zodíaco.'}</p>
+                <div class="sintese-metrics">
+                    <div class="sintese-metric"><span>Área mais ativada</span><strong>${casaTexto}</strong></div>
+                    <div class="sintese-metric"><span>Aspectos exatos</span><strong>${aspectosExatos}</strong></div>
+                    <div class="sintese-metric"><span>Processos de longo prazo</span><strong>${longos}</strong></div>
+                </div>
+                <p><strong>Convergência:</strong> ${casaMaisAtiva ? `o maior agrupamento de ativações recai na Casa ${casaMaisAtiva}.` : 'o dia não apresenta concentração clara por casa.'} Isso não significa que essa área determine os acontecimentos; indica onde o mapa recebe maior densidade simbólica no recorte analisado.</p>
+                <p style="margin-top:8px;"><strong>Tensão predominante:</strong> ${maiorTensao ? `${maiorTensao.pHoje} ${maiorTensao.asp.simbolo} ${maiorTensao.pNatal}, ${maiorTensao.asp.nome}, envolvendo a Casa ${maiorTensao.casaTrans}.` : 'nenhuma quadratura ou oposição principal dentro da orbe considerada.'}</p>
+                <p style="margin-top:8px;"><strong>Via de integração:</strong> ${maiorFacilidade ? `${maiorFacilidade.pHoje} ${maiorFacilidade.asp.simbolo} ${maiorFacilidade.pNatal}, ${maiorFacilidade.asp.nome}, oferece um canal de fluidez para trabalhar conscientemente as ativações.` : 'a integração depende sobretudo da observação dos temas ativados e dos aspectos maiores do dia.'}</p>
             `;
 
-            // 6. SÍNTESE FINAL
-            let provaTexto = trânsitosEncontrados.length > 0 ? 
-                `Superar e integrar os desafios na Casa ${trânsitosEncontrados[0].casaTrans} natal sem reações impulsivas.` : 
-                `Harmonia nos trânsitos principais; momento para focar no desenvolvimento pessoal.`;
+            contextoTransitosAtual.convergencia={casaMaisAtiva,casaTexto,aspectosExatos,longos,tensao:maiorTensao?{planeta:maiorTensao.pHoje,aspecto:maiorTensao.asp.nome,alvo:maiorTensao.pNatal,casa:maiorTensao.casaTrans}:null,facilidade:maiorFacilidade?{planeta:maiorFacilidade.pHoje,aspecto:maiorFacilidade.asp.nome,alvo:maiorFacilidade.pNatal,casa:maiorFacilidade.casaTrans}:null};
 
+            // 6. SÍNTESE FINAL — leitura estrutural local; a IA acrescenta a síntese interpretativa profunda.
+            const casaFoco = casaMaisAtiva || casaSolNatal;
+            const estadoTensao = tensionantes.length > facilitadores.length ? 'mais desafiador e exigente' : facilitadores.length > tensionantes.length ? 'mais fluido e cooperativo' : 'misto, alternando abertura e tensão';
             document.getElementById('sinteseFinalConteudo').innerHTML = `
-                <div class="sintese-section">
-                    <strong>🔵 Foco Individual (Sol):</strong> Casa ${casaSolNatal} Natal (${SIGNIFICADO_CASAS[casaSolNatal]}).
+                <div class="sintese-metrics">
+                    <div class="sintese-metric"><span>Área central</span><strong>Casa ${casaFoco} — ${SIGNIFICADO_CASAS[casaFoco]}</strong></div>
+                    <div class="sintese-metric"><span>Clima de aspectos</span><strong>${estadoTensao}</strong></div>
+                    <div class="sintese-metric"><span>Ritmo subjetivo</span><strong>Lua em ${luaHojeInfo.signo} · Casa ${casaLuaNatal}</strong></div>
                 </div>
-                <div class="sintese-section">
-                    <strong>🔵 Sensibilidade (Lua):</strong> Casa ${casaLuaNatal} Natal (${SIGNIFICADO_CASAS[casaLuaNatal]}).
-                </div>
-                <div class="sintese-section">
-                    <strong>🔵 Prova / Desafio Individual:</strong> ${provaTexto}
-                </div>
-                <div class="sintese-section">
-                    <strong>🔵 Virtude a Desenvolver:</strong> Discernimento, presença consciente e serenidade.
-                </div>
+                <div class="sintese-section"><strong>☉ Consciência e identidade:</strong> o Sol percorre a Casa ${casaSolNatal}, colocando foco consciente em ${SIGNIFICADO_CASAS[casaSolNatal].toLowerCase()}. O dia tende a pedir presença nesse território, mas sua expressão deve ser lida em relação ao Sol natal e aos aspectos ativos.</div>
+                <div class="sintese-section"><strong>🌙 Estado emocional:</strong> a Lua em ${luaHojeInfo.signo}, na Casa ${casaLuaNatal}, descreve o campo de sensibilidade e necessidade de segurança do momento. Ela pode tornar ${SIGNIFICADO_CASAS[casaLuaNatal].toLowerCase()} emocionalmente mais perceptível.</div>
+                <div class="sintese-section"><strong>⚔️ Conflitos:</strong> ${maiorTensao ? `${maiorTensao.pHoje} em ${maiorTensao.asp.nome.toLowerCase()} com ${maiorTensao.pNatal} natal cria uma zona de fricção que pede consciência em vez de reação automática.` : 'não há um conflito dominante claramente isolado; a tensão deve ser lida pela combinação dos aspectos e pela casa mais ativada.'}</div>
+                <div class="sintese-section"><strong>✦ Bençãos e recursos:</strong> ${maiorFacilidade ? `${maiorFacilidade.pHoje} em ${maiorFacilidade.asp.nome.toLowerCase()} com ${maiorFacilidade.pNatal} natal indica um ponto de cooperação que pode facilitar a integração do processo.` : 'a principal força disponível está na observação consciente e na capacidade de trabalhar a área central do dia sem agir por automatismo.'}</div>
+                <div class="sintese-section"><strong>🜂 Estado de consciência:</strong> o momento é melhor compreendido como ${estadoTensao}; a pergunta central é como transformar a pressão ou abertura do céu em escolha consciente dentro da área mais ativada.</div>
+                <div class="sintese-section"><strong>🜁 Relação consigo mesmo:</strong> o mapa não determina um sentimento único. Ele mostra tendências simbólicas: hoje a pessoa pode perceber com mais intensidade a distância entre o modo habitual de funcionar e aquilo que o céu está solicitando que seja revisto, desenvolvido ou integrado.</div>
             `;
         }
 
         // --- CÁLCULO DOS ELEMENTOS, RITMOS E POLARIDADES ---
-        function calcularElementosERitmos(planetasHoje) {
-            let elem = { Fogo: 0, Terra: 0, Ar: 0, Água: 0 };
-            let ritmos = { Cardinal: 0, Fixo: 0, Mutável: 0 };
-            let pol = { Masculina: 0, Feminina: 0 };
-            let total = 0;
-
-            Object.keys(planetasHoje).forEach(p => {
-                let info = obterInfoSigno(planetasHoje[p]);
-                let prop = PROPRIEDADES_SIGNOS[info.signo];
-                if (prop) {
-                    elem[prop.elemento]++;
-                    ritmos[prop.ritmo]++;
-                    pol[prop.polaridade]++;
-                    total++;
-                }
-            });
-
-            const coresElem = { Fogo: "var(--fogo)", Terra: "var(--terra)", Ar: "var(--ar)", Água: "var(--agua)" };
-
-            // Render Elementos
-            document.getElementById('elementosContainer').innerHTML = Object.keys(elem).map(e => {
-                let pct = Math.round((elem[e] / total) * 100);
-                return `
-                    <div class="element-bar-row">
-                        <span style="width:70px;">${e}</span>
-                        <div class="bar-bg">
-                            <div class="bar-fill" style="width: ${pct}%; background: ${coresElem[e]};"></div>
-                        </div>
-                        <span style="width:40px; text-align:right; font-weight:bold;">${pct}%</span>
-                    </div>
-                `;
+        function calcularElementosERitmos(planetasHoje, planetasNatais) {
+            const calcular = (mapa) => {
+                const elem={Fogo:0,Terra:0,Ar:0,Água:0}, ritmos={Cardinal:0,Fixo:0,Mutável:0}, pol={Masculina:0,Feminina:0};
+                Object.keys(mapa).forEach(p=>{ const info=obterInfoSigno(mapa[p]); const prop=PROPRIEDADES_SIGNOS[info.signo]; if(prop){elem[prop.elemento]++;ritmos[prop.ritmo]++;pol[prop.polaridade]++;} });
+                return {elem,ritmos,pol};
+            };
+            const hoje=calcular(planetasHoje), natal=calcular(planetasNatais);
+            const render=(atual,origem,cores)=>Object.keys(atual).map(k=>{
+                const a=Math.round(atual[k]/10*100), n=Math.round(origem[k]/10*100), delta=a-n;
+                const sinal=delta>0?`+${delta}`:delta;
+                return `<div class="element-bar-row" style="display:block;margin-bottom:10px;">
+                    <div style="display:flex;justify-content:space-between;font-size:.76rem;margin-bottom:4px;"><span>${k}</span><span style="color:#8b949e;">Dia ${a}% · Natal ${n}% · Δ ${sinal} p.p.</span></div>
+                    <div class="bar-bg" style="margin:0 0 4px 0;"><div class="bar-fill" style="width:${a}%;background:${cores[k]||'var(--destaque)'};"></div></div>
+                    <div class="bar-bg" style="margin:0;opacity:.55;"><div class="bar-fill" style="width:${n}%;background:${cores[k]||'var(--destaque)'};"></div></div>
+                </div>`;
             }).join('');
-
-            // Render Ritmos
-            document.getElementById('modalidadesContainer').innerHTML = Object.keys(ritmos).map(r => {
-                let pct = Math.round((ritmos[r] / total) * 100);
-                return `
-                    <div class="element-bar-row">
-                        <span style="width:70px;">${r}</span>
-                        <div class="bar-bg">
-                            <div class="bar-fill" style="width: ${pct}%; background: var(--destaque);"></div>
-                        </div>
-                        <span style="width:40px; text-align:right; font-weight:bold;">${pct}%</span>
-                    </div>
-                `;
-            }).join('');
-
-            // Render Polaridades
-            document.getElementById('polaridadesContainer').innerHTML = Object.keys(pol).map(p => {
-                let pct = Math.round((pol[p] / total) * 100);
-                return `
-                    <div class="element-bar-row">
-                        <span style="width:70px;">${p}</span>
-                        <div class="bar-bg">
-                            <div class="bar-fill" style="width: ${pct}%; background: var(--sol);"></div>
-                        </div>
-                        <span style="width:40px; text-align:right; font-weight:bold;">${pct}%</span>
-                    </div>
-                `;
-            }).join('');
+            const coresElem={Fogo:'var(--fogo)',Terra:'var(--terra)',Ar:'var(--ar)',Água:'var(--agua)'};
+            document.getElementById('elementosContainer').innerHTML=render(hoje.elem,natal.elem,coresElem);
+            document.getElementById('modalidadesContainer').innerHTML=render(hoje.ritmos,natal.ritmos,{Cardinal:'var(--destaque)',Fixo:'var(--destaque)',Mutável:'var(--destaque)'});
+            document.getElementById('polaridadesContainer').innerHTML=render(hoje.pol,natal.pol,{Masculina:'var(--sol)',Feminina:'var(--ia-color)'});
+            contextoTransitosAtual.elementos={dia:hoje.elem,natal:natal.elem};
+            contextoTransitosAtual.ritmos={dia:hoje.ritmos,natal:natal.ritmos};
+            contextoTransitosAtual.polaridades={dia:hoje.pol,natal:natal.pol};
         }
 
         // --- RENDERIZAÇÃO GRÁFICA DA RODA ASTROLÓGICA ---
@@ -788,159 +920,70 @@ function calcularPosicaoPlaneta(nome, dataUtc) {
 // O código anterior desenhava apenas círculos/linhas e planetas, portanto
 // os signos nunca eram inseridos no SVG.
 function desenharRodaAstrologica(natal, hoje, casas) {
-    const svg = document.getElementById('chartSvg');
-    svg.innerHTML = '';
+    const svg=document.getElementById('chartSvg');
+    svg.innerHTML='';
+    const NS='http://www.w3.org/2000/svg';
+    const cx=300,cy=300,rOuter=282,rMid=204,rInner=124,rCore=62;
+    const angle=(grau)=>(-90+normalizarGraus(grau))*Math.PI/180;
+    const point=(r,grau)=>({x:cx+r*Math.cos(angle(grau)),y:cy+r*Math.sin(angle(grau))});
+    const add=(tag,attrs,text='')=>{const e=document.createElementNS(NS,tag);Object.entries(attrs).forEach(([k,v])=>e.setAttribute(k,v));if(text)e.textContent=text;svg.appendChild(e);return e;};
+    const textAt=(r,grau,text,attrs={})=>add('text',{x:point(r,grau).x,y:point(r,grau).y,'text-anchor':'middle','dominant-baseline':'central',...attrs},text);
 
-    const cx = 250, cy = 250;
-    const rOuter = 235, rZodiacInner = 178, rNatal = 150, rTransit = 205, rCore = 75;
+    add('circle',{cx,cy,r:rOuter,fill:'#0b0e14',stroke:'#30363d','stroke-width':2});
+    add('circle',{cx,cy,r:rMid,fill:'#0d1117',stroke:'#30363d','stroke-width':1.5});
+    add('circle',{cx,cy,r:rInner,fill:'#161b22',stroke:'#30363d','stroke-width':1.5});
 
-    const grauParaAngulo = (grau) => (180 + (grau - casas[0])) % 360;
-    const polarToCart = (r, angulo) => {
-        const rad = (angulo - 180) * Math.PI / 180;
-        return {
-            x: cx + r * Math.cos(rad),
-            y: cy + r * Math.sin(rad)
-        };
-    };
-
-    // Fundo e círculos estruturais.
-    const outer = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-    outer.setAttribute('cx', cx);
-    outer.setAttribute('cy', cy);
-    outer.setAttribute('r', rOuter);
-    outer.setAttribute('fill', '#161b22');
-    outer.setAttribute('stroke', '#30363d');
-    outer.setAttribute('stroke-width', '2');
-    svg.appendChild(outer);
-
-    const inner = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-    inner.setAttribute('cx', cx);
-    inner.setAttribute('cy', cy);
-    inner.setAttribute('r', rZodiacInner);
-    inner.setAttribute('fill', '#0d1117');
-    inner.setAttribute('stroke', '#30363d');
-    inner.setAttribute('stroke-width', '1.5');
-    svg.appendChild(inner);
-
-    // 12 setores zodiacais + símbolos dos signos.
-    for (let i = 0; i < 12; i++) {
-        const aIn = grauParaAngulo(i * 30);
-        const aFim = grauParaAngulo((i + 1) * 30);
-
-        const p1 = polarToCart(rOuter, aIn);
-        const p2 = polarToCart(rOuter, aFim);
-        const p3 = polarToCart(rZodiacInner, aFim);
-        const p4 = polarToCart(rZodiacInner, aIn);
-
-        const d = `M ${p1.x} ${p1.y} A ${rOuter} ${rOuter} 0 0 1 ${p2.x} ${p2.y} L ${p3.x} ${p3.y} A ${rZodiacInner} ${rZodiacInner} 0 0 0 ${p4.x} ${p4.y} Z`;
-
-        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-        path.setAttribute('d', d);
-        path.setAttribute('fill', i % 2 === 0 ? '#161b22' : '#0d1117');
-        path.setAttribute('stroke', '#30363d');
-        path.setAttribute('stroke-width', '1');
-        svg.appendChild(path);
-
-        const pTxt = polarToCart((rOuter + rZodiacInner) / 2, grauParaAngulo(i * 30 + 15));
-        const txt = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-        txt.setAttribute('x', pTxt.x);
-        txt.setAttribute('y', pTxt.y);
-        txt.setAttribute('class', 'signo-symbol');
-        txt.textContent = SIMBOLOS_SIGNOS[i];
-        svg.appendChild(txt);
+    // Anel externo: os 12 signos fixos do zodíaco.
+    for(let i=0;i<12;i++){
+        const a=i*30, p1=point(rOuter,a), p2=point(rMid,a);
+        add('line',{x1:p1.x,y1:p1.y,x2:p2.x,y2:p2.y,stroke:'#30363d','stroke-width':1});
+        textAt((rOuter+rMid)/2,a+15,SIMBOLOS_SIGNOS[i],{fill:'#e3b341','font-family':'Segoe UI Symbol, sans-serif','font-size':25,'font-weight':'bold'});
+        textAt(rOuter-10,a+15,SIGNOS[i].slice(0,3),{fill:'#8b949e','font-size':7,'font-weight':'600'});
     }
 
-    // Divisões das 12 casas natais.
-    casas.forEach((c, i) => {
-        const p1 = polarToCart(rZodiacInner, grauParaAngulo(c));
-        const p2 = polarToCart(rCore, grauParaAngulo(c));
-
-        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-        line.setAttribute('x1', p1.x);
-        line.setAttribute('y1', p1.y);
-        line.setAttribute('x2', p2.x);
-        line.setAttribute('y2', p2.y);
-        line.setAttribute('stroke', (i % 3 === 0) ? '#58a6ff' : '#30363d');
-        line.setAttribute('stroke-width', (i % 3 === 0) ? '1.5' : '1');
-        svg.appendChild(line);
+    // Divisões das casas natais sobre todos os anéis.
+    casas.forEach((c,i)=>{
+        const p1=point(rMid,c),p2=point(rCore,c);
+        add('line',{x1:p1.x,y1:p1.y,x2:p2.x,y2:p2.y,stroke:(i===0?'#58a6ff':'#30363d'),'stroke-width':i===0?2:1});
+        const pc=point(rInner+18,c+15);
+        add('text',{x:pc.x,y:pc.y,'text-anchor':'middle','dominant-baseline':'central',fill:'#8b949e','font-size':8,'font-weight':'600'},String(i+1));
     });
 
-    // Círculos de separação entre os planetas natais e os trânsitos.
-    [rNatal + 12, rTransit + 12].forEach((r, i) => {
-        const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-        c.setAttribute('cx', cx);
-        c.setAttribute('cy', cy);
-        c.setAttribute('r', r);
-        c.setAttribute('fill', 'none');
-        c.setAttribute('stroke', '#30363d');
-        c.setAttribute('stroke-width', '1');
-        c.setAttribute('stroke-dasharray', i === 0 ? '2 4' : 'none');
-        svg.appendChild(c);
+    // Aspectos entre o céu atual e o mapa natal.
+    const lista=Object.keys(hoje);
+    lista.forEach((pHoje,idx)=>{
+        lista.forEach(pNatal=>{
+            const asp=calcularAspecto(hoje[pHoje],natal[pNatal]);
+            if(!asp || asp.orbeVal>2.5) return;
+            const a=point(rMid-3,hoje[pHoje]), b=point(rInner+4,natal[pNatal]);
+            const cor={Conjunção:'#3fb950',Sextil:'#a371f7',Quadratura:'#d29922',Trígono:'#58a6ff',Oposição:'#f85149'}[asp.nome]||'#8b949e';
+            add('line',{x1:a.x,y1:a.y,x2:b.x,y2:b.y,stroke:cor,'stroke-width':asp.estado==='Exato'?2:1,'stroke-opacity':.48,'stroke-dasharray':asp.nome==='Oposição'?'4 3':'none'});
+        });
     });
 
-    // Centro da roda.
-    const coreCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-    coreCircle.setAttribute('cx', cx);
-    coreCircle.setAttribute('cy', cy);
-    coreCircle.setAttribute('r', rCore);
-    coreCircle.setAttribute('fill', '#0b0e14');
-    coreCircle.setAttribute('stroke', '#30363d');
-    svg.appendChild(coreCircle);
-
-    // Pontos natais.
-    Object.keys(natal).forEach(p => {
-        const pos = polarToCart(rNatal, grauParaAngulo(natal[p]));
-        const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-        g.setAttribute('class', 'planet-node');
-        g.setAttribute('transform', `translate(${pos.x}, ${pos.y})`);
-
-        const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-        c.setAttribute('r', '13');
-        c.setAttribute('fill', '#161b22');
-        c.setAttribute('stroke', '#58a6ff');
-        c.setAttribute('stroke-width', '2');
-
-        const txt = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-        txt.setAttribute('fill', '#58a6ff');
-        txt.setAttribute('y', '1');
-        txt.textContent = SIMBOLOS_PLANETAS[p] || p;
-
-        const title = document.createElementNS('http://www.w3.org/2000/svg', 'title');
-        title.textContent = `${p}: ${obterInfoSigno(natal[p]).signo} ${obterInfoSigno(natal[p]).grau}°${String(obterInfoSigno(natal[p]).min).padStart(2, '0')}' — Natal`;
-
-        g.appendChild(c);
-        g.appendChild(txt);
-        g.appendChild(title);
-        svg.appendChild(g);
+    // Anel médio: posições do céu do dia.
+    Object.keys(hoje).forEach((p,i)=>{
+        const info=obterInfoSigno(hoje[p]), rr=rMid-23-(i%3)*7, pos=point(rr,hoje[p]);
+        const g=add('g',{transform:`translate(${pos.x},${pos.y})`});
+        const c=document.createElementNS(NS,'circle');c.setAttribute('r',11);c.setAttribute('fill','#161b22');c.setAttribute('stroke','#a371f7');c.setAttribute('stroke-width',2);g.appendChild(c);
+        const t=document.createElementNS(NS,'text');t.setAttribute('text-anchor','middle');t.setAttribute('dominant-baseline','central');t.setAttribute('fill','#a371f7');t.setAttribute('font-family','Segoe UI Symbol, sans-serif');t.setAttribute('font-size','13');t.setAttribute('font-weight','bold');t.textContent=SIMBOLOS_PLANETAS[p]||p;g.appendChild(t);
+        const sg=document.createElementNS(NS,'text');sg.setAttribute('text-anchor','middle');sg.setAttribute('y','19');sg.setAttribute('fill','#a371f7');sg.setAttribute('font-size','7');sg.textContent=info.simbolo;g.appendChild(sg);
+        const title=document.createElementNS(NS,'title');title.textContent=`${p}: ${info.signo} ${info.grau}°${String(info.min).padStart(2,'0')}' — Céu do dia`;g.appendChild(title);svg.appendChild(g);
     });
 
-    // Pontos de trânsito.
-    Object.keys(hoje).forEach(p => {
-        const pos = polarToCart(rTransit, grauParaAngulo(hoje[p]));
-        const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-        g.setAttribute('class', 'planet-node');
-        g.setAttribute('transform', `translate(${pos.x}, ${pos.y})`);
-
-        const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-        c.setAttribute('r', '13');
-        c.setAttribute('fill', '#161b22');
-        c.setAttribute('stroke', '#a371f7');
-        c.setAttribute('stroke-width', '2');
-
-        const txt = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-        txt.setAttribute('fill', '#a371f7');
-        txt.setAttribute('y', '1');
-        txt.textContent = SIMBOLOS_PLANETAS[p] || p;
-
-        const info = obterInfoSigno(hoje[p]);
-        const title = document.createElementNS('http://www.w3.org/2000/svg', 'title');
-        title.textContent = `${p}: ${info.signo} ${info.grau}°${String(info.min).padStart(2, '0')}' — Trânsito`;
-
-        g.appendChild(c);
-        g.appendChild(txt);
-        g.appendChild(title);
-        svg.appendChild(g);
+    // Anel interno: posições natais.
+    Object.keys(natal).forEach((p,i)=>{
+        const info=obterInfoSigno(natal[p]), rr=rInner-18-(i%3)*5, pos=point(rr,natal[p]);
+        const g=add('g',{transform:`translate(${pos.x},${pos.y})`});
+        const c=document.createElementNS(NS,'circle');c.setAttribute('r',10);c.setAttribute('fill','#0d1117');c.setAttribute('stroke','#58a6ff');c.setAttribute('stroke-width',2);g.appendChild(c);
+        const t=document.createElementNS(NS,'text');t.setAttribute('text-anchor','middle');t.setAttribute('dominant-baseline','central');t.setAttribute('fill','#58a6ff');t.setAttribute('font-family','Segoe UI Symbol, sans-serif');t.setAttribute('font-size','12');t.setAttribute('font-weight','bold');t.textContent=SIMBOLOS_PLANETAS[p]||p;g.appendChild(t);
+        const sg=document.createElementNS(NS,'text');sg.setAttribute('text-anchor','middle');sg.setAttribute('y','17');sg.setAttribute('fill','#58a6ff');sg.setAttribute('font-size','7');sg.textContent=info.simbolo;g.appendChild(sg);
+        const title=document.createElementNS(NS,'title');title.textContent=`${p}: ${info.signo} ${info.grau}°${String(info.min).padStart(2,'0')}' — Mapa natal`;g.appendChild(title);svg.appendChild(g);
     });
+
+    add('text',{x:cx,y:cy-12,'text-anchor':'middle','dominant-baseline':'central',fill:'#e3b341','font-size':11,'font-weight':'700'},'NATAL × TRÂNSITO');
+    add('text',{x:cx,y:cy+6,'text-anchor':'middle','dominant-baseline':'central',fill:'#8b949e','font-size':8},'aspectos e ativações');
+    add('text',{x:cx,y:cy+22,'text-anchor':'middle','dominant-baseline':'central',fill:'#8b949e','font-size':7},'externo: signos · médio: hoje · interno: natal');
 }
 
         // --- BUSCA GEO CIDADES ---
@@ -1012,6 +1055,60 @@ const DIRETRIZ_TOM_IA_TRANSITOS = `Escreva com profundidade filosófica e psicol
     NÃO escreva introduções, saudações, ou frases como "vamos analisar" — comece direto no conteúdo.
     NÃO use títulos, cabeçalhos ou listas numeradas visíveis no texto final — apenas parágrafos corridos.
     Use formatação HTML básica com parágrafos <p> e destaques em <strong>.`;
+
+function resumoContextoIA() {
+    if (!contextoTransitosAtual) return 'Contexto ainda não calculado.';
+    const c=contextoTransitosAtual;
+    const fmt=(mapa)=>Object.entries(mapa).map(([p,g])=>{const i=obterInfoSigno(g);return `${p}: ${i.signo} ${i.grau}°${String(i.min).padStart(2,'0')}'`;}).join('; ');
+    const aspectos=(c.trânsitosEncontrados||[]).slice(0,18).map(t=>`${t.pHoje} ${t.asp.simbolo} ${t.pNatal} (${t.asp.nome}, orbe ${t.asp.orbeFormat}, ${t.asp.estado}, casa ${t.casaTrans})`).join('; ');
+    const percentual=(obj)=>Object.entries(obj||{}).map(([k,v])=>`${k}: ${Math.round(v/10*100)}%`).join(', ');
+    return `DATA/HORA: ${c.data} ${c.hora}.
+REGENTE DO DIA: ${c.regenteDia}. HORA PLANETÁRIA: ${c.horaPlanetaria}, ${c.numeroHora}ª hora ${c.periodoHora}. METAL ALQUÍMICO: ${c.metalAlquimico}. PRINCÍPIO: ${c.principioRegente}. FASE LUNAR: ${c.faseLunar}.
+SOL DO DIA: ${c.sol.signo} ${c.sol.grau}°, casa natal ${c.sol.casa}. LUA DO DIA: ${c.lua.signo} ${c.lua.grau}°, casa natal ${c.lua.casa}.
+POSIÇÕES DO DIA: ${fmt(c.planetasHoje)}
+POSIÇÕES NATAIS: ${fmt(c.planetasNatais)}
+ELEMENTOS — DIA: ${percentual(c.elementos?.dia)} | NATAL: ${percentual(c.elementos?.natal)}
+RITMOS — DIA: ${percentual(c.ritmos?.dia)} | NATAL: ${percentual(c.ritmos?.natal)}
+POLARIDADES — DIA: ${percentual(c.polaridades?.dia)} | NATAL: ${percentual(c.polaridades?.natal)}
+ASPECTOS DE TRÂNSITO/NATAL RELEVANTES: ${aspectos||'nenhum dentro da orbe analisada.'}
+CONVERGÊNCIA: ${JSON.stringify(c.convergencia||{})}`;
+}
+
+const PROMPTS_BLOCOS_IA = {
+    panorama: `Faça um panorama integrado do céu do dia comparado ao mapa natal. Considere simultaneamente os dez planetas, casas natalmente ativadas, aspectos relevantes, Sol, Lua, elementos, ritmos, polaridades, regente do dia e hora planetária. Não analise os fatores como uma lista isolada: encontre os padrões que se repetem, a área de maior ativação, tensões, facilidades, conflitos e possibilidades de integração. Explique como o céu coletivo se torna experiência pessoal quando encontra o mapa natal.`,
+    dia: `Explique profundamente o significado do céu coletivo deste dia. Interprete regente do dia, hora planetária, correspondência alquímica, fase lunar, Sol, Lua e ascendente do momento. Explique o que esses símbolos representam e, principalmente, como mudam de significado quando comparados ao mapa natal apresentado.`,
+    elementos: `Compare Fogo, Terra, Ar e Água do céu do dia com a distribuição do mapa natal. Explique onde há excesso, ausência ou deslocamento de ênfase, como isso pode alterar a maneira de agir, sentir, pensar e materializar, e qual elemento natal pode estar sendo desafiado ou compensado.`,
+    ritmos: `Compare Cardinal, Fixo e Mutável no céu do dia com o mapa natal. Explique a relação entre impulso para iniciar, capacidade de sustentar e necessidade de adaptar. Identifique possíveis atritos entre o ritmo natural da pessoa e o ritmo simbólico do dia.`,
+    polaridades: `Compare a polaridade Masculina/Yang e Feminina/Yin do céu do dia com o mapa natal. Explique iniciativa versus receptividade, exteriorização versus interiorização, e como o desequilíbrio relativo pode ser percebido psicologicamente.`,
+    sol: `Interprete o Sol em trânsito em relação ao Sol natal, à casa natal atravessada e aos aspectos do dia. Explique o que o foco consciente, vitalidade, identidade e vontade estão sendo convidados a perceber, desenvolver ou reorganizar.`,
+    lua: `Interprete a Lua em trânsito em relação à Lua natal, à casa natal atravessada e aos aspectos relevantes. Explique ritmo emocional, necessidade de segurança, sensibilidade, reatividade, memória e estado subjetivo, sem transformar símbolo astrológico em diagnóstico psicológico.`,
+    ativacoes: `Analise as ativações individuais como um sistema. Identifique os trânsitos mais importantes por duração, exatidão, planeta e casa, e explique como eles se combinam. Destaque conflitos, apoios e o tema central que emerge da interação dos aspectos.`,
+    convergencia: `Analise a convergência dos trânsitos. Descubra qual casa ou tema recebe maior densidade, quais forças apontam na mesma direção, quais entram em conflito e qual processo psicológico ou existencial parece dominar o dia. Não invente acontecimentos concretos.`,
+    sintese: `Produza uma síntese total, rica e integrada de todo o mapa natal ativado neste dia. Responda explicitamente: qual área da vida está mais afetada; quais são os principais conflitos; quais são as bênçãos, recursos e vias de fluidez; qual pode ser o clima emocional; que estado de consciência o momento favorece ou desafia; como a pessoa pode se sentir consigo mesma; o que pede transformação, disciplina, expressão ou recolhimento; e qual atitude consciente integra melhor o conjunto. Diferencie tendências simbólicas de fatos concretos e não faça determinismo.`
+};
+
+async function gerarAnaliseIABloco(tipo) {
+    const ids={panorama:'iaPanorama',dia:'iaDia',elementos:'iaElementos',ritmos:'iaRitmos',polaridades:'iaPolaridades',sol:'iaSol',lua:'iaLua',ativacoes:'iaAtivacoes',convergencia:'iaConvergencia',sintese:'iaSintese'};
+    const painel=document.getElementById(ids[tipo]);
+    if(!painel) return;
+    painel.style.display='block';
+    painel.innerHTML='<em>Consultando a inteligência astrológica...</em>';
+    const promptText=`${PROMPTS_BLOCOS_IA[tipo]}
+
+DADOS CALCULADOS PELO APLICATIVO — USE SOMENTE ESTES DADOS:
+${resumoContextoIA()}
+
+${DIRETRIZ_TOM_IA_TRANSITOS}`;
+    try {
+        const response=await fetch('https://astro-gns-proxy.genesisgns.workers.dev/',{method:'POST',cache:'no-store',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt:promptText})});
+        const data=await response.json();
+        if(response.ok && data.resposta) painel.innerHTML=`<p><strong>✨ Interpretação IA:</strong></p>${data.resposta}`;
+        else painel.innerHTML=`<p style="color:var(--fogo);"><strong>Erro:</strong> ${data.error||'Não foi possível obter a resposta da IA.'}</p>`;
+    } catch(err) {
+        console.error('Erro na análise IA:',err);
+        painel.innerHTML=`<p style="color:var(--fogo);"><strong>Erro de conexão:</strong> ${err.message}</p>`;
+    }
+}
 
 async function gerarLeituraIA(astroTransito, alvoNatal, casa, idPainel) {
     const painel = document.getElementById(idPainel);
