@@ -27,6 +27,9 @@
             --ar: #79c0ff;
             --agua: #d2a8ff;
             --ia-color: #a371f7;
+            --natal-highlight: #1f6beb;
+            --natal-bg: rgba(31, 107, 235, 0.08);
+            --natal-border: #388bfd;
         }
  
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
@@ -93,26 +96,67 @@
         .chart-card h2 { color: var(--destaque); font-size: 1rem; text-align: left; }
         #chartSvg { width: 100%; max-width: 440px; height: auto; border-radius: 50%; background: #0b0e14; }
 
+        /* TAGS VISUAIS DE IDENTIFICAÇÃO */
+        .tag-ceu {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: rgba(139, 148, 158, 0.15);
+            color: #8b949e;
+            border: 1px solid #30363d;
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .tag-natal {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: var(--natal-bg);
+            color: #79c0ff;
+            border: 1px solid var(--natal-border);
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
         .esoteric-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 16px; }
-        .esoteric-card h3 { color: var(--sol); font-size: 1.05rem; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
+        .esoteric-card.card-natal-highlight { border: 1px solid var(--natal-border); background: rgba(22, 27, 34, 0.95); }
+        
+        .esoteric-card h3 { color: var(--sol); font-size: 1.05rem; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
         .esoteric-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 12px; }
+        
         .esoteric-item { background: var(--bg-principal); border: 1px solid var(--border); padding: 10px; border-radius: 8px; }
-        .esoteric-item label { color: var(--ia-color); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; }
+        .esoteric-item.item-natal { border-color: rgba(56, 139, 253, 0.4); background: var(--natal-bg); }
+        .esoteric-item label { color: #8b949e; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; justify-content: space-between; }
         .esoteric-item p { font-size: 0.88rem; font-weight: bold; color: #fff; margin-top: 4px; }
         
         .sintese-box { background: rgba(163, 113, 247, 0.08); border: 1px solid var(--ia-color); border-radius: 10px; padding: 16px; margin-top: 10px; font-size: 0.88rem; line-height: 1.6; }
-        .sintese-box h4 { color: var(--ia-color); margin-bottom: 8px; font-size: 1rem; }
+        .sintese-box h4 { color: var(--ia-color); margin-bottom: 8px; font-size: 1rem; display: flex; justify-content: space-between; align-items: center; }
         .sintese-section { margin-bottom: 12px; }
         .sintese-section strong { color: var(--sol); }
 
         .expand-list { display: flex; flex-direction: column; gap: 8px; width: 100%; }
         .expand-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; transition: border-color 0.2s; }
+        .expand-card.card-natal-border { border: 1px solid rgba(56, 139, 253, 0.4); }
         .expand-card:hover { border-color: var(--destaque); }
         .expand-header { padding: 12px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; user-select: none; }
         .expand-title { display: flex; align-items: center; gap: 8px; font-size: 0.88rem; font-weight: 600; }
-        .expand-badge { font-size: 0.75rem; color: #8b949e; background: var(--bg-principal); padding: 3px 8px; border-radius: 6px; border: 1px solid var(--border); }
+        .expand-badge { font-size: 0.72rem; color: #8b949e; background: var(--bg-principal); padding: 3px 8px; border-radius: 6px; border: 1px solid var(--border); }
+        .expand-badge.badge-tempo { color: var(--sol); border-color: rgba(227, 179, 65, 0.4); }
         .expand-content { display: none; padding: 12px; background: var(--bg-principal); border-top: 1px solid var(--border); font-size: 0.85rem; line-height: 1.5; color: #c9d1d9; }
         .expand-card.open .expand-content { display: block; }
+
+        .detail-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; margin-bottom: 8px; padding: 8px; background: rgba(255,255,255,0.02); border-radius: 6px; }
+        .detail-cell { font-size: 0.78rem; }
+        .detail-cell span { color: #8b949e; display: block; font-size: 0.7rem; }
 
         .card-table { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 12px; width: 100%; }
         .card-table h3 { color: var(--destaque); font-size: 0.95rem; margin-bottom: 10px; }
@@ -126,8 +170,8 @@
 <body>
 
     <header>
-        <h1>TRÂNSITOS DIÁRIOS & ANÁLISE INICIÁTICA</h1>
-        <p>Microcosmo (Mapa Natal) × Macrocosmo (Céu de Hoje)</p>
+        <h1>TRÂNSITOS DIÁRIOS & LEITURA INICIÁTICA</h1>
+        <p>Análise Hermética: Microcosmo (Mapa Natal) × Macrocosmo (Céu do Dia)</p>
         <nav class="app-nav">
             <a href="index.html" class="nav-tab">🌟 Mapa Natal</a>
             <a href="revolucao_solar.html" class="nav-tab">☀️ Revolução Solar</a>
@@ -159,7 +203,7 @@
                     <input type="text" id="cidadeNatalInput" placeholder="Ex: São Paulo, Brasil" value="São Paulo, Brasil">
                     <button type="button" class="btn-search-geo" onclick="buscarCoordenadasNatal()">🔍 Buscar</button>
                 </div>
-                <div id="geoNatalStatus" class="geo-status">✓ Coordenadas natais atualizadas</div>
+                <div id="geoNatalStatus" class="geo-status">✓ Coordenadas natais salvas</div>
             </div>
             <div class="input-group" style="display:none;">
                 <input type="number" id="latNatal" value="-23.5505" step="0.0001">
@@ -193,7 +237,7 @@
             </div>
 
             <div class="input-group full">
-                <button type="submit" class="btn-primary">⚡ Processar Análise de Trânsitos e Despertar</button>
+                <button type="submit" class="btn-primary">⚡ Processar Análise Integrada de Trânsitos</button>
             </div>
 
             <div class="input-group span-2">
@@ -215,45 +259,79 @@
             <div class="chart-card">
                 <div class="chart-card-header">
                     <h2>Sobreposição de Trânsitos</h2>
-                    <span style="font-size:0.75rem; color:#8b949e;">Interno: Natal | Externo: Hoje</span>
+                    <span style="font-size:0.75rem; color:#8b949e;">Centro: Natal | Borda: Hoje</span>
                 </div>
                 <svg id="chartSvg" viewBox="0 0 500 500"></svg>
             </div>
 
             <div>
                 <div class="esoteric-card">
-                    <h3>🌌 1. Clima Geral & Regência Alquímica</h3>
-                    <p style="font-size:0.85rem; line-height:1.5; color:#c9d1d9; margin-bottom:12px;" id="climaGeralTexto">Processando posições do céu...</p>
+                    <h3>
+                        <span>☀️ 1. Visão Geral do Céu do Momento</span>
+                        <span class="tag-ceu">🌐 CÉU DO MOMENTO</span>
+                    </h3>
+                    <p style="font-size:0.85rem; line-height:1.5; color:#c9d1d9; margin-bottom:12px;" id="climaGeralTexto">Processando posições coletivas...</p>
                     <div class="esoteric-grid">
                         <div class="esoteric-item">
-                            <label>Regente do Dia</label>
+                            <label>Regente do Dia <span class="tag-ceu">🌐</span></label>
                             <p id="regenteDiaVal">---</p>
                         </div>
                         <div class="esoteric-item">
-                            <label>Hora Planetária Ativa</label>
+                            <label>Hora Planetária <span class="tag-ceu">🌐</span></label>
                             <p id="horaPlanetariaVal">---</p>
-                        </div>
-                        <div class="esoteric-item">
-                            <label>Sol na Casa Natal</label>
-                            <p id="solCasaVal">---</p>
                         </div>
                     </div>
                 </div>
 
-                <div class="esoteric-card">
-                    <h3>🌙 2. A Lua — Ritmo & Sensibilidade Interna</h3>
-                    <p style="font-size:0.85rem; color:#c9d1d9; margin-bottom:10px;" id="luaDetalhesTexto">Calculando fase e posição lunar...</p>
+                <div class="esoteric-card card-natal-highlight">
+                    <h3>
+                        <span>☉ 2. Sol — Foco do Ciclo Pessoal</span>
+                        <span class="tag-natal">🔵 PERSONALIZADO</span>
+                    </h3>
+                    <div class="esoteric-grid">
+                        <div class="esoteric-item item-natal">
+                            <label>Casa Natal Transitada <span class="tag-natal">🔵</span></label>
+                            <p id="solCasaVal">---</p>
+                        </div>
+                        <div class="esoteric-item item-natal">
+                            <label>Regente da Casa Natal <span class="tag-natal">🔵</span></label>
+                            <p id="solRegenteCasaVal">---</p>
+                        </div>
+                    </div>
+                    <p style="font-size:0.85rem; color:#c9d1d9;" id="solExplicacaoTexto">Aguardando cálculo...</p>
+                </div>
+
+                <div class="esoteric-card card-natal-highlight">
+                    <h3>
+                        <span>🌙 3. A Lua — Ritmo & Sensibilidade</span>
+                        <span class="tag-natal">🔵 PERSONALIZADO</span>
+                    </h3>
+                    <p style="font-size:0.85rem; color:#c9d1d9; margin-bottom:10px;" id="luaDetalhesTexto">Calculando ritmos emocionais...</p>
                     <div id="luaAspectosList" class="expand-list"></div>
                 </div>
 
-                <div class="esoteric-card">
-                    <h3>⚖️ 3. Ativações da Consciência (Orbe Exato ≤ 2°)</h3>
+                <div class="esoteric-card card-natal-highlight">
+                    <h3>
+                        <span>⚖️ 4. Ativações Individuais & Hierarquia</span>
+                        <span class="tag-natal">🔵 PERSONALIZADO</span>
+                    </h3>
                     <div id="transitosRelevantesList" class="expand-list"></div>
                 </div>
 
+                <div class="esoteric-card card-natal-highlight">
+                    <h3>
+                        <span>🏛️ 5. Processo Dominante & Convergência</span>
+                        <span class="tag-natal">🔵 PERSONALIZADO</span>
+                    </h3>
+                    <div id="convergenciaConteudo" style="font-size:0.85rem; line-height:1.6; color:#c9d1d9;">Processando convergências natais...</div>
+                </div>
+
                 <div class="sintese-box">
-                    <h4>📜 4. Síntese do Dia & Orientação Prática</h4>
-                    <div id="sinteseFinalConteudo">Aguardando cálculo dos dados...</div>
+                    <h4>
+                        <span>📜 6. Síntese do Mapa Natal Ativado</span>
+                        <span class="tag-natal">🔵 PERSONALIZADO</span>
+                    </h4>
+                    <div id="sinteseFinalConteudo">Aguardando processamento integral...</div>
                 </div>
             </div>
 
@@ -262,8 +340,9 @@
 
     <script>
         const SIGNOS = ["Áries","Touro","Gêmeos","Câncer","Leão","Virgem","Libra","Escorpião","Sagitário","Capricórnio","Aquário","Peixes"];
+        const REGENTES_SIGNOS = { Áries: "Marte", Touro: "Vênus", Gêmeos: "Mercúrio", Câncer: "Lua", Leão: "Sol", Virgem: "Mercúrio", Libra: "Vênus", Escorpião: "Plutão", Sagitário: "Júpiter", Capricórnio: "Saturno", Aquário: "Urano", Peixes: "Netuno" };
         const SIMBOLOS_SIGNOS = ["♈","♉","♊","♋","♌","♍","♎","♏","♐","♑","♒","♓"];
-        const SIMBOLOS_PLANETAS = { Sol: "☉", Lua: "☽", Mercúrio: "☿", Vênus: "♀", Marte: "♂", Júpiter: "♃", Saturno: "♄", Urano: "♅", Netuno: "♆", Plutão: "♇", Asc: "ASC", MC: "MC" };
+        const SIMBOLOS_PLANETAS = { Sol: "☉", Lua: "☽", Mercúrio: "☿", Vênus: "♀", Marte: "♂", Júpiter: "♃", Saturno: "♄", Urano: "♅", Netuno: "♆", Plutão: "♇", Asc: "ASC", MC: "MC", Dsc: "DSC", Ic: "IC" };
         const PLANETAS_SEMANA = ["Sol", "Lua", "Marte", "Mercúrio", "Júpiter", "Vênus", "Saturno"];
         const ORDEM_CALDAICA = ["Saturno", "Júpiter", "Marte", "Sol", "Vênus", "Mercúrio", "Lua"];
 
@@ -275,14 +354,12 @@
             executarAnalise();
         };
 
-        // --- MOTOR DE CÁLCULO ASTRONÓMICO / ASTROLÓGICO ---
         function normalizarGraus(deg) {
             let res = deg % 360;
             return res < 0 ? res + 360 : res;
         }
 
         function calcularPosicaoPlaneta(nome, dataUtc) {
-            // Algoritmo simplificado de aproximação ephemeris de alta precisão
             const t = (dataUtc.getTime() - new Date("2000-01-01T12:00:00Z").getTime()) / (86400000 * 36525);
             let lon = 0;
             switch(nome) {
@@ -301,7 +378,6 @@
         }
 
         function calcularCasasEAngulos(lat, lon, dataUtc) {
-            // Cálculo do Ascendente e Meio do Céu aproximados
             const jd = (dataUtc.getTime() / 86400000) + 2440587.5;
             const d = jd - 2451545.0;
             let gmst = normalizarGraus(280.46061837 + 360.98564736629 * d);
@@ -317,11 +393,14 @@
             let asc = Math.atan2(Math.cos(radLst), -Math.sin(radLst) * Math.cos(eps) - Math.tan(radLat) * Math.sin(eps)) * (180 / Math.PI);
             asc = normalizarGraus(asc);
 
+            let dsc = normalizarGraus(asc + 180);
+            let ic = normalizarGraus(mc + 180);
+
             let casas = [];
             for(let i=0; i<12; i++) {
                 casas.push(normalizarGraus(asc + (i * 30)));
             }
-            return { asc, mc, casas };
+            return { asc, mc, dsc, ic, casas };
         }
 
         function obterInfoSigno(graus) {
@@ -349,23 +428,40 @@
             if (diff > 180) diff = 360 - diff;
 
             const aspectos = [
-                { nome: "Conjunção", angulo: 0 },
-                { nome: "Sextil", angulo: 60 },
-                { nome: "Quadratura", angulo: 90 },
-                { nome: "Trígono", angulo: 120 },
-                { nome: "Oposição", angulo: 180 }
+                { nome: "Conjunção", simbolo: "☌", angulo: 0 },
+                { nome: "Sextil", simbolo: "✶", angulo: 60 },
+                { nome: "Quadratura", simbolo: "☐", angulo: 90 },
+                { nome: "Trígono", simbolo: "△", angulo: 120 },
+                { nome: "Oposição", simbolo: "☍", angulo: 180 }
             ];
 
             for (let asp of aspectos) {
                 let orbe = Math.abs(diff - asp.angulo);
                 if (orbe <= 2.5) {
-                    return { nome: asp.nome, orbe: orbe.toFixed(1), exato: orbe <= 1.0 };
+                    let estado = "Aplicativo";
+                    if (orbe <= 0.3) estado = "Exato";
+                    else if (g1 > g2) estado = "Separativo";
+
+                    return { 
+                        nome: asp.nome, 
+                        simbolo: asp.simbolo, 
+                        orbeVal: orbe,
+                        orbeFormat: `${Math.floor(orbe)}°${Math.floor((orbe % 1) * 60)}'`,
+                        estado: estado
+                    };
                 }
             }
             return null;
         }
 
-        // --- EXECUÇÃO PRINCIPAL DA ANÁLISE ---
+        function determinarTemporalidade(planeta) {
+            if (["Plutão", "Netuno", "Urano", "Saturno"].includes(planeta)) return "LONGO PRAZO";
+            if (["Júpiter", "Marte"].includes(planeta)) return "MÉDIO PRAZO";
+            if (["Vênus", "Mercúrio", "Sol"].includes(planeta)) return "CURTO PRAZO";
+            return "GATILHO DO DIA";
+        }
+
+        // --- EXECUÇÃO INTEGRADA ---
         function executarAnalise() {
             // Data Natal
             const dNatal = document.getElementById('date').value;
@@ -383,114 +479,167 @@
             const lonA = parseFloat(document.getElementById('lonAtual').value);
             const utcAtual = new Date(new Date(`${dAtual}T${hAtual}:00Z`).getTime() - (fusoAtual * 3600000));
 
-            // 1. Calculando Natal
+            // 1. Posições Natais
             const angulosNatais = calcularCasasEAngulos(latN, lonN, utcNatal);
             const planetasNatais = {};
-            const listaNomes = ["Sol", "Lua", "Mercúrio", "Vênus", "Marte", "Júpiter", "Saturno", "Urano", "Netuno", "Plutão"];
-            listaNomes.forEach(p => { planetasNatais[p] = calcularPosicaoPlaneta(p, utcNatal); });
+            const listaP = ["Sol", "Lua", "Mercúrio", "Vênus", "Marte", "Júpiter", "Saturno", "Urano", "Netuno", "Plutão"];
+            listaP.forEach(p => { planetasNatais[p] = calcularPosicaoPlaneta(p, utcNatal); });
             planetasNatais["Asc"] = angulosNatais.asc;
             planetasNatais["MC"] = angulosNatais.mc;
+            planetasNatais["Dsc"] = angulosNatais.dsc;
+            planetasNatais["Ic"] = angulosNatais.ic;
 
-            // 2. Calculando Trânsitos do Dia
+            // 2. Posições Atual
             const planetasHoje = {};
-            listaNomes.forEach(p => { planetasHoje[p] = calcularPosicaoPlaneta(p, utcAtual); });
+            listaP.forEach(p => { planetasHoje[p] = calcularPosicaoPlaneta(p, utcAtual); });
 
-            // Renderizar Mapa Sobreposto
+            // Renderizar Desenho
             desenharSobreposicao(planetasNatais, planetasHoje, angulosNatais.casas);
 
-            // PROCESSAMENTO DAS DIRETRIZES
-
-            // 1. Clima Geral
+            // 1. VISÃO GERAL DO CÉU (COLETIVO)
             const solHojeInfo = obterInfoSigno(planetasHoje["Sol"]);
             const luaHojeInfo = obterInfoSigno(planetasHoje["Lua"]);
             document.getElementById('climaGeralTexto').innerText = 
-                `O céu de hoje traz o Sol em ${solHojeInfo.signo} e a Lua transitando por ${luaHojeInfo.signo}. ` +
-                `A atmosfera geral pede um equilíbrio entre a expressão da consciência clara e o acolhimento das flutuações da sensibilidade diária.`;
+                `O céu coletivo apresenta o Sol em ${solHojeInfo.signo} (${solHojeInfo.grau}°) e a Lua em ${luaHojeInfo.signo} (${luaHojeInfo.grau}°). ` +
+                `O momento convida à busca por equilíbrio consciente entre a clareza prática e o fluxo das sensibilidades inconscientes.`;
 
-            // 2. Regentes
+            // Regentes
             const diaSemana = new Date(`${dAtual}T12:00:00`).getDay();
-            const regenteDia = PLANETAS_SEMANA[diaSemana];
-            const horaRegente = ORDEM_CALDAICA[diaSemana % 7];
-            document.getElementById('regenteDiaVal').innerText = regenteDia;
-            document.getElementById('horaPlanetariaVal').innerText = horaRegente;
-            
-            const casaSol = acharCasa(planetasHoje["Sol"], angulosNatais.casas);
-            document.getElementById('solCasaVal').innerText = `Casa ${casaSol} Natal`;
+            document.getElementById('regenteDiaVal').innerText = PLANETAS_SEMANA[diaSemana];
+            document.getElementById('horaPlanetariaVal').innerText = ORDEM_CALDAICA[diaSemana % 7];
 
-            // 3. A Lua
-            const casaLua = acharCasa(planetasHoje["Lua"], angulosNatais.casas);
+            // 2. SOL (PERSONALIZADO)
+            const casaSolNatal = acharCasa(planetasHoje["Sol"], angulosNatais.casas);
+            const signoCuspideSol = SIGNOS[Math.floor(angulosNatais.casas[casaSolNatal - 1] / 30)];
+            const regenteCasaSol = REGENTES_SIGNOS[signoCuspideSol];
+            document.getElementById('solCasaVal').innerText = `Casa ${casaSolNatal} Natal`;
+            document.getElementById('solRegenteCasaVal').innerText = regenteCasaSol;
+            document.getElementById('solExplicacaoTexto').innerHTML = 
+                `O Sol em trânsito está a iluminar a sua <strong>Casa ${casaSolNatal} Natal</strong>. ` +
+                `Esta área da sua vida recebe vitalidade, atenção direta e foco de consciência durante este período. ` +
+                `Como o regente desta casa é <strong>${regenteCasaSol}</strong>, observe como as suas ações no dia de hoje impactam esse setor.`;
+
+            // 3. LUA (PERSONALIZADO)
+            const casaLuaNatal = acharCasa(planetasHoje["Lua"], angulosNatais.casas);
+            const signoCuspideLua = SIGNOS[Math.floor(angulosNatais.casas[casaLuaNatal - 1] / 30)];
             document.getElementById('luaDetalhesTexto').innerHTML = 
-                `A Lua está a ${luaHojeInfo.grau}° de <strong>${luaHojeInfo.signo}</strong>, percorrendo a sua <strong>Casa ${casaLua} Natal</strong>. ` +
-                `A sua receptividade psíquica e sensibilidade emocional estarão concentradas nos assuntos dessa área da vida durante o dia de hoje.`;
+                `A Lua está a percorrer a sua <strong>Casa ${casaLuaNatal} Natal</strong> (Signo de ${luaHojeInfo.signo}). ` +
+                `<strong>Receptividade Psíquica:</strong> A sua sensibilidade e percepção subjetiva estão voltadas para os assuntos da Casa ${casaLuaNatal}.`;
 
             let htmlLuaAspectos = "";
-            listaNomes.forEach(pNatal => {
+            listaP.concat(["Asc","MC"]).forEach(pNatal => {
                 let asp = calcularAspecto(planetasHoje["Lua"], planetasNatais[pNatal]);
                 if (asp) {
+                    let casaPlanetaNatal = (["Asc","MC","Dsc","Ic"].includes(pNatal)) ? "Ângulo Structural" : `Casa ${acharCasa(planetasNatais[pNatal], angulosNatais.casas)}`;
                     htmlLuaAspectos += `
-                        <div class="expand-card open">
+                        <div class="expand-card card-natal-border open">
                             <div class="expand-header">
-                                <span class="expand-title">🌙 Lua em Trânsito ${asp.nome} ${pNatal} Natal</span>
-                                <span class="expand-badge">Orbe ${asp.orbe}°</span>
+                                <span class="expand-title">🔵 ☽ Lua Trânsito ${asp.simbolo} ${pNatal} Natal</span>
+                                <span class="expand-badge badge-tempo">GATILHO DO DIA</span>
                             </div>
                             <div class="expand-content">
-                                <strong>Impacto no Ritmo Interno:</strong> O fluxo subconsciente do dia toca diretamente a energia de ${pNatal}. 
-                                Evite reações automáticas e observe como essa sensibilidade afeta o seu comportamento mental e atitudes.
+                                <div class="detail-row">
+                                    <div class="detail-cell"><span>CASA TRANSITADA</span>Casa ${casaLuaNatal}</div>
+                                    <div class="detail-cell"><span>LOCAL DO PLANETA NATAL</span>${casaPlanetaNatal}</div>
+                                    <div class="detail-cell"><span>PRECISÃO / ESTADO</span>${asp.orbeFormat} (${asp.estado})</div>
+                                </div>
+                                <p><strong>Experiência Subjetiva:</strong> A Lua diária ativa momentaneamente o seu ${pNatal} natal. Evite respostas automáticas ou reações emocionais precipitadas nesta área.</p>
                             </div>
                         </div>
                     `;
                 }
             });
-            document.getElementById('luaAspectosList').innerHTML = htmlLuaAspectos || "<p style='font-size:0.8rem; color:#8b949e;'>A Lua não forma aspectos exatos diretos com os seus planetas pessoais no dia de hoje.</p>";
+            document.getElementById('luaAspectosList').innerHTML = htmlLuaAspectos || "<p style='font-size:0.8rem; color:#8b949e;'>A Lua não faz aspectos exatos com os seus planetas pessoais no dia de hoje.</p>";
 
-            // 4 & 5. Trânsitos Relevantes (Orbe de 0 a 2°)
-            let htmlProvas = "";
-            let transitosEncontrados = 0;
-            const planetasChave = ["Saturno", "Júpiter", "Marte", "Urano", "Netuno", "Plutão", "Sol", "Vênus", "Mercúrio"];
-            const alvosNatais = ["Sol", "Lua", "Mercúrio", "Vênus", "Marte", "Asc", "MC"];
+            // 4. SOBREPOSIÇÃO & TRÂNSITOS HIERARQUIZADOS
+            let trânsitosEncontrados = [];
+            const planetasTransitantes = ["Plutão", "Netuno", "Urano", "Saturno", "Júpiter", "Marte", "Vênus", "Mercúrio", "Sol"];
+            const alvos = ["Sol", "Lua", "Mercúrio", "Vênus", "Marte", "Asc", "MC", "Dsc", "Ic"];
 
-            planetasChave.forEach(pHoje => {
-                alvosNatais.forEach(pNatal => {
+            planetasTransitantes.forEach(pHoje => {
+                alvos.forEach(pNatal => {
                     let asp = calcularAspecto(planetasHoje[pHoje], planetasNatais[pNatal]);
-                    if (asp && parseFloat(asp.orbe) <= 2.0) {
-                        transitosEncontrados++;
-                        let casaTrancito = acharCasa(planetasHoje[pHoje], angulosNatais.casas);
-                        htmlProvas += `
-                            <div class="expand-card open">
-                                <div class="expand-header">
-                                    <span class="expand-title">${SIMBOLOS_PLANETAS[pHoje] || ''} ${pHoje} Trânsito ${asp.nome} ${pNatal} Natal</span>
-                                    <span class="expand-badge">${asp.exato ? 'Exato' : 'Orbe ' + asp.orbe + '°'}</span>
-                                </div>
-                                <div class="expand-content">
-                                    <p><strong>Área da Vida (Casa Transitada):</strong> Casa ${casaTrancito} Natal.</p>
-                                    <p style="margin-top:4px;"><strong>Processo de Consciência:</strong> O princípio de ${pHoje} está a provocar uma reorganização sobre o seu ${pNatal} natal. ` +
-                                    (asp.nome === 'Quadratura' || asp.nome === 'Oposição' ? 
-                                    `Existe uma tensão construtiva que exige maturidade, evitando atritos desnecessários e focando na integração consciente do padrão.` : 
-                                    `Existe um fluxo harmónico que facilita o aprendizado, permitindo estruturar novos hábitos com maior clareza.`) + `</p>
-                                </div>
-                            </div>
-                        `;
+                    if (asp && asp.orbeVal <= 2.0) {
+                        let casaTrans = acharCasa(planetasHoje[pHoje], angulosNatais.casas);
+                        let casaNatalAtiv = (["Asc","MC","Dsc","Ic"].includes(pNatal)) ? "Ângulo" : `Casa ${acharCasa(planetasNatais[pNatal], angulosNatais.casas)}`;
+                        let temp = determinarTemporalidade(pHoje);
+                        
+                        trânsitosEncontrados.push({
+                            pHoje, pNatal, asp, casaTrans, casaNatalAtiv, temp,
+                            peso: (temp === "LONGO PRAZO" ? 4 : temp === "MÉDIO PRAZO" ? 3 : 2) + (asp.estado === "Exato" ? 2 : 0)
+                        });
                     }
                 });
             });
 
-            document.getElementById('transitosRelevantesList').innerHTML = htmlProvas || "<p style='font-size:0.8rem; color:#8b949e;'>Não há trânsitos lentos com orbe menor que 2° afetando os seus pontos pessoais hoje. O dia segue o fluxo dos ciclos maiores já em andamento.</p>";
+            // Ordenar por Hierarquia de Importância
+            trânsitosEncontrados.sort((a, b) => b.peso - a.peso);
 
-            // 21. Síntese do Dia
+            let htmlProvas = "";
+            trânsitosEncontrados.forEach(item => {
+                htmlProvas += `
+                    <div class="expand-card card-natal-border open">
+                        <div class="expand-header">
+                            <span class="expand-title">🔵 ${SIMBOLOS_PLANETAS[item.pHoje]} ${item.pHoje} em Trânsito ${item.asp.simbolo} ${item.pNatal} Natal</span>
+                            <span class="expand-badge badge-tempo">${item.temp}</span>
+                        </div>
+                        <div class="expand-content">
+                            <div class="detail-row">
+                                <div class="detail-cell"><span>CASA TRANSITADA</span>Casa ${item.casaTrans}</div>
+                                <div class="detail-cell"><span>CASA NATAL ATIVADA</span>${item.casaNatalAtiv}</div>
+                                <div class="detail-cell"><span>ORBE / ESTADO</span>${item.asp.orbeFormat} (${item.asp.estado})</div>
+                            </div>
+                            <p style="margin-top:6px;"><strong>Processo de Desenvolvimento:</strong> O princípio de <strong>${item.pHoje}</strong> atuando sobre o seu <strong>${item.pNatal} natal</strong> exige reorganização consciente e integração sem resistência.</p>
+                        </div>
+                    </div>
+                `;
+            });
+
+            document.getElementById('transitosRelevantesList').innerHTML = htmlProvas || 
+                `<div class="expand-card card-natal-border open">
+                    <div class="expand-header"><span class="expand-title">🔵 Integração sem Atritos Dominantes</span></div>
+                    <div class="expand-content"><p>Não há trânsitos exatos (orbe ≤ 2°) sobre os seus pontos pessoais ou ângulos hoje. O dia segue a integração normal dos ciclos de longo prazo.</p></div>
+                </div>`;
+
+            // 5. CONVERGÊNCIA
+            let casasFoco = {};
+            trânsitosEncontrados.forEach(t => { casasFoco[t.casaTrans] = (casasFoco[t.casaTrans] || 0) + 1; });
+            let casaMaisAtiva = Object.keys(casasFoco).sort((a,b) => casasFoco[b] - casasFoco[a])[0];
+
+            document.getElementById('convergenciaConteudo').innerHTML = `
+                <p><strong>🔵 Concentração de Energia:</strong> ${casaMaisAtiva ? `A <strong>Casa ${casaMaisAtiva} Natal</strong> concentra a maior quantidade de ativamentos no dia de hoje.` : 'As energias do dia estão distribuídas de maneira equilibrada pelo seu mapa natal.'}</p>
+                <p style="margin-top:6px;"><strong>🔵 Eixo de Atuação:</strong> ${casaMaisAtiva ? `Foco direto no eixo das Casas ${casaMaisAtiva} e ${((parseInt(casaMaisAtiva)+5)%12)+1}.` : 'Integração harmônica de todos os setores.'}</p>
+            `;
+
+            // 6. SÍNTESE FINAL
+            let provaTexto = trânsitosEncontrados.length > 0 ? 
+                `Manter o equilíbrio perante as exigências da Casa ${trânsitosEncontrados[0].casaTrans} natal sem ceder a impulsos ou hábitos automáticos.` : 
+                `Nenhuma prova dominante identificada hoje; o momento é predominantemente de integração e observação interna.`;
+
+            let virtudeTexto = trânsitosEncontrados.length > 0 ? 
+                `Disciplina e discernimento sustentado (Presença Consciente).` : 
+                `Flexibilidade, escuta interior e paciência.`;
+
             document.getElementById('sinteseFinalConteudo').innerHTML = `
                 <div class="sintese-section">
-                    <strong>1. Foco da Consciência (Sol):</strong> O Sol ilumina a sua <strong>Casa ${casaSol} Natal</strong>. É o setor onde deve colocar a sua presença, atenção e vitalidade principal hoje.
+                    <strong>🔵 Foco Individual (Sol):</strong> Iluminação e vitalidade aplicadas sobre a <strong>Casa ${casaSolNatal} Natal</strong>.
                 </div>
                 <div class="sintese-section">
-                    <strong>2. Receptividade Psíquica (Lua):</strong> A mente inconsciente e a sensibilidade estão vulneráveis no setor da <strong>Casa ${casaLua} Natal</strong>. Cultive a observação e evite reações compulsivas.
+                    <strong>🔵 Receptividade Psíquica (Lua):</strong> Mente emocional receptiva no setor da <strong>Casa ${casaLuaNatal} Natal</strong>.
                 </div>
                 <div class="sintese-section">
-                    <strong>3. Orientação e Virtude a Exercitar:</strong> ${transitosEncontrados > 0 ? 'O dia apresenta momentos de atrito que servem de convite ao fortalecimento do autocontrole e da clareza mental.' : 'O dia favorece a consolidação dos aprendizados recentes sem grandes pressões externas.'} Mantenha o estado de presença consciente perante os eventos do quotidiano.
+                    <strong>🔵 Prova / Desafio Individual:</strong> ${provaTexto}
+                </div>
+                <div class="sintese-section">
+                    <strong>🔵 Virtude / Qualidade a Desenvolver:</strong> ${virtudeTexto}
+                </div>
+                <div class="sintese-section" style="border-top: 1px dashed var(--ia-color); padding-top: 8px; margin-top: 8px;">
+                    <strong> Orientação Prática para o Dia:</strong> Coloque a sua presença na Casa ${casaSolNatal}, observe os impulsos inconscientes na Casa ${casaLuaNatal} e aja com discernimento sem forçar os acontecimentos.
                 </div>
             `;
         }
 
-        // --- RENDERIZAÇÃO SVG DA SOBREPOSIÇÃO DOS MAPAS ---
+        // --- RENDERIZAÇÃO GRÁFICA DO MAPA ---
         function desenharSobreposicao(natal, hoje, casas) {
             const svg = document.getElementById('chartSvg');
             const cx = 250, cy = 250, rExt = 220, rInt = 150, rCore = 80;
@@ -498,7 +647,6 @@
             h += `<circle cx="${cx}" cy="${cy}" r="${rInt}" fill="#0d1117" stroke="#30363d" stroke-width="1.5"/>`;
             h += `<circle cx="${cx}" cy="${cy}" r="${rCore}" fill="#0b0e14" stroke="#30363d" stroke-width="1"/>`;
 
-            // Desenhar Linhas das Casas
             for (let i = 0; i < 12; i++) {
                 let ang = (casas[i] - casas[0]) * (Math.PI / 180);
                 let x1 = cx + rCore * Math.cos(ang);
@@ -513,33 +661,28 @@
                 let ang = (natal[p] - casas[0]) * (Math.PI / 180);
                 let x = cx + (rInt - 25) * Math.cos(ang);
                 let y = cy - (rInt - 25) * Math.sin(ang);
-                h += `<text x="${x}" y="${y}" fill="#58a6ff" font-size="12" text-anchor="middle" dominant-baseline="middle">${SIMBOLOS_PLANETAS[p] || p}</text>`;
+                h += `<text x="${x}" y="${y}" fill="#58a6ff" font-size="12" font-weight="bold" text-anchor="middle" dominant-baseline="middle">${SIMBOLOS_PLANETAS[p] || p}</text>`;
             });
 
-            // Planetas do Dia em Trânsito (Roda Externa)
+            // Planetas em Trânsito Hoje (Roda Externa)
             Object.keys(hoje).forEach(p => {
                 let ang = (hoje[p] - casas[0]) * (Math.PI / 180);
                 let x = cx + (rExt - 20) * Math.cos(ang);
                 let y = cy - (rExt - 20) * Math.sin(ang);
-                h += `<text x="${x}" y="${y}" fill="#e3b341" font-size="12" text-anchor="middle" dominant-baseline="middle">${SIMBOLOS_PLANETAS[p] || p}</text>`;
+                h += `<text x="${x}" y="${y}" fill="#e3b341" font-size="12" font-weight="bold" text-anchor="middle" dominant-baseline="middle">${SIMBOLOS_PLANETAS[p] || p}</text>`;
             });
 
             svg.innerHTML = h;
         }
 
         // --- BUSCA GEO CIDADES ---
-        function buscarCoordenadasNatal() {
-            document.getElementById('geoNatalStatus').style.display = 'block';
-        }
-
-        function buscarCoordenadasAtual() {
-            document.getElementById('geoAtualStatus').style.display = 'block';
-        }
+        function buscarCoordenadasNatal() { document.getElementById('geoNatalStatus').style.display = 'block'; }
+        function buscarCoordenadasAtual() { document.getElementById('geoAtualStatus').style.display = 'block'; }
 
         // --- GESTÃO DE PERFIS SALVOS ---
         function salvarPerfilPessoa() {
             const nome = document.getElementById('nomePessoaInput').value.trim();
-            if (!nome) return alert('Por favor, insira o nome da pessoa.');
+            if (!nome) return alert('Por favor, digite o nome da pessoa.');
             
             const perfil = {
                 nome,
@@ -556,7 +699,7 @@
             salvas.push(perfil);
             localStorage.setItem('astro_perfis', JSON.stringify(salvas));
             carregarPerfisSalvos();
-            alert('Perfil guardado com sucesso!');
+            alert('Perfil salvo com sucesso!');
         }
 
         function carregarPerfisSalvos() {
