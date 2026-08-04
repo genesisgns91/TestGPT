@@ -164,6 +164,17 @@
         .btn-ia:hover { opacity: 0.9; }
         .painel-resposta-ia { margin-top: 10px; display: none; background: rgba(163, 113, 247, 0.08); padding: 12px; border-radius: 8px; border: 1px solid var(--ia-color); font-size: 0.85rem; line-height: 1.5; }
 
+        .ai-inline-panel { margin-top:12px; padding:12px; border:1px solid var(--ia-color); border-radius:8px; background:rgba(163,113,247,.08); font-size:.84rem; line-height:1.6; display:none; }
+        .ai-inline-panel p { margin-bottom:8px; }
+        .ai-inline-panel p:last-child { margin-bottom:0; }
+        .position-row { display:grid; grid-template-columns:34px minmax(90px,1fr) minmax(100px,1fr) minmax(130px,1.3fr); gap:8px; align-items:center; padding:9px 0; border-bottom:1px solid var(--border); }
+        .position-row:last-child { border-bottom:none; }
+        .position-glyph { font-family:"Segoe UI Symbol",sans-serif; color:var(--ia-color); font-size:1.25rem; text-align:center; }
+        .position-main strong, .position-house strong { display:block; font-size:.82rem; }
+        .position-main small, .position-house small, .position-sign small { display:block; color:#8b949e; font-size:.69rem; line-height:1.35; }
+        .position-sign { color:var(--ia-color); font-weight:700; font-size:.8rem; }
+        @media(max-width:700px){ .position-row{grid-template-columns:30px 1fr 1fr;} .position-house{grid-column:2/-1;} }
+
         .sintese-box { background: rgba(163, 113, 247, 0.08); border: 1px solid var(--ia-color); border-radius: 10px; padding: 16px; width: 100%; font-size: 0.88rem; line-height: 1.6; }
         .sintese-box h4 { color: var(--ia-color); margin-bottom: 8px; font-size: 1rem; display: flex; justify-content: space-between; align-items: center; }
         .sintese-section { margin-bottom: 12px; }
@@ -298,7 +309,7 @@
             <div class="wheel-panel">
                 <div class="wheel-panel-header">
                     <h2>Roda Comparativa — Natal × Céu do Dia</h2>
-                    <button type="button" class="btn-ia" onclick="gerarAnaliseIABloco('panorama')">✦ Panorama IA</button>
+                    <button type="button" class="btn-ia" onclick="alternarAnaliseIABloco('panorama', this)">✦ Panorama IA</button>
                 </div>
                 <svg id="chartSvg" viewBox="0 0 600 600" role="img" aria-label="Roda astrológica comparativa"></svg>
                 <div class="wheel-legend">
@@ -310,26 +321,26 @@
             </div>
             <div class="positions-panel">
                 <div class="positions-panel-header"><h2>10 Astros Principais — Céu do Dia</h2><span class="tag-ceu">🌐 TRÂNSITO</span></div>
-                <p style="font-size:.78rem;color:#8b949e;line-height:1.45;margin-bottom:10px;">As casas abaixo são lidas sobre o mapa natal: mostram em qual setor da vida cada posição do céu atual está ativando o mapa de origem.</p>
+                <p style="font-size:.78rem;color:#8b949e;line-height:1.45;margin-bottom:10px;">Estas são as posições reais do céu no momento selecionado. A casa é calculada sobre o mapa natal e mostra <strong>onde, na vida da pessoa, cada planeta do céu atual está atuando hoje</strong>.</p>
                 <div id="posicoesPrincipaisList" class="positions-list"></div>
             </div>
         </div>
 
         <div class="grid-3-colunas">
             <div class="esoteric-card">
-                <h3><span>🔥 Triplicidades (Elementos)</span><button type="button" class="btn-ia" onclick="gerarAnaliseIABloco('elementos')">✦ IA</button></h3>
+                <h3><span>🔥 Triplicidades (Elementos)</span><button type="button" class="btn-ia" onclick="alternarAnaliseIABloco('elementos', this)">✦ IA</button></h3>
                 <p style="font-size:.75rem;color:#8b949e;line-height:1.45;margin-bottom:8px;">Compara a distribuição de Fogo, Terra, Ar e Água no céu atual com a composição do mapa natal.</p>
                 <div class="element-bar-container" id="elementosContainer"></div>
                 <div class="ai-inline-panel" id="iaElementos"></div>
             </div>
             <div class="esoteric-card">
-                <h3><span>🏛️ Quadruplicidades (Ritmos)</span><button type="button" class="btn-ia" onclick="gerarAnaliseIABloco('ritmos')">✦ IA</button></h3>
+                <h3><span>🏛️ Quadruplicidades (Ritmos)</span><button type="button" class="btn-ia" onclick="alternarAnaliseIABloco('ritmos', this)">✦ IA</button></h3>
                 <p style="font-size:.75rem;color:#8b949e;line-height:1.45;margin-bottom:8px;">Mostra se o dia tende a iniciar, sustentar ou adaptar processos em contraste com o padrão natal.</p>
                 <div class="element-bar-container" id="modalidadesContainer"></div>
                 <div class="ai-inline-panel" id="iaRitmos"></div>
             </div>
             <div class="esoteric-card">
-                <h3><span>☯️ Polaridades</span><button type="button" class="btn-ia" onclick="gerarAnaliseIABloco('polaridades')">✦ IA</button></h3>
+                <h3><span>☯️ Polaridades</span><button type="button" class="btn-ia" onclick="alternarAnaliseIABloco('polaridades', this)">✦ IA</button></h3>
                 <p style="font-size:.75rem;color:#8b949e;line-height:1.45;margin-bottom:8px;">Contrasta a ênfase Yang/Masculina e Yin/Feminina do momento com o equilíbrio estrutural natal.</p>
                 <div class="element-bar-container" id="polaridadesContainer"></div>
                 <div class="ai-inline-panel" id="iaPolaridades"></div>
@@ -339,7 +350,7 @@
         <div class="esoteric-card">
             <h3>
                 <span>☀️ 1. Visão Geral do Céu do Momento</span>
-                <span class="block-ai-head"><span class="tag-ceu">🌐 CÉU DO MOMENTO</span><button type="button" class="btn-ia" onclick="gerarAnaliseIABloco('dia')">✦ Análise IA</button></span>
+                <span class="block-ai-head"><span class="tag-ceu">🌐 CÉU DO MOMENTO</span><button type="button" class="btn-ia" onclick="alternarAnaliseIABloco('dia', this)">✦ Análise IA</button></span>
             </h3>
             <p style="font-size:.85rem;line-height:1.6;color:#c9d1d9;margin-bottom:12px;" id="climaGeralTexto">Processando posições coletivas...</p>
             <div class="day-details-grid">
@@ -359,7 +370,7 @@
 
         <div class="sol-lua-grid">
             <div class="esoteric-card card-natal-highlight">
-                <h3><span>☉ 2. Sol — Foco do Ciclo Pessoal</span><span class="block-ai-head"><span class="tag-natal">🔵 PERSONALIZADO</span><button type="button" class="btn-ia" onclick="gerarAnaliseIABloco('sol')">✦ IA</button></span></h3>
+                <h3><span>☉ 2. Sol — Foco do Ciclo Pessoal</span><span class="block-ai-head"><span class="tag-natal">🔵 PERSONALIZADO</span><button type="button" class="btn-ia" onclick="alternarAnaliseIABloco('sol', this)">✦ IA</button></span></h3>
                 <div class="esoteric-grid">
                     <div class="esoteric-item item-natal"><label>Posição atual <span class="tag-ceu">🌐</span></label><p id="solPosicaoVal">---</p></div>
                     <div class="esoteric-item item-natal"><label>Casa natal ativada <span class="tag-natal">🔵</span></label><p id="solCasaVal">---</p></div>
@@ -369,7 +380,7 @@
                 <div class="ai-inline-panel" id="iaSol"></div>
             </div>
             <div class="esoteric-card card-natal-highlight">
-                <h3><span>🌙 3. Lua — Ritmo & Sensibilidade</span><span class="block-ai-head"><span class="tag-natal">🔵 PERSONALIZADO</span><button type="button" class="btn-ia" onclick="gerarAnaliseIABloco('lua')">✦ IA</button></span></h3>
+                <h3><span>🌙 3. Lua — Ritmo & Sensibilidade</span><span class="block-ai-head"><span class="tag-natal">🔵 PERSONALIZADO</span><button type="button" class="btn-ia" onclick="alternarAnaliseIABloco('lua', this)">✦ IA</button></span></h3>
                 <div class="esoteric-grid">
                     <div class="esoteric-item item-natal"><label>Posição atual <span class="tag-ceu">🌐</span></label><p id="luaPosicaoVal">---</p></div>
                     <div class="esoteric-item item-natal"><label>Casa natal ativada <span class="tag-natal">🔵</span></label><p id="luaCasaVal">---</p></div>
@@ -381,21 +392,21 @@
         </div>
 
         <div class="esoteric-card card-natal-highlight">
-            <h3><span>⚖️ 4. Ativações Individuais Expansíveis</span><span class="block-ai-head"><span class="tag-natal">🔵 PERSONALIZADO</span><button type="button" class="btn-ia" onclick="gerarAnaliseIABloco('ativacoes')">✦ Panorama IA</button></span></h3>
+            <h3><span>⚖️ 4. Ativações Individuais Expansíveis</span><span class="block-ai-head"><span class="tag-natal">🔵 PERSONALIZADO</span><button type="button" class="btn-ia" onclick="alternarAnaliseIABloco('ativacoes', this)">✦ Panorama IA</button></span></h3>
             <p style="font-size:.82rem;color:#8b949e;line-height:1.5;margin-bottom:10px;">Aqui estão os contatos mais relevantes entre o céu atual e os pontos estruturais do mapa natal. A força de um trânsito não depende apenas do aspecto: duração, orbe, planeta envolvido e área natal ativada alteram seu peso.</p>
             <div id="transitosRelevantesList" class="expand-list"></div>
             <div class="ai-inline-panel" id="iaAtivacoes"></div>
         </div>
 
         <div class="esoteric-card card-natal-highlight">
-            <h3><span>🏛️ 5. Processo Dominante & Convergência</span><span class="block-ai-head"><span class="tag-natal">🔵 PERSONALIZADO</span><button type="button" class="btn-ia" onclick="gerarAnaliseIABloco('convergencia')">✦ Análise IA</button></span></h3>
+            <h3><span>🏛️ 5. Processo Dominante & Convergência</span><span class="block-ai-head"><span class="tag-natal">🔵 PERSONALIZADO</span><button type="button" class="btn-ia" onclick="alternarAnaliseIABloco('convergencia', this)">✦ Análise IA</button></span></h3>
             <p style="font-size:.82rem;color:#8b949e;line-height:1.5;margin-bottom:10px;">Este bloco procura convergência: quando vários fatores do céu atual apontam para a mesma casa, tema psicológico ou eixo de vida, essa região ganha prioridade interpretativa.</p>
             <div id="convergenciaConteudo" style="font-size:.85rem;line-height:1.65;color:#c9d1d9;">Processando convergências...</div>
             <div class="ai-inline-panel" id="iaConvergencia"></div>
         </div>
 
         <div class="sintese-box">
-            <h4><span>📜 6. Síntese do Mapa Natal Ativado</span><span class="block-ai-head"><span class="tag-natal">🔵 PERSONALIZADO</span><button type="button" class="btn-ia" onclick="gerarAnaliseIABloco('sintese')">✦ Síntese IA</button></span></h4>
+            <h4><span>📜 6. Síntese do Mapa Natal Ativado</span><span class="block-ai-head"><span class="tag-natal">🔵 PERSONALIZADO</span><button type="button" class="btn-ia" onclick="alternarAnaliseIABloco('sintese', this)">✦ Síntese IA</button></span></h4>
             <p style="font-size:.82rem;color:#8b949e;line-height:1.5;margin-bottom:8px;">A síntese final reúne céu coletivo, mapa natal, casas, aspectos, elementos, ritmos, polaridades e convergências. O objetivo é responder onde o dia toca mais fundo, o que tensiona, o que favorece, como a pessoa pode se sentir e qual atitude consciente integra melhor o momento.</p>
             <div id="sinteseFinalConteudo">Aguardando processamento integral...</div>
             <div class="ai-inline-panel" id="iaSintese"></div>
@@ -639,6 +650,19 @@ function calcularPosicaoPlaneta(nome, dataUtc) {
         }
 
         function executarAnalise() {
+            try {
+                executarAnaliseInterna();
+            } catch (erro) {
+                console.error('Erro ao processar análise astrológica:', erro);
+                const ids = ['climaGeralTexto','solExplicacaoTexto','luaDetalhesTexto'];
+                ids.forEach(id => { const el=document.getElementById(id); if(el) el.innerHTML=`<strong style="color:var(--fogo);">Não foi possível concluir o cálculo.</strong> Verifique se a biblioteca Astronomy Engine foi carregada e tente processar novamente.`; });
+                const lista=document.getElementById('posicoesPrincipaisList');
+                if(lista) lista.innerHTML='<p style="color:var(--fogo);font-size:.82rem;">Erro no cálculo. Abra o console do navegador para detalhes.</p>';
+            }
+        }
+
+        function executarAnaliseInterna() {
+            if (typeof Astronomy === 'undefined') throw new Error('Astronomy Engine não carregado.');
             // Data Natal
             const dNatal = document.getElementById('date').value;
             const hNatal = document.getElementById('time').value;
@@ -672,9 +696,6 @@ function calcularPosicaoPlaneta(nome, dataUtc) {
             // Roda Astrológica Integrada
             desenharRodaAstrologica(planetasNatais, planetasHoje, angulosNatais.casas);
 
-            // ELEMENTOS, RITMOS E POLARIDADES
-            calcularElementosERitmos(planetasHoje, planetasNatais);
-
             // 1. VISÃO GERAL DO CÉU
             const solHojeInfo = obterInfoSigno(planetasHoje["Sol"]);
             const luaHojeInfo = obterInfoSigno(planetasHoje["Lua"]);
@@ -687,8 +708,10 @@ function calcularPosicaoPlaneta(nome, dataUtc) {
 
             document.getElementById('climaGeralTexto').innerHTML =
                 `O céu do momento apresenta <strong>Sol em ${solHojeInfo.signo} ${solHojeInfo.grau}°</strong> e <strong>Lua em ${luaHojeInfo.signo} ${luaHojeInfo.grau}°</strong>. ` +
-                `O Sol descreve a direção consciente e a vitalidade coletiva; a Lua mostra o ritmo receptivo e emocional. ` +
-                `A leitura realmente individual começa quando essas posições são confrontadas com as casas, signos e aspectos do mapa natal.`;
+                `O Sol mostra o eixo de consciência, vitalidade e direção do dia; a Lua mostra o ritmo subjetivo, a sensibilidade e aquilo que tende a ser sentido com maior imediatismo. ` +
+                `O <strong>regente do dia</strong> fornece a tônica simbólica geral, enquanto a <strong>hora planetária</strong> funciona como uma tonalidade mais específica dentro desse dia. ` +
+                `A correspondência alquímica não é uma causa física: é uma linguagem simbólica para compreender a qualidade da experiência. ` +
+                `O ponto decisivo desta tela é a comparação com o mapa natal: o mesmo céu coletivo ganha significado diferente conforme as casas e os planetas natais que ele toca.`;
             document.getElementById('regenteDiaVal').innerText = regenteDia;
             document.getElementById('regenteDiaHelp').innerText = `O ${regenteDia} colore simbolicamente o dia com ${PRINCIPIOS_PLANETARIOS[regenteDia] || 'sua função tradicional'}. Não é uma causa física, mas uma chave interpretativa tradicional.`;
             document.getElementById('horaPlanetariaVal').innerText = `${horaDia.horaPlaneta} — ${horaDia.periodo}`;
@@ -707,11 +730,11 @@ function calcularPosicaoPlaneta(nome, dataUtc) {
                 const info = obterInfoSigno(planetasHoje[p]);
                 const casa = acharCasa(planetasHoje[p], angulosNatais.casas);
                 const natalInfo = obterInfoSigno(planetasNatais[p]);
-                return `<div class="position-row" title="Natal: ${natalInfo.signo} ${natalInfo.grau}° | Trânsito: ${info.signo} ${info.grau}°">
+                return `<div class="position-row" title="${p} em ${info.signo}, ${info.grau}°${String(info.min).padStart(2,'0')}' — Casa ${casa} do mapa natal. Posição natal: ${natalInfo.signo} ${natalInfo.grau}°. ">
                     <div class="position-glyph">${SIMBOLOS_PLANETAS[p]}</div>
-                    <div class="position-main"><strong>${p}</strong><small>Natal: ${natalInfo.signo} ${natalInfo.grau}°</small></div>
-                    <div class="position-sign">${info.simbolo} ${info.signo}<small>${info.grau}°${String(info.min).padStart(2,'0')}'</small></div>
-                    <div class="position-house">Casa ${casa}<small>${SIGNIFICADO_CASAS[casa]}</small></div>
+                    <div class="position-main"><strong>${p}</strong><small>${info.signo} · ${info.grau}°${String(info.min).padStart(2,'0')}'</small></div>
+                    <div class="position-sign"><span>${info.simbolo}</span> ${info.signo}</div>
+                    <div class="position-house"><strong>Casa ${casa}</strong><small>${SIGNIFICADO_CASAS[casa]}</small></div>
                 </div>`;
             }).join('');
 
@@ -723,6 +746,10 @@ function calcularPosicaoPlaneta(nome, dataUtc) {
                 planetasHoje, planetasNatais, casasNatais: angulosNatais.casas, trânsitosEncontrados: []
             };
 
+            // Agora que o contexto-base existe, podemos calcular e renderizar os
+            // comparativos de elementos, ritmos e polaridades sem interromper o fluxo.
+            calcularElementosERitmos(planetasHoje, planetasNatais);
+
             // 2. SOL
             const casaSolNatal = acharCasa(planetasHoje["Sol"], angulosNatais.casas);
             const signoCuspideSol = SIGNOS[Math.floor(angulosNatais.casas[casaSolNatal - 1] / 30)];
@@ -730,18 +757,24 @@ function calcularPosicaoPlaneta(nome, dataUtc) {
             document.getElementById('solPosicaoVal').innerText = `${solHojeInfo.simbolo} ${solHojeInfo.signo} ${solHojeInfo.grau}°${String(solHojeInfo.min).padStart(2,'0')}'`;
             document.getElementById('solCasaVal').innerText = `Casa ${casaSolNatal} Natal`;
             document.getElementById('solRegenteCasaVal').innerText = regenteCasaSol;
+            const aspectosSolHoje = listaP.concat(["Asc","MC"]).map(pNatal => {
+                const asp=calcularAspecto(planetasHoje["Sol"],planetasNatais[pNatal]);
+                return asp ? `${asp.nome} ${pNatal} (${asp.orbeFormat})` : null;
+            }).filter(Boolean);
             document.getElementById('solExplicacaoTexto').innerHTML = 
-                `O Sol em trânsito em <strong>${solHojeInfo.signo}</strong> percorre a <strong>Casa ${casaSolNatal} Natal</strong>. ` +
-                `Essa casa mostra onde a consciência, vitalidade e vontade tendem a buscar expressão hoje: <strong>${SIGNIFICADO_CASAS[casaSolNatal]}</strong>. ` +
-                `O sentido pessoal nasce da comparação entre o Sol atual e o Sol natal, além dos aspectos que o trânsito forma com o restante do mapa.`;
+                `O Sol em trânsito em <strong>${solHojeInfo.signo}</strong> percorre a <strong>Casa ${casaSolNatal} Natal</strong>, portanto ilumina hoje o campo de <strong>${SIGNIFICADO_CASAS[casaSolNatal].toLowerCase()}</strong>. ` +
+                `A casa responde à pergunta <em>“em que área da vida minha consciência está sendo chamada a estar presente?”</em>. ` +
+                `O signo mostra <em>como</em> essa energia solar tende a se expressar, enquanto o Sol natal mostra a identidade e a vontade de base com as quais esse trânsito precisa dialogar. ` +
+                `${aspectosSolHoje.length ? `Hoje, o Sol também forma <strong>${aspectosSolHoje.join(', ')}</strong> com o mapa natal, tornando essa ativação mais específica.` : 'Hoje não há aspecto maior do Sol dentro da orbe utilizada; a principal leitura vem da casa natal atravessada e da relação com o Sol natal.'}`;
 
             // 3. LUA
             const casaLuaNatal = acharCasa(planetasHoje["Lua"], angulosNatais.casas);
             document.getElementById('luaPosicaoVal').innerText = `${luaHojeInfo.simbolo} ${luaHojeInfo.signo} ${luaHojeInfo.grau}°${String(luaHojeInfo.min).padStart(2,'0')}'`;
             document.getElementById('luaCasaVal').innerText = `Casa ${casaLuaNatal} Natal`;
             document.getElementById('luaDetalhesTexto').innerHTML = 
-                `A Lua em <strong>${luaHojeInfo.signo}</strong> atravessa a <strong>Casa ${casaLuaNatal} Natal</strong>, ativando ${SIGNIFICADO_CASAS[casaLuaNatal]}. ` +
-                `Ela descreve o ritmo subjetivo do dia: aquilo que tende a chamar atenção emocionalmente, aumentar necessidade de segurança ou provocar mudanças de disposição.`;
+                `A Lua em <strong>${luaHojeInfo.signo}</strong> atravessa a <strong>Casa ${casaLuaNatal} Natal</strong>, ativando <strong>${SIGNIFICADO_CASAS[casaLuaNatal].toLowerCase()}</strong>. ` +
+                `Ela funciona como o relógio subjetivo do trânsito: mostra onde a experiência tende a ficar mais sensível, onde necessidades de segurança podem aparecer e onde a pessoa pode reagir antes mesmo de formular racionalmente o que está acontecendo. ` +
+                `O significado pessoal aumenta quando a Lua atual encontra a <strong>Lua natal</strong> e os demais pontos do mapa; por isso os aspectos listados abaixo mostram quais padrões emocionais natais estão sendo tocados hoje.`;
 
             contextoTransitosAtual.sol.casa = casaSolNatal;
             contextoTransitosAtual.lua.casa = casaLuaNatal;
@@ -938,7 +971,6 @@ function desenharRodaAstrologica(natal, hoje, casas) {
         const a=i*30, p1=point(rOuter,a), p2=point(rMid,a);
         add('line',{x1:p1.x,y1:p1.y,x2:p2.x,y2:p2.y,stroke:'#30363d','stroke-width':1});
         textAt((rOuter+rMid)/2,a+15,SIMBOLOS_SIGNOS[i],{fill:'#e3b341','font-family':'Segoe UI Symbol, sans-serif','font-size':25,'font-weight':'bold'});
-        textAt(rOuter-10,a+15,SIGNOS[i].slice(0,3),{fill:'#8b949e','font-size':7,'font-weight':'600'});
     }
 
     // Divisões das casas natais sobre todos os anéis.
@@ -1087,6 +1119,21 @@ const PROMPTS_BLOCOS_IA = {
     sintese: `Produza uma síntese total, rica e integrada de todo o mapa natal ativado neste dia. Responda explicitamente: qual área da vida está mais afetada; quais são os principais conflitos; quais são as bênçãos, recursos e vias de fluidez; qual pode ser o clima emocional; que estado de consciência o momento favorece ou desafia; como a pessoa pode se sentir consigo mesma; o que pede transformação, disciplina, expressão ou recolhimento; e qual atitude consciente integra melhor o conjunto. Diferencie tendências simbólicas de fatos concretos e não faça determinismo.`
 };
 
+async function alternarAnaliseIABloco(tipo, botao) {
+    const ids={panorama:'iaPanorama',dia:'iaDia',elementos:'iaElementos',ritmos:'iaRitmos',polaridades:'iaPolaridades',sol:'iaSol',lua:'iaLua',ativacoes:'iaAtivacoes',convergencia:'iaConvergencia',sintese:'iaSintese'};
+    const painel=document.getElementById(ids[tipo]);
+    if(!painel) return;
+    const visivel = getComputedStyle(painel).display !== 'none';
+    if(visivel) {
+        painel.style.display='none';
+        if(botao) botao.setAttribute('aria-expanded','false');
+        return;
+    }
+    if(botao) botao.setAttribute('aria-expanded','true');
+    if(painel.dataset.carregado === '1') { painel.style.display='block'; return; }
+    await gerarAnaliseIABloco(tipo);
+}
+
 async function gerarAnaliseIABloco(tipo) {
     const ids={panorama:'iaPanorama',dia:'iaDia',elementos:'iaElementos',ritmos:'iaRitmos',polaridades:'iaPolaridades',sol:'iaSol',lua:'iaLua',ativacoes:'iaAtivacoes',convergencia:'iaConvergencia',sintese:'iaSintese'};
     const painel=document.getElementById(ids[tipo]);
@@ -1102,7 +1149,7 @@ ${DIRETRIZ_TOM_IA_TRANSITOS}`;
     try {
         const response=await fetch('https://astro-gns-proxy.genesisgns.workers.dev/',{method:'POST',cache:'no-store',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt:promptText})});
         const data=await response.json();
-        if(response.ok && data.resposta) painel.innerHTML=`<p><strong>✨ Interpretação IA:</strong></p>${data.resposta}`;
+        if(response.ok && data.resposta) { painel.innerHTML=`<p><strong>✨ Interpretação IA:</strong></p>${data.resposta}`; painel.dataset.carregado='1'; }
         else painel.innerHTML=`<p style="color:var(--fogo);"><strong>Erro:</strong> ${data.error||'Não foi possível obter a resposta da IA.'}</p>`;
     } catch(err) {
         console.error('Erro na análise IA:',err);
