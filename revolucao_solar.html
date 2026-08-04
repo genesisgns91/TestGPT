@@ -2155,35 +2155,125 @@
             URL.revokeObjectURL(url);
         }
 
+        // Extrai o período (ex: "2026-2027") do texto salvo em "origem" de uma
+        // leitura da Revolução Solar. Leituras sem período identificável caem em
+        // "Outros períodos" (ex: leituras muito antigas, salvas antes desse texto
+        // existir no campo "origem").
+        function extrairPeriodoDeOrigem(origem) {
+            const match = (origem || '').match(/(\d{4}-\d{4})/);
+            return match ? match[1] : 'Outros períodos';
+        }
+
+        // Agrupa as leituras de uma pessoa para o PDF: um capítulo único para o
+        // Mapa Natal, e um capítulo "Revolução Solar" subdividido por período
+        // (já que a mesma pessoa pode ter mais de um período salvo). Cada grupo
+        // sai na mesma sequência dos blocos do app (ordenarLeituras).
+        function agruparLeiturasParaPdf(leituras) {
+            const ordenadas = ordenarLeituras(leituras);
+            const natal = ordenadas.filter(l => obterContextoDaLeitura(l) === 'natal');
+            const solar = ordenadas.filter(l => obterContextoDaLeitura(l) === 'solar');
+
+            const solarPorPeriodo = {};
+            solar.forEach(l => {
+                const periodo = extrairPeriodoDeOrigem(l.origem);
+                if (!solarPorPeriodo[periodo]) solarPorPeriodo[periodo] = [];
+                solarPorPeriodo[periodo].push(l);
+            });
+
+            // Períodos ordenados pelo ano inicial (mais antigo primeiro). Períodos
+            // sem ano identificável ("Outros períodos") ficam sempre por último.
+            const periodosOrdenados = Object.keys(solarPorPeriodo).sort((a, b) => {
+                const anoA = parseInt(a, 10);
+                const anoB = parseInt(b, 10);
+                if (isNaN(anoA) && isNaN(anoB)) return 0;
+                if (isNaN(anoA)) return 1;
+                if (isNaN(anoB)) return -1;
+                return anoA - anoB;
+            });
+
+            return { natal, solarPorPeriodo, periodosOrdenados };
+        }
+
         function exportarPdfPessoa(id) {
             const lista = carregarPessoasSalvas();
             const pessoa = lista.find(p => p.id === id);
             if (!pessoa) return;
 
-            const leiturasHtml = pessoa.leituras.length
-                ? ordenarLeituras(pessoa.leituras).map(l => `
-                    <div style="margin-bottom:24px; page-break-inside:avoid;">
-                        <h2 style="color:#5b3a00; font-size:1.1rem; margin-bottom:2px;">${l.titulo}</h2>
-                        <p style="font-size:0.8rem; color:#666; margin-bottom:10px;">${l.origem} — ${new Date(l.criadoEm).toLocaleString('pt-BR')}</p>
-                        <div style="font-size:0.95rem; line-height:1.6; color:#222;">${l.html}</div>
-                    </div>
-                    <hr style="border:none; border-top:1px solid #ccc; margin:20px 0;">
-                `).join('')
-                : '<p>Nenhuma leitura salva ainda.</p>';
+            // Caminho absoluto do ícone do app, usado como logo na capa do PDF
+            // (resolvido a partir da própria página, já que a janela do PDF abre
+            // em branco e não tem uma URL base própria para caminhos relativos).
+            const logoUrl = new URL('icon-192.png', window.location.href).href;
+
+            const renderizarLeitura = (l) => `
+                <div class="pdf-leitura">
+                    <h2>${l.titulo}</h2>
+                    <p class="pdf-meta">${l.origem} — ${new Date(l.criadoEm).toLocaleString('pt-BR')}</p>
+                    <div class="pdf-texto">${l.html}</div>
+                </div>
+                <hr class="pdf-divisor">
+            `;
+
+            let corpoHtml = '';
+
+            if (!pessoa.leituras.length) {
+                corpoHtml = '<p>Nenhuma leitura salva ainda.</p>';
+            } else {
+                const { natal, solarPorPeriodo, periodosOrdenados } = agruparLeiturasParaPdf(pessoa.leituras);
+                let primeiroCapitulo = true;
+
+                // Capítulo Mapa Natal — todas as leituras natais juntas, na mesma
+                // ordem dos blocos do app.
+                if (natal.length) {
+                    corpoHtml += `<div class="pdf-chapter">
+                        <h1 class="pdf-chapter-title">🌟 Mapa Natal</h1>
+                        ${natal.map(renderizarLeitura).join('')}
+                    </div>`;
+                    primeiroCapitulo = false;
+                }
+
+                // Capítulo Revolução Solar — começa em folha nova (se não for o
+                // primeiro capítulo do documento) e cada período salvo abre sua
+                // própria folha nova, identificado no título.
+                if (periodosOrdenados.length) {
+                    corpoHtml += `<div class="pdf-chapter"${primeiroCapitulo ? '' : ' style="page-break-before:always;"'}>
+                        <h1 class="pdf-chapter-title">☀️ Revolução Solar</h1>
+                        ${periodosOrdenados.map((periodo, idx) => `
+                            <h2 class="pdf-period-title"${idx === 0 ? '' : ' style="page-break-before:always;"'}>Período ${periodo}</h2>
+                            ${solarPorPeriodo[periodo].map(renderizarLeitura).join('')}
+                        `).join('')}
+                    </div>`;
+                }
+            }
 
             const documentoHtml = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">
                 <title>${pessoa.nome} — Leituras Astrológicas</title>
                 <style>
                     body { font-family: Georgia, 'Times New Roman', serif; padding: 30px; color:#222; }
-                    h1 { color:#5b3a00; border-bottom:2px solid #e3b341; padding-bottom:8px; }
-                    .meta { color:#666; font-size:0.9rem; margin-bottom:24px; }
+                    .pdf-cover { text-align:center; padding-top:120px; page-break-after:always; }
+                    .pdf-cover img { width:140px; height:140px; object-fit:contain; margin-bottom:24px; }
+                    .pdf-cover h1 { font-size:2.6rem; letter-spacing:6px; color:#5b3a00; margin-bottom:6px; }
+                    .pdf-cover .pdf-subtitulo { font-size:1rem; color:#888; letter-spacing:2px; text-transform:uppercase; margin-bottom:70px; }
+                    .pdf-cover .pdf-nome-pessoa { font-size:1.4rem; color:#222; margin-bottom:6px; }
+                    .pdf-cover .pdf-nascimento { font-size:0.9rem; color:#666; }
+                    .pdf-chapter-title { font-size:1.7rem; color:#5b3a00; border-bottom:3px solid #e3b341; padding-bottom:10px; margin-bottom:20px; }
+                    .pdf-period-title { font-size:1.2rem; color:#8957e5; margin:26px 0 12px 0; border-bottom:1px solid #ccc; padding-bottom:4px; }
+                    .pdf-leitura { margin-bottom:24px; page-break-inside:avoid; }
+                    .pdf-leitura h2 { color:#5b3a00; font-size:1.1rem; margin-bottom:2px; }
+                    .pdf-meta { font-size:0.8rem; color:#666; margin-bottom:10px; }
+                    .pdf-texto { font-size:0.95rem; line-height:1.6; color:#222; }
+                    .pdf-divisor { border:none; border-top:1px solid #ccc; margin:20px 0; }
                     strong { color:#5b3a00; }
                     @media print { body { padding: 10mm; } }
                 </style>
                 </head><body>
-                <h1>${pessoa.nome}</h1>
-                <p class="meta">Nascimento: ${pessoa.dados.date} às ${pessoa.dados.time} (UTC${pessoa.dados.fuso >= 0 ? '+' : ''}${pessoa.dados.fuso}) — ${pessoa.dados.cidade}</p>
-                ${leiturasHtml}
+                <div class="pdf-cover">
+                    <img src="${logoUrl}" alt="Logo Astro">
+                    <h1>ASTRO</h1>
+                    <p class="pdf-subtitulo">Leituras Astrológicas</p>
+                    <p class="pdf-nome-pessoa"><strong>${pessoa.nome}</strong></p>
+                    <p class="pdf-nascimento">Nascimento: ${pessoa.dados.date} às ${pessoa.dados.time} (UTC${pessoa.dados.fuso >= 0 ? '+' : ''}${pessoa.dados.fuso}) — ${pessoa.dados.cidade}</p>
+                </div>
+                ${corpoHtml}
                 </body></html>`;
 
             const janela = window.open('', '_blank');
