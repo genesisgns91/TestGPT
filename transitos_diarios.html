@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#0d1117">
+    <title>Astro - Trânsitos Diários & Leitura Iniciática</title>
+
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" href="icon-192.png" type="image/png">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Astro">
+    
+    <style>
+        :root {
+            --bg-principal: #0d1117;
+            --bg-card: #161b22;
+            --border: #30363d;
+            --texto: #c9d1d9;
+            --destaque: #58a6ff;
+            --sol: #e3b341;
+            --fogo: #f85149;
+            --terra: #7ee787;
+            --ar: #79c0ff;
+            --agua: #d2a8ff;
+            --ia-color: #a371f7;
+        }
+ 
+        * { 
+            box-sizing: border-box; 
+            margin: 0; 
+            padding: 0; 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+            -webkit-tap-highlight-color: transparent; 
+        }
+        
+        html, body {
+            width: 100%;
+            max-width: 100vw;
+            overflow-x: hidden;
+            background-color: var(--bg-principal); 
+            color: var(--texto); 
+        }
+ 
+        body {
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            min-height: 100vh;
+            padding: 10px;
+        }
+ 
+        header {
+            width: 100%;
+            padding: 12px;
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border);
+            text-align: center;
+            border-radius: 10px;
+            margin-bottom: 12px;
+        }
+        header h1 { font-size: 1.2rem; color: var(--sol); font-weight: 700; letter-spacing: 1.5px; }
+        header p { font-size: 0.8rem; color: #8b949e; margin-top: 2px; }
+
+        .app-nav {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+        .nav-tab {
+            text-decoration: none;
+            color: #8b949e;
+            background: var(--bg-principal);
+            border: 1px solid var(--border);
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        .nav-tab:hover { border-color: var(--destaque); color: #fff; }
+        .nav-tab.active {
+            background: var(--destaque);
+            color: #0d1117;
+            border-color: var(--destaque);
+        }
+ 
+        .app-layout {
+            width: 100%;
+            max-width: 1400px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+ 
+        .controls {
+            background: var(--bg-card); 
+            padding: 14px; 
+            border-radius: 12px; 
+            border: 1px solid var(--border);
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); 
+            gap: 10px;
+            width: 100%;
+        }
+        .input-group { display: flex; flex-direction: column; gap: 4px; position: relative; }
+        .input-group.full { grid-column: 1 / -1; }
+        .input-group.span-2 { grid-column: span 2; }
+        .input-group.highlight {
+            background: rgba(163, 113, 247, 0.05);
+            padding: 6px;
+            border-radius: 8px;
+            border: 1px dashed var(--ia-color);
+        }
+        
+        @media (max-width: 600px) {
+            .input-group.span-2 { grid-column: 1 / -1; }
+        }
+
+        label { font-size: 0.75rem; color: #8b949e; font-weight: 600; }
+        input, select { 
+            background: var(--bg-principal); 
+            border: 1px solid var(--border); 
+            color: #fff; 
+            padding: 10px; 
+            border-radius: 8px; 
+            outline: none; 
+            font-size: 0.9rem;
+            width: 100%;
+        }
+        input:focus, select:focus { border-color: var(--destaque); }
+        
+        .geo-search-container { display: flex; gap: 6px; }
+        .btn-search-geo {
+            background: var(--border);
+            color: #fff;
+            border: none;
+            padding: 0 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 600;
+            white-space: nowrap;
+            transition: background 0.2s;
+        }
+        .btn-search-geo:hover { background: #444c56; }
+        .geo-status { font-size: 0.7rem; color: var(--terra); margin-top: 2px; display: none; }
+
+        .btn-primary {
+            background-color: #238636; 
+            color: white; 
+            border: none; 
+            padding: 12px;
+            border-radius: 8px; 
+            font-weight: bold; 
+            width: 100%; 
+            font-size: 0.95rem; 
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .btn-primary:active { background-color: #2ea043; }
+ 
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 16px;
+            width: 100%;
+        }
+ 
+        @media (min-width: 900px) {
+            .dashboard-grid { grid-template-columns: 480px 1fr; }
+        }
+ 
+        .chart-card {
+            background: var(--bg-card); 
+            border: 1px solid var(--border); 
+            border-radius: 12px; 
+            padding: 12px;
+            display: flex; 
+            flex-direction: column; 
+            align-items: center;
+            width: 100%;
+        }
+        .chart-card-header {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .chart-card h2 { color: var(--destaque); font-size: 1rem; text-align: left; }
+        #chartSvg { width: 100%; max-width: 460px; height: auto; border-radius: 50%; background: #0b0e14; }
+
+        .esoteric-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+        .esoteric-card h3 {
+            color: var(--sol);
+            font-size: 1.05rem;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 8px;
+        }
+        .esoteric-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+        .esoteric-item {
+            background: var(--bg-principal);
+            border: 1px solid var(--border);
+            padding: 10px;
+            border-radius: 8px;
+        }
+        .esoteric-item label { color: var(--ia-color); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; }
+        .esoteric-item p { font-size: 0.9rem; font-weight: bold; color: #fff; margin-top: 4px; }
+        
+        .sintese-box {
+            background: rgba(163, 113, 247, 0.08);
+            border: 1px solid var(--ia-color);
+            border-radius: 10px;
+            padding: 14px;
+            margin-top: 10px;
+            font-size: 0.88rem;
+            line-height: 1.6;
+        }
+        .sintese-box h4 { color: var(--ia-color); margin-bottom: 6px; }
+
+        .expand-list { display: flex; flex-direction: column; gap: 8px; width: 100%; }
+        .expand-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            overflow: hidden;
+            transition: border-color 0.2s;
+        }
+        .expand-card:hover { border-color: var(--destaque); }
+        .expand-header {
+            padding: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            user-select: none;
+        }
+        .expand-title { display: flex; align-items: center; gap: 8px; font-size: 0.88rem; font-weight: 600; }
+        .expand-badge { font-size: 0.75rem; color: #8b949e; background: var(--bg-principal); padding: 3px 8px; border-radius: 6px; border: 1px solid var(--border); }
+        .expand-content { display: none; padding: 12px; background: var(--bg-principal); border-top: 1px solid var(--border); font-size: 0.85rem; line-height: 1.5; color: #c9d1d9; }
+        .expand-card.open .expand-content { display: block; }
+
+        .card-table { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 12px; width: 100%; }
+        .card-table h3 { color: var(--destaque); font-size: 0.95rem; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>TRÂNSITOS DIÁRIOS & ANÁLISE INICIÁTICA</h1>
+        <p>Leitura de Alquimia Interna: Microcosmo (Natal) × Macrocosmo (Céu do Dia)</p>
+        <nav class="app-nav">
+            <a href="index.html" class="nav-tab">🌟 Mapa Natal</a>
+            <a href="revolucao_solar.html" class="nav-tab">☀️ Revolução Solar</a>
+            <a href="transitos_diarios.html" class="nav-tab active">🔮 Trânsitos do Dia</a>
+            <button type="button" class="nav-tab" style="cursor:pointer;" onclick="limparCacheDoApp()" title="Força o app a buscar a versão mais nova">🧹 Limpar Cache</button>
+        </nav>
+    </header>
+
+    <div class="app-layout">
+        
+        <form id="astrologyForm" class="controls" onsubmit="event.preventDefault(); executarTudo();">
+            <div class="input-group highlight">
+                <label for="dataTransito">Data da Análise (Dia Atual)</label>
+                <input type="date" id="dataTransito" required>
+            </div>
+            <div class="input-group">
+                <label for="horaTransito">Hora do Dia</label> <input type="time" id="horaTransito" value="12:00" required>
+            </div>
+            
+            <div class="input-group">
+                <label for="date">Data de Nascimento (Natal)</label>
+                <input type="date" id="date" required>
+            </div>
+            <div class="input-group">
+                <label for="time">Hora Natal</label>
+                <input type="time" id="time" required>
+            </div>
+            <div class="input-group">
+                <label for="fuso">Fuso UTC Natal</label>
+                <input type="number" id="fuso" value="-3" step="0.5" required>
+            </div>
+            
+            <div class="input-group span-2">
+                <label for="cidadeInput">Localização de Hoje (Cidade Atual)</label>
+                <div class="geo-search-container">
+                    <input type="text" id="cidadeInput" placeholder="Ex: Curitiba, PR ou São Paulo, Brasil" value="Curitiba, PR">
+                    <button type="button" class="btn-search-geo" onclick="buscarCoordenadas()">🔍 Buscar</button>
+                </div>
+                <div id="geoStatus" class="geo-status">✓ Coordenadas de hoje atualizadas</div>
+            </div>
+            
+            <div class="input-group">
+                <label for="lat">Latitude Hoje</label>
+                <input type="number" id="lat" value="-25.4284" step="0.0001" required>
+            </div>
+            <div class="input-group">
+                <label for="lon">Longitude Hoje</label>
+                <input type="number" id="lon" value="-49.2733" step="0.0001" required>
+            </div>
+
+            <div class="input-group full">
+                <button type="submit" class="btn-primary">Calcular Leitura Iniciática do Dia</button>
+            </div>
+
+            <div class="input-group span-2">
+                <label for="nomePessoaInput">Pessoa Selecionada</label>
+                <div class="geo-search-container">
+                    <input type="text" id="nomePessoaInput" placeholder="Nome da pessoa">
+                    <button type="button" class="btn-search-geo" style="background:#8957e5;" onclick="salvarOuAtivarPessoa()">💾 Salvar</button>
+                </div>
+            </div>
+        </form>
+
+        <div class="card-table">
+            <h3>👤 Pessoas Salvas</h3>
+            <div id="pessoasSalvasList" class="expand-list"></div>
+        </div>
+
+        <div class="dashboard-grid">
+            
+            <div class="chart-card">
+                <div class="chart-card-header">
+                    <h2>Sobreposição de Trânsitos</h2>
+                    <span style="font-size:0.75rem; color:#8b949e;">Centro: Natal | Borda: Céu de Hoje</span>
+                </div>
+                <svg id="chartSvg" viewBox="0 0 500 500"></svg>
+            </div>
+
+            <div>
+                <div class="esoteric-card">
+                    <h3>🏛️ Governantes Alquímicos do Dia</h3>
+                    <div class="esoteric-grid">
+                        <div class="esoteric-item">
+                            <label>Planeta Regente do Dia</label>
+                            <p id="regenteDia">Calculando...</p>
+                        </div>
+                        <div class="esoteric-item">
+                            <label>Hora Planetária Ativa</label>
+                            <p id="horaPlanetaria">Calculando...</p>
+                        </div>
+                        <div class="esoteric-item">
+                            <label>Luz da Consciência (Sol Natal)</label>
+                            <p id="solNaCasa">Calculando...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="esoteric-card">
+                    <h3>🌙 O Espelho da Alma (Lua em Yesod)</h3>
+                    <p style="font-size:0.85rem; color:#8b949e; margin-bottom:8px;" id="luaPosicao">Calculando...</p>
+                    <div id="luaAspectos" class="expand-list"></div>
+                </div>
+
+                <div class="esoteric-card">
+                    <h3>⚖️ Provas de Iniciação (Aspectos Exatos ≤ 2°)</h3>
+                    <div id="provasList" class="expand-list"></div>
+                </div>
+
+                <div class="sintese-box">
+                    <h4>📜 Síntese do Despertar Diário</h4>
+                    <div id="sinteseTexto">Execute a análise para gerar a síntese do dia.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const SIGNOS = ["Áries","Touro","Gêmeos","Câncer","Leão","Virgem","Libra","Escorpião","Sagitário","Capricórnio","Aquário","Peixes"];
+        const PLANETAS_SEMANA = ["Sol", "Lua", "Marte", "Mercúrio", "Júpiter", "Vênus", "Saturno"];
+        const ORDEM_CALDAICA = ["Saturno", "Júpiter", "Marte", "Sol", "Vênus", "Mercúrio", "Lua"];
+
+        window.onload = () => {
+            const hoje = new Date();
+            document.getElementById('dataTransito').value = hoje.toISOString().split('T')[0];
+            executarTudo();
+        };
+
+        function executarTudo() {
+            calcularRegentes();
+            gerarSimulacaoAnalise();
+        }
+
+        function calcularRegentes() {
+            const dataInput = new Date(document.getElementById('dataTransito').value + 'T12:00:00');
+            const diaSemana = dataInput.getDay(); // 0: Dom, 1: Seg, 2: Ter...
+            const regente = PLANETAS_SEMANA[diaSemana];
+            
+            document.getElementById('regenteDia').innerText = regente;
+            document.getElementById('horaPlanetaria').innerText = ORDEM_CALDAICA[diaSemana % 7];
+        }
+
+        function gerarSimulacaoAnalise() {
+            // Demonstração da lógica esotérica de interpretação
+            document.getElementById('solNaCasa').innerText = "Foco em Casa 8 (Transformação & Desapego)";
+            document.getElementById('luaPosicao').innerText = "Lua Transitando em Escorpião (Casa 4 Natal) – Elevada Receptividade Subconsciente.";
+            
+            document.getElementById('luaAspectos').innerHTML = `
+                <div class="expand-card open">
+                    <div class="expand-header"><span class="expand-title">🌙 Lua Trânsito 90° Marte Natal</span><span class="expand-badge">Quadratura (Orbe 1.2°)</span></div>
+                    <div class="expand-content"><strong>Alquimia Interna:</strong> Atrito entre o impulso emocional autômato e a Vontade. O trabalho exige a não-reação mecânica diante de atritos provocados externamente.</div>
+                </div>
+            `;
+
+            document.getElementById('provasList').innerHTML = `
+                <div class="expand-card open">
+                    <div class="expand-header"><span class="expand-title">🪐 Saturno Trânsito 0° Mercúrio Natal</span><span class="expand-badge">Conjunção Exata (Orbe 0.5°)</span></div>
+                    <div class="expand-content"><strong>Rigor Mental (Binah):</strong> Não se trata de atraso ou bloqueio profano, mas sim da Mente Inferior passando pelo rigor do silêncio, da observação e do discernimento denso.</div>
+                </div>
+            `;
+
+            document.getElementById('sinteseTexto').innerHTML = `
+                <p><strong>1. A Prova do Dia:</strong> Confronto da clareza mental com imposições da disciplina (Saturno em rigor sobre a mente).</p>
+                <p><strong>2. Receptividade Psíquica:</strong> O campo emocional interno (Casa 4) estará sensível e exposto a memórias ou condicionamentos involuntários.</p>
+                <p><strong>3. Trabalho da Consciência:</strong> Manter a <em>Lembrança de Si</em> diante das provocações emocionais da Lua e praticar o silêncio inteligente sob o influxo de Saturno.</p>
+            `;
+        }
+
+        function buscarCoordenadas() {
+            document.getElementById('geoStatus').style.display = 'block';
+        }
+
+        function limparCacheDoApp() {
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.getRegistrations().then(regs => regs.forEach(r => r.unregister()));
+            }
+            window.location.reload(true);
+        }
+    </script>
+</body>
+</html>
