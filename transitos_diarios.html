@@ -87,25 +87,30 @@
         .btn-primary { background-color: #238636; color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; width: 100%; font-size: 0.95rem; cursor: pointer; transition: background-color 0.2s; }
         .btn-primary:hover { background-color: #2ea043; }
 
-        .dashboard-grid { display: grid; grid-template-columns: 1fr; gap: 16px; width: 100%; }
-        @media (min-width: 960px) { .dashboard-grid { grid-template-columns: 460px 1fr; } }
-
-        /* RODA ASTROLÓGICA (LAYOUT IDÊNTICO À IMAGEM) */
-        .chart-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; align-items: center; width: 100%; height: fit-content; }
-        .chart-card-header { width: 100%; display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-        .chart-card h2 { color: var(--destaque); font-size: 1.05rem; text-align: left; }
-        #chartSvg { width: 100%; max-width: 420px; height: auto; border-radius: 50%; background: #0b0e14; }
-        .legenda-precisao { display: flex; gap: 14px; margin-top: 12px; font-size: 0.78rem; color: #8b949e; flex-wrap: wrap; justify-content: center; }
+        /* RODA ASTROLÓGICA (TOPO - LARGURA TOTAL COM SVG CENTRALIZADO) */
+        .chart-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; display: flex; flex-direction: column; align-items: center; width: 100%; }
+        .chart-card-header { width: 100%; display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+        .chart-card h2 { color: var(--destaque); font-size: 1.1rem; text-align: left; }
+        #chartSvg { width: 100%; max-width: 480px; height: auto; border-radius: 50%; background: #0b0e14; }
+        .legenda-precisao { display: flex; gap: 16px; margin-top: 14px; font-size: 0.8rem; color: #8b949e; flex-wrap: wrap; justify-content: center; }
         .ponto-legenda { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 4px; }
+
+        /* GRID DOS ELEMENTOS, RITMOS E POLARIDADES (3 COLUNAS VERTICAIS) */
+        .grid-3-colunas {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 16px;
+            width: 100%;
+        }
 
         /* TAGS DE DIFERENCIAÇÃO */
         .tag-ceu { display: inline-flex; align-items: center; gap: 4px; background: rgba(139, 148, 158, 0.15); color: #8b949e; border: 1px solid #30363d; padding: 3px 8px; border-radius: 6px; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; }
         .tag-natal { display: inline-flex; align-items: center; gap: 4px; background: var(--natal-bg); color: #79c0ff; border: 1px solid var(--natal-border); padding: 3px 8px; border-radius: 6px; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; }
 
-        .esoteric-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 16px; }
+        .esoteric-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 16px; width: 100%; }
         .esoteric-card.card-natal-highlight { border: 1px solid var(--natal-border); background: rgba(22, 27, 34, 0.95); }
         .esoteric-card h3 { color: var(--sol); font-size: 1.05rem; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
-        .esoteric-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; margin-bottom: 12px; }
+        .esoteric-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 12px; }
 
         .esoteric-item { background: var(--bg-principal); border: 1px solid var(--border); padding: 10px; border-radius: 8px; }
         .esoteric-item.item-natal { border-color: rgba(56, 139, 253, 0.4); background: var(--natal-bg); }
@@ -113,8 +118,8 @@
         .esoteric-item p { font-size: 0.9rem; font-weight: bold; color: #fff; margin-top: 4px; }
 
         /* BARRAS DOS ELEMENTOS E RITMOS */
-        .element-bar-container { display: flex; flex-direction: column; gap: 8px; margin-top: 6px; }
-        .element-bar-row { display: flex; align-items: center; justify-content: space-between; font-size: 0.8rem; }
+        .element-bar-container { display: flex; flex-direction: column; gap: 10px; margin-top: 8px; }
+        .element-bar-row { display: flex; align-items: center; justify-content: space-between; font-size: 0.82rem; }
         .bar-bg { flex: 1; height: 8px; background: var(--bg-principal); border-radius: 4px; margin: 0 10px; overflow: hidden; border: 1px solid var(--border); }
         .bar-fill { height: 100%; border-radius: 4px; transition: width 0.4s ease; }
 
@@ -133,7 +138,7 @@
         .expand-content { display: none; padding: 12px; background: var(--bg-principal); border-top: 1px solid var(--border); font-size: 0.85rem; line-height: 1.5; color: #c9d1d9; }
         .expand-card.open .expand-content { display: block; }
 
-        .detail-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 8px; margin-bottom: 8px; padding: 8px; background: rgba(255,255,255,0.02); border-radius: 6px; }
+        .detail-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; margin-bottom: 8px; padding: 8px; background: rgba(255,255,255,0.02); border-radius: 6px; }
         .detail-cell { font-size: 0.78rem; }
         .detail-cell span { color: #8b949e; display: block; font-size: 0.7rem; }
 
@@ -142,12 +147,12 @@
         .btn-ia:hover { opacity: 0.9; }
         .painel-resposta-ia { margin-top: 10px; display: none; background: rgba(163, 113, 247, 0.08); padding: 12px; border-radius: 8px; border: 1px solid var(--ia-color); font-size: 0.85rem; line-height: 1.5; }
 
-        .sintese-box { background: rgba(163, 113, 247, 0.08); border: 1px solid var(--ia-color); border-radius: 10px; padding: 16px; margin-top: 10px; font-size: 0.88rem; line-height: 1.6; }
+        .sintese-box { background: rgba(163, 113, 247, 0.08); border: 1px solid var(--ia-color); border-radius: 10px; padding: 16px; width: 100%; font-size: 0.88rem; line-height: 1.6; }
         .sintese-box h4 { color: var(--ia-color); margin-bottom: 8px; font-size: 1rem; display: flex; justify-content: space-between; align-items: center; }
         .sintese-section { margin-bottom: 12px; }
         .sintese-section strong { color: var(--sol); }
 
-        .card-table { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 14px; width: 100%; margin-top: 10px; }
+        .card-table { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 14px; width: 100%; }
         .card-table h3 { color: var(--destaque); font-size: 0.95rem; margin-bottom: 10px; }
         .pessoa-item { display: flex; justify-content: space-between; align-items: center; background: var(--bg-principal); padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border); margin-bottom: 6px; }
         .pessoa-item span { font-size: 0.85rem; font-weight: 600; }
@@ -172,7 +177,6 @@
     <div class="app-layout">
         
         <form id="astrologyForm" class="controls" onsubmit="event.preventDefault(); executarAnalise();">
-            
             <div class="section-form-title">1. Dados da Pessoa (Mapa Natal de Origem)</div>
             <div class="input-group">
                 <label for="date">Data de Nascimento</label>
@@ -239,118 +243,101 @@
             <div id="pessoasSalvasList"></div>
         </div>
 
-        <div class="dashboard-grid">
-            
-            <div class="chart-card">
-                <div class="chart-card-header">
-                    <h2>Roda de Trânsitos Planetários</h2>
-                </div>
-                <svg id="chartSvg" viewBox="0 0 500 500"></svg>
-                <div class="legenda-precisao">
-                    <span><span class="ponto-legenda" style="background: var(--destaque);"></span> Posição Natal</span>
-                    <span><span class="ponto-legenda" style="background: var(--ia-color);"></span> Trânsito do Dia</span>
-                </div>
+        <div class="chart-card">
+            <div class="chart-card-header">
+                <h2>Roda de Trânsitos Planetários</h2>
             </div>
-
-            <div>
-                
-                <div class="esoteric-card">
-                    <h3>
-                        <span>🔥 0. Triplicidades, Quadruplicidades & Polaridades (Céu do Dia)</span>
-                        <span class="tag-ceu">🌐 CÉU DO MOMENTO</span>
-                    </h3>
-                    
-                    <div style="margin-bottom: 12px;">
-                        <label style="color:#8b949e; font-size:0.75rem; text-transform:uppercase; font-weight:bold;">Elementos (Triplicidades)</label>
-                        <div class="element-bar-container" id="elementosContainer">
-                            </div>
-                    </div>
-
-                    <div style="margin-bottom: 12px;">
-                        <label style="color:#8b949e; font-size:0.75rem; text-transform:uppercase; font-weight:bold;">Modalidades / Ritmos (Quadruplicidades)</label>
-                        <div class="element-bar-container" id="modalidadesContainer">
-                            </div>
-                    </div>
-
-                    <div>
-                        <label style="color:#8b949e; font-size:0.75rem; text-transform:uppercase; font-weight:bold;">Polaridades</label>
-                        <div class="element-bar-container" id="polaridadesContainer">
-                            </div>
-                    </div>
-                </div>
-
-                <div class="esoteric-card">
-                    <h3>
-                        <span>☀️ 1. Visão Geral do Céu do Momento</span>
-                        <span class="tag-ceu">🌐 CÉU DO MOMENTO</span>
-                    </h3>
-                    <p style="font-size:0.85rem; line-height:1.5; color:#c9d1d9; margin-bottom:12px;" id="climaGeralTexto">Processando posições coletivas...</p>
-                    <div class="esoteric-grid">
-                        <div class="esoteric-item">
-                            <label>Regente do Dia <span class="tag-ceu">🌐</span></label>
-                            <p id="regenteDiaVal">---</p>
-                        </div>
-                        <div class="esoteric-item">
-                            <label>Hora Planetária <span class="tag-ceu">🌐</span></label>
-                            <p id="horaPlanetariaVal">---</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="esoteric-card card-natal-highlight">
-                    <h3>
-                        <span>☉ 2. Sol — Foco do Ciclo Pessoal</span>
-                        <span class="tag-natal">🔵 PERSONALIZADO</span>
-                    </h3>
-                    <div class="esoteric-grid">
-                        <div class="esoteric-item item-natal">
-                            <label>Casa Natal Transitada <span class="tag-natal">🔵</span></label>
-                            <p id="solCasaVal">---</p>
-                        </div>
-                        <div class="esoteric-item item-natal">
-                            <label>Regente da Casa Natal <span class="tag-natal">🔵</span></label>
-                            <p id="solRegenteCasaVal">---</p>
-                        </div>
-                    </div>
-                    <p style="font-size:0.85rem; color:#c9d1d9;" id="solExplicacaoTexto">Aguardando cálculo...</p>
-                </div>
-
-                <div class="esoteric-card card-natal-highlight">
-                    <h3>
-                        <span>🌙 3. A Lua — Ritmo & Sensibilidade</span>
-                        <span class="tag-natal">🔵 PERSONALIZADO</span>
-                    </h3>
-                    <p style="font-size:0.85rem; color:#c9d1d9; margin-bottom:10px;" id="luaDetalhesTexto">Calculando ritmos emocionais...</p>
-                    <div id="luaAspectosList" class="expand-list"></div>
-                </div>
-
-                <div class="esoteric-card card-natal-highlight">
-                    <h3>
-                        <span>⚖️ 4. Ativações Individuais Expansíveis</span>
-                        <span class="tag-natal">🔵 PERSONALIZADO</span>
-                    </h3>
-                    <div id="transitosRelevantesList" class="expand-list"></div>
-                </div>
-
-                <div class="esoteric-card card-natal-highlight">
-                    <h3>
-                        <span>🏛️ 5. Processo Dominante & Convergência</span>
-                        <span class="tag-natal">🔵 PERSONALIZADO</span>
-                    </h3>
-                    <div id="convergenciaConteudo" style="font-size:0.85rem; line-height:1.6; color:#c9d1d9;">Processando convergências...</div>
-                </div>
-
-                <div class="sintese-box">
-                    <h4>
-                        <span>📜 6. Síntese do Mapa Natal Ativado</span>
-                        <span class="tag-natal">🔵 PERSONALIZADO</span>
-                    </h4>
-                    <div id="sinteseFinalConteudo">Aguardando processamento integral...</div>
-                </div>
-
+            <svg id="chartSvg" viewBox="0 0 500 500"></svg>
+            <div class="legenda-precisao">
+                <span><span class="ponto-legenda" style="background: var(--destaque);"></span> Posição Natal</span>
+                <span><span class="ponto-legenda" style="background: var(--ia-color);"></span> Trânsito do Dia</span>
             </div>
-
         </div>
+
+        <div class="grid-3-colunas">
+            <div class="esoteric-card">
+                <h3>🔥 Triplicidades (Elementos)</h3>
+                <div class="element-bar-container" id="elementosContainer"></div>
+            </div>
+            <div class="esoteric-card">
+                <h3>🏛️ Quadruplicidades (Ritmos)</h3>
+                <div class="element-bar-container" id="modalidadesContainer"></div>
+            </div>
+            <div class="esoteric-card">
+                <h3>☯️ Polaridades</h3>
+                <div class="element-bar-container" id="polaridadesContainer"></div>
+            </div>
+        </div>
+
+        <div class="esoteric-card">
+            <h3>
+                <span>☀️ 1. Visão Geral do Céu do Momento</span>
+                <span class="tag-ceu">🌐 CÉU DO MOMENTO</span>
+            </h3>
+            <p style="font-size:0.85rem; line-height:1.5; color:#c9d1d9; margin-bottom:12px;" id="climaGeralTexto">Processando posições coletivas...</p>
+            <div class="esoteric-grid">
+                <div class="esoteric-item">
+                    <label>Regente do Dia <span class="tag-ceu">🌐</span></label>
+                    <p id="regenteDiaVal">---</p>
+                </div>
+                <div class="esoteric-item">
+                    <label>Hora Planetária <span class="tag-ceu">🌐</span></label>
+                    <p id="horaPlanetariaVal">---</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="esoteric-card card-natal-highlight">
+            <h3>
+                <span>☉ 2. Sol — Foco do Ciclo Pessoal</span>
+                <span class="tag-natal">🔵 PERSONALIZADO</span>
+            </h3>
+            <div class="esoteric-grid">
+                <div class="esoteric-item item-natal">
+                    <label>Casa Natal Transitada <span class="tag-natal">🔵</span></label>
+                    <p id="solCasaVal">---</p>
+                </div>
+                <div class="esoteric-item item-natal">
+                    <label>Regente da Casa Natal <span class="tag-natal">🔵</span></label>
+                    <p id="solRegenteCasaVal">---</p>
+                </div>
+            </div>
+            <p style="font-size:0.85rem; color:#c9d1d9;" id="solExplicacaoTexto">Aguardando cálculo...</p>
+        </div>
+
+        <div class="esoteric-card card-natal-highlight">
+            <h3>
+                <span>🌙 3. A Lua — Ritmo & Sensibilidade</span>
+                <span class="tag-natal">🔵 PERSONALIZADO</span>
+            </h3>
+            <p style="font-size:0.85rem; color:#c9d1d9; margin-bottom:10px;" id="luaDetalhesTexto">Calculando ritmos emocionais...</p>
+            <div id="luaAspectosList" class="expand-list"></div>
+        </div>
+
+        <div class="esoteric-card card-natal-highlight">
+            <h3>
+                <span>⚖️ 4. Ativações Individuais Expansíveis</span>
+                <span class="tag-natal">🔵 PERSONALIZADO</span>
+            </h3>
+            <div id="transitosRelevantesList" class="expand-list"></div>
+        </div>
+
+        <div class="esoteric-card card-natal-highlight">
+            <h3>
+                <span>🏛️ 5. Processo Dominante & Convergência</span>
+                <span class="tag-natal">🔵 PERSONALIZADO</span>
+            </h3>
+            <div id="convergenciaConteudo" style="font-size:0.85rem; line-height:1.6; color:#c9d1d9;">Processando convergências...</div>
+        </div>
+
+        <div class="sintese-box">
+            <h4>
+                <span>📜 6. Síntese do Mapa Natal Ativado</span>
+                <span class="tag-natal">🔵 PERSONALIZADO</span>
+            </h4>
+            <div id="sinteseFinalConteudo">Aguardando processamento integral...</div>
+        </div>
+
     </div>
 
     <script>
@@ -361,7 +348,6 @@
         const PLANETAS_SEMANA = ["Sol", "Lua", "Marte", "Mercúrio", "Júpiter", "Vênus", "Saturno"];
         const ORDEM_CALDAICA = ["Saturno", "Júpiter", "Marte", "Sol", "Vênus", "Mercúrio", "Lua"];
 
-        // Mapeamento Hermético dos Signos
         const PROPRIEDADES_SIGNOS = {
             "Áries": { elemento: "Fogo", ritmo: "Cardinal", polaridade: "Masculina" },
             "Touro": { elemento: "Terra", ritmo: "Fixo", polaridade: "Feminina" },
@@ -512,7 +498,6 @@
             card.classList.toggle('open');
         }
 
-        // --- EXECUÇÃO INTEGRADA ---
         function executarAnalise() {
             // Data Natal
             const dNatal = document.getElementById('date').value;
@@ -547,10 +532,10 @@
             // Roda Astrológica Integrada
             desenharRodaAstrologica(planetasNatais, planetasHoje, angulosNatais.casas);
 
-            // CÁLCULO DOS ELEMENTOS, RITMOS E POLARIDADES (CÉU DO DIA)
+            // ELEMENTOS, RITMOS E POLARIDADES
             calcularElementosERitmos(planetasHoje);
 
-            // 1. VISÃO GERAL DO CÉU (COLETIVO)
+            // 1. VISÃO GERAL DO CÉU
             const solHojeInfo = obterInfoSigno(planetasHoje["Sol"]);
             const luaHojeInfo = obterInfoSigno(planetasHoje["Lua"]);
             document.getElementById('climaGeralTexto').innerText = 
@@ -561,7 +546,7 @@
             document.getElementById('regenteDiaVal').innerText = PLANETAS_SEMANA[diaSemana];
             document.getElementById('horaPlanetariaVal').innerText = ORDEM_CALDAICA[diaSemana % 7];
 
-            // 2. SOL (PERSONALIZADO)
+            // 2. SOL
             const casaSolNatal = acharCasa(planetasHoje["Sol"], angulosNatais.casas);
             const signoCuspideSol = SIGNOS[Math.floor(angulosNatais.casas[casaSolNatal - 1] / 30)];
             const regenteCasaSol = REGENTES_SIGNOS[signoCuspideSol];
@@ -571,7 +556,7 @@
                 `O Sol em trânsito ilumina a sua <strong>Casa ${casaSolNatal} Natal</strong> (${SIGNIFICADO_CASAS[casaSolNatal]}). ` +
                 `Sua vitalidade e atenção consciente estão concentradas neste setor da vida.`;
 
-            // 3. LUA (PERSONALIZADO)
+            // 3. LUA
             const casaLuaNatal = acharCasa(planetasHoje["Lua"], angulosNatais.casas);
             document.getElementById('luaDetalhesTexto').innerHTML = 
                 `A Lua hoje ilumina a sua <strong>Casa ${casaLuaNatal} Natal</strong> (${luaHojeInfo.signo}). ` +
@@ -611,7 +596,7 @@
             });
             document.getElementById('luaAspectosList').innerHTML = htmlLuaAspectos || "<p style='font-size:0.8rem; color:#8b949e;'>A Lua não faz aspectos exatos com seus planetas pessoais no dia de hoje.</p>";
 
-            // 4. ATIVAÇÕES INDIVIDUAIS HIERARQUIZADAS
+            // 4. ATIVAÇÕES INDIVIDUAIS
             let trânsitosEncontrados = [];
             const planetasTransitantes = ["Plutão", "Netuno", "Urano", "Saturno", "Júpiter", "Marte", "Vênus", "Mercúrio", "Sol"];
             const alvos = ["Sol", "Lua", "Mercúrio", "Vênus", "Marte", "Asc", "MC", "Dsc", "Ic"];
@@ -722,7 +707,6 @@
                 }
             });
 
-            // Cores dos Elementos
             const coresElem = { Fogo: "var(--fogo)", Terra: "var(--terra)", Ar: "var(--ar)", Água: "var(--agua)" };
 
             // Render Elementos
@@ -804,7 +788,7 @@
             svg.innerHTML = h;
         }
 
-        // --- BUSCA GEO CIDADES COM CONFIRMAÇÃO ---
+        // --- BUSCA GEO CIDADES ---
         async function buscarCoordenadasNatal() {
             const cidade = document.getElementById('cidadeNatalInput').value.trim();
             const statusEl = document.getElementById('geoStatusNatal');
