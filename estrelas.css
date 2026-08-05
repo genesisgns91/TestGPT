@@ -1,0 +1,72 @@
+/* ==========================================================
+   estrelas.css — Fundo de "céu noturno estrelado"
+   Usado em todas as telas do Astro (index, revolução solar,
+   trânsitos diários e tarot) para dar identidade visual
+   consistente ao abrir o app, especialmente quando instalado
+   como PWA no celular (tela cheia / standalone).
+   ========================================================== */
+
+.fundo-estrelado {
+    position: relative;
+    background-color: #0d1117;
+    /* Três camadas de "poeira estelar" com tamanhos e distâncias
+       diferentes, para dar profundidade (estrelas próximas maiores
+       e mais visíveis, estrelas distantes menores e mais numerosas). */
+    background-image:
+        radial-gradient(1.6px 1.6px at 12% 18%, #ffffff 60%, transparent 100%),
+        radial-gradient(1.2px 1.2px at 78% 8%,  #cdd9ff 55%, transparent 100%),
+        radial-gradient(2px 2px at 34% 62%,     #ffffff 55%, transparent 100%),
+        radial-gradient(1.2px 1.2px at 92% 34%, #ffe9b0 55%, transparent 100%),
+        radial-gradient(1.4px 1.4px at 55% 82%, #ffffff 55%, transparent 100%),
+        radial-gradient(1px 1px at 6% 74%,      #cdd9ff 55%, transparent 100%),
+        radial-gradient(1.6px 1.6px at 68% 46%, #ffffff 55%, transparent 100%),
+        radial-gradient(1px 1px at 24% 92%,     #ffffff 55%, transparent 100%),
+        radial-gradient(1.2px 1.2px at 86% 68%, #ffe9b0 55%, transparent 100%),
+        radial-gradient(1px 1px at 46% 12%,     #cdd9ff 55%, transparent 100%),
+        radial-gradient(1.4px 1.4px at 4% 40%,  #ffffff 55%, transparent 100%),
+        radial-gradient(1px 1px at 62% 4%,      #ffffff 55%, transparent 100%),
+        radial-gradient(ellipse 90% 60% at 50% -10%, rgba(88,166,255,0.10), transparent),
+        radial-gradient(ellipse 70% 45% at 100% 110%, rgba(163,113,247,0.08), transparent);
+    background-repeat: repeat, repeat, repeat, repeat, repeat, repeat, repeat, repeat, repeat, repeat, repeat, repeat, no-repeat, no-repeat;
+    background-size: 260px 260px, 260px 260px, 260px 260px, 260px 260px, 260px 260px,
+                      260px 260px, 260px 260px, 260px 260px, 260px 260px, 260px 260px,
+                      260px 260px, 260px 260px, 100% 100%, 100% 100%;
+    background-attachment: fixed, fixed, fixed, fixed, fixed, fixed, fixed, fixed, fixed, fixed, fixed, fixed, fixed, fixed;
+    animation: astro-cintilar 7s ease-in-out infinite alternate;
+}
+
+@keyframes astro-cintilar {
+    from { filter: brightness(0.94); }
+    to   { filter: brightness(1.08); }
+}
+
+/* Estrela cadente ocasional — puramente decorativa, sutil */
+.fundo-estrelado::before {
+    content: '';
+    position: fixed;
+    top: 8%;
+    left: -10%;
+    width: 3px;
+    height: 3px;
+    border-radius: 50%;
+    background: #ffffff;
+    box-shadow: 0 0 6px 1px rgba(255,255,255,0.9);
+    opacity: 0;
+    pointer-events: none;
+    animation: astro-cadente 9s linear infinite;
+    animation-delay: 3s;
+}
+
+@keyframes astro-cadente {
+    0%   { transform: translate(0, 0);        opacity: 0; }
+    2%   { opacity: 1; }
+    12%  { transform: translate(60vw, 30vh);  opacity: 0; }
+    100% { transform: translate(60vw, 30vh);  opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .fundo-estrelado,
+    .fundo-estrelado::before {
+        animation: none;
+    }
+}

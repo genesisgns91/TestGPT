@@ -13,7 +13,8 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Astro">
-    
+    <link rel="stylesheet" href="estrelas.css">
+
     <style>
         :root {
             --bg-principal: #0d1117;
@@ -70,6 +71,7 @@
             gap: 8px;
             justify-content: center;
             margin-top: 10px;
+            flex-wrap: wrap;
         }
         .nav-tab {
             text-decoration: none;
@@ -496,7 +498,7 @@
         @keyframes spin { to { transform: rotate(360deg); } }
     </style>
 </head>
-<body>
+<body class="fundo-estrelado">
  
     <header>
         <h1>REVOLUÇÃO SOLAR</h1>
@@ -504,6 +506,8 @@
         <nav class="app-nav">
             <a href="index.html" class="nav-tab">🌟 Mapa Natal</a>
             <a href="revolucao_solar.html" class="nav-tab active">☀️ Revolução Solar</a>
+            <a href="transitos_diarios.html" class="nav-tab">🔮 Trânsitos Diários</a>
+            <a href="astro.html" class="nav-tab">🃏 Astro Tarot</a>
             <button type="button" class="nav-tab" style="cursor:pointer;" onclick="limparCacheDoApp()" title="Força o app a buscar a versão mais nova, sem apagar pessoas salvas">🧹 Limpar Cache</button>
         </nav>
     </header>
