@@ -4,27 +4,55 @@
    trânsitos diários e tarot) para dar identidade visual
    consistente ao abrir o app, especialmente quando instalado
    como PWA no celular (tela cheia / standalone).
+
+   Cada uma das 12 estrelas-ponto tem sua PRÓPRIA variável de
+   opacidade (--tw1 .. --tw12), registrada via @property para
+   poder ser animada suavemente. Cada variável tem sua própria
+   animação, com duração e atraso (delay) diferentes uns dos
+   outros — assim as estrelas piscam de forma lenta e
+   assíncrona/aleatória entre si, em vez de todo o céu clarear
+   e escurecer junto.
+
+   Em navegadores que não suportam @property (bem raros hoje em
+   dia), a regra é simplesmente ignorada e as estrelas ficam
+   estáticas e visíveis — ou seja, o app continua funcionando
+   normalmente, só sem o efeito de piscar.
    ========================================================== */
+
+@property --tw1  { syntax: '<number>'; inherits: true; initial-value: 1; }
+@property --tw2  { syntax: '<number>'; inherits: true; initial-value: 1; }
+@property --tw3  { syntax: '<number>'; inherits: true; initial-value: 1; }
+@property --tw4  { syntax: '<number>'; inherits: true; initial-value: 1; }
+@property --tw5  { syntax: '<number>'; inherits: true; initial-value: 1; }
+@property --tw6  { syntax: '<number>'; inherits: true; initial-value: 1; }
+@property --tw7  { syntax: '<number>'; inherits: true; initial-value: 1; }
+@property --tw8  { syntax: '<number>'; inherits: true; initial-value: 1; }
+@property --tw9  { syntax: '<number>'; inherits: true; initial-value: 1; }
+@property --tw10 { syntax: '<number>'; inherits: true; initial-value: 1; }
+@property --tw11 { syntax: '<number>'; inherits: true; initial-value: 1; }
+@property --tw12 { syntax: '<number>'; inherits: true; initial-value: 1; }
 
 .fundo-estrelado {
     position: relative;
     background-color: #0d1117;
+    --tw1: 1; --tw2: 1; --tw3: 1; --tw4: 1; --tw5: 1; --tw6: 1;
+    --tw7: 1; --tw8: 1; --tw9: 1; --tw10: 1; --tw11: 1; --tw12: 1;
     /* Três camadas de "poeira estelar" com tamanhos e distâncias
        diferentes, para dar profundidade (estrelas próximas maiores
        e mais visíveis, estrelas distantes menores e mais numerosas). */
     background-image:
-        radial-gradient(1.6px 1.6px at 12% 18%, #ffffff 60%, transparent 100%),
-        radial-gradient(1.2px 1.2px at 78% 8%,  #cdd9ff 55%, transparent 100%),
-        radial-gradient(2px 2px at 34% 62%,     #ffffff 55%, transparent 100%),
-        radial-gradient(1.2px 1.2px at 92% 34%, #ffe9b0 55%, transparent 100%),
-        radial-gradient(1.4px 1.4px at 55% 82%, #ffffff 55%, transparent 100%),
-        radial-gradient(1px 1px at 6% 74%,      #cdd9ff 55%, transparent 100%),
-        radial-gradient(1.6px 1.6px at 68% 46%, #ffffff 55%, transparent 100%),
-        radial-gradient(1px 1px at 24% 92%,     #ffffff 55%, transparent 100%),
-        radial-gradient(1.2px 1.2px at 86% 68%, #ffe9b0 55%, transparent 100%),
-        radial-gradient(1px 1px at 46% 12%,     #cdd9ff 55%, transparent 100%),
-        radial-gradient(1.4px 1.4px at 4% 40%,  #ffffff 55%, transparent 100%),
-        radial-gradient(1px 1px at 62% 4%,      #ffffff 55%, transparent 100%),
+        radial-gradient(1.6px 1.6px at 12% 18%, rgba(255,255,255,var(--tw1))  60%, transparent 100%),
+        radial-gradient(1.2px 1.2px at 78% 8%,  rgba(205,217,255,var(--tw2))  55%, transparent 100%),
+        radial-gradient(2px 2px at 34% 62%,     rgba(255,255,255,var(--tw3))  55%, transparent 100%),
+        radial-gradient(1.2px 1.2px at 92% 34%, rgba(255,233,176,var(--tw4))  55%, transparent 100%),
+        radial-gradient(1.4px 1.4px at 55% 82%, rgba(255,255,255,var(--tw5))  55%, transparent 100%),
+        radial-gradient(1px 1px at 6% 74%,      rgba(205,217,255,var(--tw6))  55%, transparent 100%),
+        radial-gradient(1.6px 1.6px at 68% 46%, rgba(255,255,255,var(--tw7))  55%, transparent 100%),
+        radial-gradient(1px 1px at 24% 92%,     rgba(255,255,255,var(--tw8))  55%, transparent 100%),
+        radial-gradient(1.2px 1.2px at 86% 68%, rgba(255,233,176,var(--tw9))  55%, transparent 100%),
+        radial-gradient(1px 1px at 46% 12%,     rgba(205,217,255,var(--tw10)) 55%, transparent 100%),
+        radial-gradient(1.4px 1.4px at 4% 40%,  rgba(255,255,255,var(--tw11)) 55%, transparent 100%),
+        radial-gradient(1px 1px at 62% 4%,      rgba(255,255,255,var(--tw12)) 55%, transparent 100%),
         radial-gradient(ellipse 90% 60% at 50% -10%, rgba(88,166,255,0.10), transparent),
         radial-gradient(ellipse 70% 45% at 100% 110%, rgba(163,113,247,0.08), transparent);
     background-repeat: repeat, repeat, repeat, repeat, repeat, repeat, repeat, repeat, repeat, repeat, repeat, repeat, no-repeat, no-repeat;
@@ -32,13 +60,37 @@
                       260px 260px, 260px 260px, 260px 260px, 260px 260px, 260px 260px,
                       260px 260px, 260px 260px, 100% 100%, 100% 100%;
     background-attachment: fixed, fixed, fixed, fixed, fixed, fixed, fixed, fixed, fixed, fixed, fixed, fixed, fixed, fixed;
-    animation: astro-cintilar 7s ease-in-out infinite alternate;
+    animation:
+        astro-piscar-1  6.4s ease-in-out infinite 0.2s,
+        astro-piscar-2  8.1s ease-in-out infinite 1.6s,
+        astro-piscar-3  5.3s ease-in-out infinite 3.1s,
+        astro-piscar-4  9.2s ease-in-out infinite 0.8s,
+        astro-piscar-5  6.9s ease-in-out infinite 4.4s,
+        astro-piscar-6  7.6s ease-in-out infinite 2.3s,
+        astro-piscar-7  5.8s ease-in-out infinite 5.2s,
+        astro-piscar-8  8.7s ease-in-out infinite 1.1s,
+        astro-piscar-9  6.1s ease-in-out infinite 3.7s,
+        astro-piscar-10 9.6s ease-in-out infinite 0.5s,
+        astro-piscar-11 7.2s ease-in-out infinite 4.9s,
+        astro-piscar-12 5.5s ease-in-out infinite 2.8s;
 }
 
-@keyframes astro-cintilar {
-    from { filter: brightness(0.94); }
-    to   { filter: brightness(1.08); }
-}
+/* Cada estrela tem uma curva de brilho levemente diferente das outras
+   (mínimos, picos e instantes de pico distintos), reforçando a sensação
+   de piscar independente e aleatório mesmo com um número limitado de
+   camadas. */
+@keyframes astro-piscar-1  { 0%, 100% { --tw1: 0.30; }  48% { --tw1: 1; } }
+@keyframes astro-piscar-2  { 0%, 100% { --tw2: 1; }     40% { --tw2: 0.25; } 70% { --tw2: 0.9; } }
+@keyframes astro-piscar-3  { 0%, 100% { --tw3: 0.5; }   55% { --tw3: 1; } }
+@keyframes astro-piscar-4  { 0%, 100% { --tw4: 1; }     30% { --tw4: 0.35; } 65% { --tw4: 0.85; } }
+@keyframes astro-piscar-5  { 0%, 100% { --tw5: 0.4; }   50% { --tw5: 1; } 80% { --tw5: 0.6; } }
+@keyframes astro-piscar-6  { 0%, 100% { --tw6: 1; }     45% { --tw6: 0.3; } }
+@keyframes astro-piscar-7  { 0%, 100% { --tw7: 0.35; }  35% { --tw7: 0.9; } 68% { --tw7: 0.5; } }
+@keyframes astro-piscar-8  { 0%, 100% { --tw8: 1; }     58% { --tw8: 0.25; } }
+@keyframes astro-piscar-9  { 0%, 100% { --tw9: 0.45; }  42% { --tw9: 1; } 75% { --tw9: 0.7; } }
+@keyframes astro-piscar-10 { 0%, 100% { --tw10: 1; }    38% { --tw10: 0.4; } 72% { --tw10: 0.95; } }
+@keyframes astro-piscar-11 { 0%, 100% { --tw11: 0.3; }  60% { --tw11: 1; } }
+@keyframes astro-piscar-12 { 0%, 100% { --tw12: 1; }    50% { --tw12: 0.35; } }
 
 /* Estrela cadente ocasional — puramente decorativa, sutil */
 .fundo-estrelado::before {
