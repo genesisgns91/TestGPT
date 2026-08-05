@@ -221,25 +221,16 @@
         .wheel-legend span { display: flex; align-items: center; gap: 5px; }
         .wheel-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; }
 
-        .positions-list { display: flex; flex-direction: column; gap: 7px; }
-        .position-row {
-            display: grid;
-            grid-template-columns: 34px minmax(78px,1fr) minmax(95px,1fr) 74px;
-            gap: 8px;
-            align-items: center;
-            background: var(--bg-principal);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 8px 9px;
+        .positions-list { display: flex; flex-direction: column; gap: 2px; }
+        .position-line {
+            display: block;
+            color: #c9d1d9;
+            font-size: 0.84rem;
+            line-height: 1.7;
+            padding: 2px 0;
         }
-        .position-glyph { font-family: "Segoe UI Symbol", sans-serif; font-size: 1.2rem; color: var(--ia-color); text-align: center; }
-        .position-main strong { display: block; color: #fff; font-size: 0.82rem; }
-        .position-main small, .position-house small { display: block; color: #8b949e; font-size: 0.68rem; margin-top: 2px; }
-        .position-sign { font-size: 0.8rem; font-weight: 700; color: var(--sol); }
-        .position-house { text-align: right; color: #c9d1d9; font-size: 0.76rem; }
+        .position-line strong { color: #fff; }
 
-        @media (max-width: 900px) { .transitos-dashboard, .sol-lua-grid { grid-template-columns: 1fr; } }
-        @media (max-width: 600px) { .position-row { grid-template-columns: 30px 1fr 1fr; } .position-house { grid-column: 2/-1; text-align: left; } }
 
         /* GRID DE 3 COLUNAS: ELEMENTOS, RITMOS, POLARIDADES */
         .grid-3-colunas {
@@ -441,8 +432,8 @@
             <a href="index.html" class="nav-tab">🌟 Mapa Natal</a>
             <a href="revolucao_solar.html" class="nav-tab">☀️ Revolução Solar</a>
             <a href="transitos_diarios.html" class="nav-tab active">🔮 Trânsitos do Dia</a>
-            <a href="astro.html" class="nav-tab">🃏 Astro Tarot</a>
-            <button type="button" class="nav-tab" style="cursor:pointer;" onclick="limparCacheDoApp()" title="Força a atualização da versão">🧹 Limpar Cache</button>
+            <a href="tarot.html" class="nav-tab">🃏 Astro Tarot</a>
+            <button type="button" class="nav-tab" style="cursor:pointer;" onclick="limparCacheDoApp()" title="Força o app a buscar a versão mais nova, sem apagar pessoas salvas">🧹 Limpar Cache</button>
         </nav>
     </header>
 
@@ -530,7 +521,7 @@
                 <div class="ai-inline-panel" id="iaPanorama"></div>
             </div>
             <div class="positions-panel">
-                <div class="positions-panel-header"><h2>10 Astros Principais — Céu do Dia</h2><span class="tag-ceu">🌐 TRÂNSITO</span></div>
+                <div class="positions-panel-header"><h2>Céu do Dia</h2><span class="tag-ceu">🌐 TRÂNSITO</span></div>
                 <p style="font-size:.78rem;color:#8b949e;line-height:1.45;margin-bottom:10px;">Estas são as posições reais do céu no momento selecionado. A casa é calculada sobre o mapa natal e mostra <strong>onde, na vida da pessoa, cada planeta do céu atual está atuando hoje</strong>.</p>
                 <div id="posicoesPrincipaisList" class="positions-list"></div>
             </div>
@@ -580,7 +571,7 @@
 
         <div class="sol-lua-grid">
             <div class="esoteric-card card-natal-highlight">
-                <h3><span>☉ 2. Sol — Foco do Ciclo Pessoal</span><span class="block-ai-head"><span class="tag-natal">🔵 PERSONALIZADO</span><button type="button" class="btn-ia" onclick="alternarAnaliseIABloco('sol', this)">✦ IA</button></span></h3>
+                <h3><span>☉ 2. Sol — Foco do Ciclo Pessoal</span><span class="block-ai-head"><button type="button" class="btn-ia" onclick="alternarAnaliseIABloco('sol', this)">✦ IA</button></span></h3>
                 <div class="esoteric-grid">
                     <div class="esoteric-item item-natal"><label>Posição atual <span class="tag-ceu">🌐</span></label><p id="solPosicaoVal">---</p></div>
                     <div class="esoteric-item item-natal"><label>Casa natal ativada <span class="tag-natal">🔵</span></label><p id="solCasaVal">---</p></div>
@@ -590,7 +581,7 @@
                 <div class="ai-inline-panel" id="iaSol"></div>
             </div>
             <div class="esoteric-card card-natal-highlight">
-                <h3><span>🌙 3. Lua — Ritmo & Sensibilidade</span><span class="block-ai-head"><span class="tag-natal">🔵 PERSONALIZADO</span><button type="button" class="btn-ia" onclick="alternarAnaliseIABloco('lua', this)">✦ IA</button></span></h3>
+                <h3><span>🌙 3. Lua — Ritmo & Sensibilidade</span><span class="block-ai-head"><button type="button" class="btn-ia" onclick="alternarAnaliseIABloco('lua', this)">✦ IA</button></span></h3>
                 <div class="esoteric-grid">
                     <div class="esoteric-item item-natal"><label>Posição atual <span class="tag-ceu">🌐</span></label><p id="luaPosicaoVal">---</p></div>
                     <div class="esoteric-item item-natal"><label>Casa natal ativada <span class="tag-natal">🔵</span></label><p id="luaCasaVal">---</p></div>
@@ -602,21 +593,21 @@
         </div>
 
         <div class="esoteric-card card-natal-highlight">
-            <h3><span>⚖️ 4. Ativações Individuais Expansíveis</span><span class="block-ai-head"><span class="tag-natal">🔵 PERSONALIZADO</span><button type="button" class="btn-ia" onclick="alternarAnaliseIABloco('ativacoes', this)">✦ Panorama IA</button></span></h3>
+            <h3><span>⚖️ 4. Ativações Individuais Expansíveis</span><span class="block-ai-head"><button type="button" class="btn-ia" onclick="alternarAnaliseIABloco('ativacoes', this)">✦ Panorama IA</button></span></h3>
             <p style="font-size:.82rem;color:#8b949e;line-height:1.5;margin-bottom:10px;">Aqui estão os contatos mais relevantes entre o céu atual e os pontos estruturais do mapa natal. A força de um trânsito não depende apenas do aspecto: duração, orbe, planeta envolvido e área natal ativada alteram seu peso.</p>
             <div id="transitosRelevantesList" class="expand-list"></div>
             <div class="ai-inline-panel" id="iaAtivacoes"></div>
         </div>
 
         <div class="esoteric-card card-natal-highlight">
-            <h3><span>🏛️ 5. Processo Dominante & Convergência</span><span class="block-ai-head"><span class="tag-natal">🔵 PERSONALIZADO</span><button type="button" class="btn-ia" onclick="alternarAnaliseIABloco('convergencia', this)">✦ Análise IA</button></span></h3>
+            <h3><span>🏛️ 5. Processo Dominante & Convergência</span><span class="block-ai-head"><button type="button" class="btn-ia" onclick="alternarAnaliseIABloco('convergencia', this)">✦ Análise IA</button></span></h3>
             <p style="font-size:.82rem;color:#8b949e;line-height:1.5;margin-bottom:10px;">Este bloco procura convergência: quando vários fatores do céu atual apontam para a mesma casa, tema psicológico ou eixo de vida, essa região ganha prioridade interpretativa.</p>
             <div id="convergenciaConteudo" style="font-size:.85rem;line-height:1.65;color:#c9d1d9;">Processando convergências...</div>
             <div class="ai-inline-panel" id="iaConvergencia"></div>
         </div>
 
         <div class="sintese-box">
-            <h4><span>📜 6. Síntese do Mapa Natal Ativado</span><span class="block-ai-head"><span class="tag-natal">🔵 PERSONALIZADO</span><button type="button" class="btn-ia" onclick="alternarAnaliseIABloco('sintese', this)">✦ Síntese IA</button></span></h4>
+            <h4><span>📜 6. Síntese do Mapa Natal Ativado</span><span class="block-ai-head"><button type="button" class="btn-ia" onclick="alternarAnaliseIABloco('sintese', this)">✦ Síntese IA</button></span></h4>
             <p style="font-size:.82rem;color:#8b949e;line-height:1.5;margin-bottom:8px;">A síntese final reúne céu coletivo, mapa natal, casas, aspectos, elementos, ritmos, polaridades e convergências. O objetivo é responder onde o dia toca mais fundo, o que tensiona, o que favorece, como a pessoa pode se sentir e qual atitude consciente integra melhor o momento.</p>
             <div id="sinteseFinalConteudo">Aguardando processamento integral...</div>
             <div class="ai-inline-panel" id="iaSintese"></div>
@@ -663,12 +654,70 @@
             12: "Inconsciente, Espiritualidade, Isolamento Regenerador e Síntese Psíquica"
         };
 
+        // ==========================================
+        // DADOS NATAIS COMPARTILHADOS ENTRE AS TELAS (Mapa Natal / Revolução Solar)
+        // ==========================================
+        // Usa a MESMA chave de localStorage que index.html e revolucao_solar.html.
+        // Assim, se a pessoa já preencheu seus dados de nascimento em uma dessas
+        // telas, eles já aparecem pré-preenchidos aqui também, sem precisar digitar
+        // tudo de novo. Um "Perfil Guardado" selecionado manualmente nesta tela
+        // sempre tem prioridade sobre esse preenchimento automático.
+        const CHAVE_DADOS_NATAIS = 'astro_dados_natais_v1';
+
+        function carregarDadosNataisCompartilhados() {
+            try {
+                const raw = localStorage.getItem(CHAVE_DADOS_NATAIS);
+                if (!raw) return false;
+                const dados = JSON.parse(raw);
+                if (dados.date) document.getElementById('date').value = dados.date;
+                if (dados.time) document.getElementById('time').value = dados.time;
+                if (dados.fuso !== undefined && dados.fuso !== '') document.getElementById('fuso').value = dados.fuso;
+                if (dados.lat !== undefined && dados.lat !== '') document.getElementById('latNatal').value = dados.lat;
+                if (dados.lon !== undefined && dados.lon !== '') document.getElementById('lonNatal').value = dados.lon;
+                if (dados.cidade) document.getElementById('cidadeNatalInput').value = dados.cidade;
+                return true;
+            } catch (err) {
+                console.warn('Não foi possível carregar os dados natais compartilhados:', err);
+                return false;
+            }
+        }
+
+        function salvarDadosNataisCompartilhados() {
+            try {
+                const dados = {
+                    date: document.getElementById('date').value,
+                    time: document.getElementById('time').value,
+                    fuso: document.getElementById('fuso').value,
+                    lat: document.getElementById('latNatal').value,
+                    lon: document.getElementById('lonNatal').value,
+                    cidade: document.getElementById('cidadeNatalInput').value
+                };
+                localStorage.setItem(CHAVE_DADOS_NATAIS, JSON.stringify(dados));
+            } catch (err) {
+                console.warn('Não foi possível salvar os dados natais compartilhados:', err);
+            }
+        }
+
         window.onload = () => {
             const hoje = new Date();
             document.getElementById('dataTransito').value = hoje.toISOString().split('T')[0];
             document.getElementById('horaTransito').value = hoje.toTimeString().split(' ')[0].substring(0, 5);
+            carregarDadosNataisCompartilhados();
             carregarPerfisSalvos();
             executarAnalise();
+
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('./sw.js').then((registro) => {
+                    registro.update();
+                }).catch(err => console.warn('Falha ao registrar Service Worker:', err));
+
+                let jaRecarregou = false;
+                navigator.serviceWorker.addEventListener('controllerchange', () => {
+                    if (jaRecarregou) return;
+                    jaRecarregou = true;
+                    window.location.reload();
+                });
+            }
         };
 
         function normalizarGraus(deg) {
@@ -880,6 +929,7 @@ function calcularPosicaoPlaneta(nome, dataUtc) {
             const latN = parseFloat(document.getElementById('latNatal').value);
             const lonN = parseFloat(document.getElementById('lonNatal').value);
             const utcNatal = new Date(new Date(`${dNatal}T${hNatal}:00Z`).getTime() - (fusoNatal * 3600000));
+            salvarDadosNataisCompartilhados();
 
             // Data Trânsito
             const dAtual = document.getElementById('dataTransito').value;
@@ -939,13 +989,7 @@ function calcularPosicaoPlaneta(nome, dataUtc) {
             document.getElementById('posicoesPrincipaisList').innerHTML = ordemAstros.map(p => {
                 const info = obterInfoSigno(planetasHoje[p]);
                 const casa = acharCasa(planetasHoje[p], angulosNatais.casas);
-                const natalInfo = obterInfoSigno(planetasNatais[p]);
-                return `<div class="position-row" title="${p} em ${info.signo}, ${info.grau}°${String(info.min).padStart(2,'0')}' — Casa ${casa} do mapa natal. Posição natal: ${natalInfo.signo} ${natalInfo.grau}°. ">
-                    <div class="position-glyph">${SIMBOLOS_PLANETAS[p]}</div>
-                    <div class="position-main"><strong>${p}</strong><small>${info.signo} · ${info.grau}°${String(info.min).padStart(2,'0')}'</small></div>
-                    <div class="position-sign"><span>${info.simbolo}</span> ${info.signo}</div>
-                    <div class="position-house"><strong>Casa ${casa}</strong><small>${SIGNIFICADO_CASAS[casa]}</small></div>
-                </div>`;
+                return `<span class="position-line">${SIMBOLOS_PLANETAS[p]} <strong>${p}</strong> - ${info.simbolo} <strong>${info.signo}</strong> - <strong>Casa ${casa}</strong></span>`;
             }).join('');
 
             contextoTransitosAtual = {
@@ -1294,8 +1338,9 @@ function desenharRodaAstrologica(natal, hoje, casas) {
 // A leitura é enviada ao mesmo proxy real usado em revolucao_solar.html.
 // Não existe mais setTimeout nem texto simulado.
 const DIRETRIZ_TOM_IA_TRANSITOS = `Escreva com profundidade filosófica e psicológica, atento às camadas simbólicas, aos padrões ocultos por trás dos acontecimentos e ao significado mais profundo por trás das tendências do momento — como uma leitura séria, intuitiva e madura. NÃO cite nomes de escolas de pensamento, tradições, sistemas ou termos técnicos de nenhuma linha teórica específica; o foco deve estar inteiramente na pessoa e na energia analisada, com linguagem natural e envolvente.
-    NÃO escreva introduções, saudações, ou frases como "vamos analisar" — comece direto no conteúdo.
+    NÃO escreva introduções, saudações, contextualizações iniciais ou frases como "vamos analisar" — a primeira frase já deve estar dentro do assunto central do tema, sem nenhum preâmbulo antes disso.
     NÃO use títulos, cabeçalhos ou listas numeradas visíveis no texto final — apenas parágrafos corridos.
+    Escreva em tom de conversa direta com quem está lendo, como se estivesse falando pessoalmente com essa pessoa sobre o momento dela — dirija-se a ela usando "você", nunca em terceira pessoa distante ("esta pessoa", "o consulente") nem como um texto acadêmico impessoal.
     Use formatação HTML básica com parágrafos <p> e destaques em <strong>.`;
 
 function resumoContextoIA() {
@@ -1481,11 +1526,35 @@ async function gerarLeituraIA(astroTransito, alvoNatal, casa, idPainel) {
             carregarPerfisSalvos();
         }
 
-        function limparCacheDoApp() {
-            if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.getRegistrations().then(regs => regs.forEach(r => r.unregister()));
+        // ==========================================
+        // LIMPAR CACHE TÉCNICO (mesmo padrão das outras telas do app)
+        // ==========================================
+        // Os "Perfis Guardados" (localStorage) não são tocados por esta função —
+        // ela apenas força o Service Worker a buscar a versão mais recente dos
+        // arquivos do app (HTML, CSS, ícones).
+        async function limparCacheDoApp() {
+            const confirmou = confirm(
+                'Isso vai limpar o cache técnico do app e recarregar a página, para ' +
+                'garantir que você veja a versão mais recente.\n\n' +
+                'Seus Perfis Guardados NÃO serão apagados — ficam guardados em outro ' +
+                'lugar, separado desse cache.\n\nContinuar?'
+            );
+            if (!confirmou) return;
+
+            try {
+                if ('serviceWorker' in navigator) {
+                    const registros = await navigator.serviceWorker.getRegistrations();
+                    await Promise.all(registros.map((registro) => registro.unregister()));
+                }
+                if ('caches' in window) {
+                    const chaves = await caches.keys();
+                    await Promise.all(chaves.map((chave) => caches.delete(chave)));
+                }
+            } catch (err) {
+                console.warn('Erro ao limpar cache técnico:', err);
             }
-            window.location.reload(true);
+
+            window.location.href = window.location.pathname + '?atualizado=' + Date.now();
         }
     </script>
 </body>

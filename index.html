@@ -469,7 +469,7 @@
             <a href="index.html" class="nav-tab active">🌟 Mapa Natal</a>
             <a href="revolucao_solar.html" class="nav-tab">☀️ Revolução Solar</a>
             <a href="transitos_diarios.html" class="nav-tab">🔮 Trânsitos Diários</a>
-            <a href="astro.html" class="nav-tab">🃏 Astro Tarot</a>
+            <a href="tarot.html" class="nav-tab">🃏 Astro Tarot</a>
             <button type="button" class="nav-tab" style="cursor:pointer;" onclick="limparCacheDoApp()" title="Força o app a buscar a versão mais nova, sem apagar pessoas salvas">🧹 Limpar Cache</button>
         </nav>
     </header>
@@ -1467,8 +1467,9 @@
         // pensamento, tradições ou termos técnicos de sistemas específicos — o texto
         // deve soar como uma leitura pessoal, nunca uma aula teórica.
         const DIRETRIZ_TOM_IA = `Escreva com profundidade filosófica e psicológica, atento às camadas simbólicas, aos padrões ocultos por trás do comportamento e ao significado mais profundo por trás dos eventos de vida — como uma leitura séria, intuitiva e madura. NÃO cite nomes de escolas de pensamento, tradições, sistemas ou termos técnicos de nenhuma linha teórica específica; o foco deve estar inteiramente na pessoa e na energia analisada, com linguagem natural e envolvente.
-            NÃO escreva introduções, saudações, ou frases como "vamos analisar" — comece direto no conteúdo.
+            NÃO escreva introduções, saudações, contextualizações iniciais ou frases como "vamos analisar" — a primeira frase já deve estar dentro do assunto central do tema, sem nenhum preâmbulo antes disso.
             NÃO use títulos, cabeçalhos ou listas numeradas visíveis no texto final — apenas parágrafos corridos.
+            Escreva em tom de conversa direta com quem está lendo, como se estivesse falando pessoalmente com essa pessoa sobre ela mesma — dirija-se a ela usando "você", nunca em terceira pessoa distante ("esta pessoa", "o consulente") nem como um texto acadêmico impessoal.
             Use formatação HTML básica com parágrafos <p> e destaques em <strong>.`;
 
         function dispararAnaliseIA(nomeAstro, nomeSigno, numCasa, retrogrado) {
@@ -2173,14 +2174,14 @@
                     body { font-family: Georgia, 'Times New Roman', serif; padding: 30px; color:#222; }
                     .pdf-cover { text-align:center; padding-top:120px; page-break-after:always; }
                     .pdf-cover img { width:140px; height:140px; object-fit:contain; margin-bottom:24px; }
-                    .pdf-cover h1 { font-size:2.6rem; letter-spacing:6px; color:#5b3a00; margin-bottom:6px; }
+                    .pdf-cover h1 { font-size:2.6rem; font-weight:bold; letter-spacing:6px; color:#5b3a00; margin-bottom:6px; }
                     .pdf-cover .pdf-subtitulo { font-size:1rem; color:#888; letter-spacing:2px; text-transform:uppercase; margin-bottom:70px; }
                     .pdf-cover .pdf-nome-pessoa { font-size:1.4rem; color:#222; margin-bottom:6px; }
                     .pdf-cover .pdf-nascimento { font-size:0.9rem; color:#666; }
-                    .pdf-chapter-title { font-size:1.7rem; color:#5b3a00; border-bottom:3px solid #e3b341; padding-bottom:10px; margin-bottom:20px; }
-                    .pdf-period-title { font-size:1.2rem; color:#8957e5; margin:26px 0 12px 0; border-bottom:1px solid #ccc; padding-bottom:4px; }
+                    .pdf-chapter-title { font-size:1.7rem; font-weight:bold; color:#5b3a00; border-bottom:3px solid #e3b341; padding-bottom:10px; margin-bottom:20px; }
+                    .pdf-period-title { font-size:1.2rem; font-weight:bold; color:#8957e5; margin:26px 0 12px 0; border-bottom:1px solid #ccc; padding-bottom:4px; }
                     .pdf-leitura { margin-bottom:24px; page-break-inside:avoid; }
-                    .pdf-leitura h2 { color:#5b3a00; font-size:1.1rem; margin-bottom:2px; }
+                    .pdf-leitura h2 { color:#5b3a00; font-size:1.1rem; font-weight:bold; margin-bottom:2px; }
                     .pdf-meta { font-size:0.8rem; color:#666; margin-bottom:10px; }
                     .pdf-texto { font-size:0.95rem; line-height:1.6; color:#222; }
                     .pdf-divisor { border:none; border-top:1px solid #ccc; margin:20px 0; }

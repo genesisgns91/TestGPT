@@ -55,7 +55,7 @@
     {
       "name": "Astro Tarot",
       "short_name": "Tarot",
-      "url": "./astro.html",
+      "url": "./tarot.html",
       "icons": [{ "src": "icon-192.png", "sizes": "192x192" }]
     }
   ]
