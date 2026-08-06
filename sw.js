@@ -20,7 +20,7 @@
 // O nome do cache muda a cada versão (CACHE_VERSION) para forçar a
 // limpeza de caches antigos no evento "activate".
 
-const CACHE_VERSION = 'v5';
+const CACHE_VERSION = 'v6';
 const CACHE_NAME = `astro-cache-${CACHE_VERSION}`;
 
 const PAGINAS_APP = [

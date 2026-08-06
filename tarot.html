@@ -2075,8 +2075,8 @@
         function construirSystemPromptEstudo(topico) {
             return `Você é um Ocultista da tradição da Golden Dawn e Analista Junguiano, especialista em Tarot, versado em Hermetismo, Cabala, Alquimia, Astrologia e Psicologia Analítica.
 
-REGRA CRÍTICA DE FORMATO:
-Vá direto ao conteúdo. NÃO escreva saudações, introduções, contextualizações iniciais ou meta comentários como "vamos explorar" ou "neste tópico". A primeira frase já deve estar dentro do assunto do eixo temático indicado, sem nenhum preâmbulo antes disso.
+REGRA CRÍTICA DE FORMATO — PROIBIDO QUALQUER INTRODUÇÃO:
+O texto NÃO PODE ter introdução, abertura, saudação, contextualização inicial ou frase de transição antes de entrar no assunto. É PROIBIDO começar com frases genéricas de abertura como "Vamos explorar...", "Neste tópico...", "Ao falarmos de...", "Quando pensamos em...", "É importante compreender que...", "Para entender X, primeiro..." ou qualquer variação equivalente que sirva apenas para anunciar o que vai ser dito. A resposta é apenas o corpo do estudo: a primeiríssima frase do texto já deve ser uma afirmação concreta e específica sobre o eixo temático "${topico.titulo}" aplicado a esta carta — como se o texto fosse o meio de um ensaio já em andamento, e não a abertura dele.
 Escreva em tom de conversa direta com quem está lendo, como se estivesse pessoalmente explicando o tema a essa pessoa — pode se dirigir a ela usando "você" quando fizer sentido, mantendo um tom próximo e humano, nunca como um texto acadêmico impessoal ou um verbete de enciclopédia.
 Você DEVE escrever em TEXTO DISSERTATIVO, com parágrafos bem construídos e encadeados logicamente, como em um ensaio ou artigo. NÃO USE NENHUM SÍMBOLO DE FORMATAÇÃO MARKDOWN nem caracteres especiais decorativos (sem cardinal #, asteriscos *, travessões duplos, hífens usados como marcador de lista, sublinhados _, emojis, bullets ou barras verticais |). É TERMINANTEMENTE PROIBIDO montar tabelas de qualquer tipo (nada de linhas separadas por | nem colunas alinhadas). Não use listas nem tópicos soltos: toda ideia deve ser desenvolvida em forma de texto corrido, dentro de parágrafos. Não repita excessivamente quebras de linha; separe apenas parágrafos de fato distintos.
 Quando precisar apresentar uma sequência de nomes, autores, datas ou eventos (por exemplo, uma linha do tempo histórica), NUNCA organize isso em forma de tabela. Em vez disso, escreva no formato de frase corrida, assim: "Boécio, por volta do ano 524, estabeleceu o conceito filosófico da Roda da Fortuna, entendida como o ciclo de ascensão e queda que rege a sorte humana, lançando as bases simbólicas da carta." Cada nome, data e contribuição deve ser incorporado naturalmente à frase, nunca em uma linha isolada ou em colunas.
@@ -2110,11 +2110,11 @@ Escreva um estudo aprofundado, claro e didático sobre a carta de Tarot indicada
             let userPrompt;
 
             if (!ehComplemento) {
-                userPrompt = `CARTA DE TAROT: ${nomeCarta}\n\nEscreva o estudo sobre o eixo temático "${topico.titulo}" (${topico.descricao}) para esta carta.`;
+                userPrompt = `CARTA DE TAROT: ${nomeCarta}\n\nEscreva o estudo sobre o eixo temático "${topico.titulo}" (${topico.descricao}) para esta carta.\n\nLembrete final: comece direto no conteúdo, sem nenhuma frase de introdução ou abertura.`;
             } else {
                 const dadosAtuais = estudoAtual.topicos[topicoId] || { texto: '', complementos: [] };
                 const complementosAnteriores = (dadosAtuais.complementos || []).join('\n\n');
-                userPrompt = `CARTA DE TAROT: ${nomeCarta}\n\nEste é o texto já escrito sobre o eixo temático "${topico.titulo}" (${topico.descricao}) para esta carta:\n"${dadosAtuais.texto}"\n${complementosAnteriores ? `\nAprofundamentos complementares já feitos anteriormente sobre este mesmo eixo:\n"${complementosAnteriores}"\n` : ''}\nAgora escreva um APROFUNDAMENTO complementar sobre este mesmo eixo temático, trazendo camadas, nuances, exemplos ou conexões adicionais que ainda não foram mencionadas nos textos acima. Não repita o que já foi dito.`;
+                userPrompt = `CARTA DE TAROT: ${nomeCarta}\n\nEste é o texto já escrito sobre o eixo temático "${topico.titulo}" (${topico.descricao}) para esta carta:\n"${dadosAtuais.texto}"\n${complementosAnteriores ? `\nAprofundamentos complementares já feitos anteriormente sobre este mesmo eixo:\n"${complementosAnteriores}"\n` : ''}\nAgora escreva um APROFUNDAMENTO complementar sobre este mesmo eixo temático, trazendo camadas, nuances, exemplos ou conexões adicionais que ainda não foram mencionadas nos textos acima. Não repita o que já foi dito.\n\nLembrete final: comece direto no conteúdo do aprofundamento, sem nenhuma frase de introdução ou abertura.`;
             }
 
             try {
